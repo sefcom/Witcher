@@ -1,0 +1,43 @@
+temp=$(tty) ;
+TTY=${temp:9}
+
+bash_prompt() {
+    local RET=$?        # set return value of last command MUST BE FIRST
+    local USERCOLOR="\[\e[38;5;81m\]"
+    local DIRCOLOR="\[\e[1;34m\]"
+    local BOLDRED="\[\e[1;31m\]"
+
+    local val=$(hostname)
+    local val_regex="[a-fA-F0-9]{${#val}}"
+    if ! [[ ${val} =~ $val_regex ]]; then
+       local a=${val}
+       val=$(for ((i=0;i<${#a};i++));do printf %02X \'${a:$i:1};done)
+    fi
+
+    if [[ ${val:0:2} =~ [A-F0-9a-f][A-F0-9a-f].* ]]; then
+        USERCOLOR=$(printf '\[\e[38;5;%dm\]' 0x${val:0:2}) ;
+    fi
+    if [[ ${val:2:2} =~ [A-F0-9a-f][A-F0-9a-f].* ]]; then
+        DIRCOLOR=$(printf '\[\e[38;5;%dm\]' 0x${val:2:2}) ;
+    fi
+
+    local NONE="\[\e[0m\]"    # unsets color to term's fg color
+
+    local VENV=""
+    if [ ! -z ${VIRTUAL_ENV+x} ];
+        then local VENV=" [$(basename $VIRTUAL_ENV)]";
+    fi
+    local RET_STR="${NONE}# "
+
+    [ $RET -ne 0 ] && RET_STR="${BOLDRED}($RET)${NONE} "
+
+    if [[ -z $CONTAINER_NAME ]]; then
+        local showip="-${LAST_IP}"
+        PS1="${USERCOLOR}\u@\h${showip}${VENV} ${DIRCOLOR}\w ${RET_STR}"
+    else
+        PS1="${USERCOLOR}\u@${CONTAINER_NAME}${VENV} ${DIRCOLOR}\w ${RET_STR}"
+    fi
+
+}
+PROMPT_COMMAND=bash_prompt
+
