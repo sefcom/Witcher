@@ -1,0 +1,3 @@
+[submodule "base/phuzzer"]
+	path = base/phuzzer
+	url = git@github.com:etrickel/phuzzer.git
