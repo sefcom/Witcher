@@ -1,32 +1,16 @@
-# Witcher
-
-
-
-## Witcher Config File
-- afl_preload is location of cgi wrapper for PHP and CGI web applications
-- number_of_refuzzes is the number of times page will be fuzzed within a single trial, more than one encourages page to page interactions
-- timeout in seconds
-- script_skip_list - scripts to skip testing of
-- script_random_order - 0: no randomization, 1: randomize order every trial, 2: randomize for refuzzes
-- script_start/end_index - used to split up large script list for large web applications  
-- cores - the number of cores to use for fuzzing.
-- request_crawler - config data used for running the crawler
-- direct - direct login information, used before creating the fuzzer instance to setup a login session
-```
 {
-  "testname": "name of test",
-  "afl_inst_interpreter_binary": "location of intrepreter with AFL instrumentation",
-  "wc_inst_interpreter_binary": "path to intrepreter with Witcher instruemtnation",
+  "testname": "unittests",
+  "afl_inst_interpreter_binary": "/p/webcam/php7/php-cgi-mysqli-afl",
+  "wc_inst_interpreter_binary": "/p/webcam/php7/php-cgi-mysqli-wc",
   "base_url": "http://localhost/",
   "afl_path": "/afl",
   "ld_library_path":"/wclibs",
   "afl_preload":"/wclibs/libcgiwrapper.so",
+  "number_of_trials": 1,
   "number_of_refuzzes": 3,
-  "timeout" : 28800,
-  "script_skip_list": ["test_5"],
+  "timeout" : 30,
+  "script_skip_list": [],
   "script_random_order": 1,
-  "script_start_index": 10,
-  "script_end_index": 20,
   "cores": 3,
   "request_crawler": {
     "form_url" : "http://localhost/interface/login/login.php?site=default",
@@ -57,4 +41,3 @@
   }
 
 }
-```

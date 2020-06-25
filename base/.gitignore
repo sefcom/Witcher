@@ -3,3 +3,5 @@ afl/*
 ShellParser
 afl
 helpers/node_modules
+/afl/
+/ShellParser/

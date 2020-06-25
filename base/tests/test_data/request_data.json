@@ -1,0 +1,99 @@
+{
+  "requestsFound": {
+    "GET http://localhost/test-get-5-crosspol.php ": {
+      "_id": 1,
+      "_urlstr": "http://localhost/test-get-5-crosspol.php",
+      "_url": "http://localhost/test-get-5-crosspol.php?&nv3=3&nv82=4&",
+      "_resourceType": "document",
+      "_method": "GET",
+      "_postData": "",
+      "key": "POST http://localhost/test-get-5-crosspol.php "
+    },
+    "GET http://localhost/test-get-5-crosspol.php ": {
+      "_id": 2,
+      "_urlstr": "http://localhost/test-get-5-crosspol.php",
+      "_url": "http://localhost/test-get-5-crosspol.php?nv1=1&nv2=2&nv3=3&nv92=5",
+      "_resourceType": "document",
+      "_method": "GET",
+      "key": "POST http://localhost/test-get-5-crosspol.php "
+    },
+    "POST http://localhost/test-cookie-5.php ": {
+      "_id": 3,
+      "_urlstr": "http://localhost/test-cookie-5.php?vul1=6",
+      "_url": "http://localhost/test-cookie-5.php?vul1=6",
+      "_resourceType": "document",
+      "_method": "POST",
+      "_postData": "nv1=nv_val1&",
+      "_cookieData": "nv1=1&nv2=2&nv3=3&nv4=4&",
+      "key": "POST http://localhost/test-cookie-5.php "
+    },
+    "POST http://localhost/test-2.php ": {
+      "_id": 4,
+      "_urlstr": "http://localhost/test-2.php",
+      "_url": "http://localhost/test-2.php",
+      "_resourceType": "document",
+      "_method": "POST",
+      "_postData": "nv1=1&nv2=2&nv3=3&nv4=4&",
+      "attempts": 3,
+      "processed": 3,
+      "from": "LoginInterceptedRequest",
+      "key": "POST http://localhost/test-2.php "
+    },
+    "POST http://localhost/test-5-cmd.php ": {
+      "_id": 5,
+      "_urlstr": "http://localhost/test-5.php?vul1=6",
+      "_url": "http://localhost/test-5.php?vul1=6",
+      "_resourceType": "document",
+      "_method": "POST",
+      "_postData": "nv1=1&nv2=2&nv3=3&nv4=4&",
+      "key": "POST http://localhost/test-5.php "
+    },
+    "POST http://localhost/test-select-3.php ": {
+      "_id": 6,
+      "_urlstr": "http://localhost/test-select-3.php?sel1=s-val2b",
+      "_url": "http://localhost/test-select-3.php?sel1=s-val2b",
+      "_resourceType": "document",
+      "_method": "GET",
+      "_postData": "",
+      "key": "POST http://localhost/test-select-3.php "
+    },
+    "POST http://localhost/test-equal-1.php ": {
+      "_id": 7,
+      "_urlstr": "http://localhost/test-equal-1.php?vul1=6",
+      "_url": "http://localhost/test-equal-1.php?vul1=6",
+      "_resourceType": "document",
+      "_method": "GET",
+      "_postData": "nv1=SSSS",
+      "key": "POST http://localhost/test-equal-1.php "
+    },"POST http://localhost/test-findvar-1.php ": {
+      "_id": 10,
+      "_urlstr": "http://localhost/test-findvar-1.php?aaa=1",
+      "_url": "http://localhost/test-findvar-1.php?aaa=1",
+      "_resourceType": "document",
+      "_method": "GET",
+      "_postData": "",
+      "key": "POST http://localhost/test-findvar-1.php "
+    }
+
+  },
+  "inputSet": [
+    "nv1=nv-val1",
+    "nv2=nv-val2",
+    "nv3=nv-val3",
+    "nv4=nv-val4",
+    "nv5=nv-val5",
+    "nv6=nv-val6",
+    "nv7=nv-val7",
+    "nv8=nv-val8",
+    "nv9=nv-val9",
+    "sel1=s-val1a",
+    "sel1=s-val1b",
+    "sel1=s-val1c",
+    "sel2=s-val2a",
+    "sel2=s-val2b",
+    "sel2=s-val2c",
+    "sel3=s-val3a",
+    "sel3=s-val3b",
+    "sel3=s-val3c",
+    "nv10=nv-val10"]
+}

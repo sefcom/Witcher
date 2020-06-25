@@ -138,19 +138,15 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN echo "export TZ=$TZ" >> /home/wc/.bashrc
 RUN echo "alias cdt='cd /p/webcam/php/tests'" >> /home/wc/.bashrc
 
-#Dash that abends on error when STRICT=1 is set.
+#"Installing" the Witcher's Dash that abends on a parsing error when STRICT=1 is set.
 COPY config/dash /bin/dash
-
-## END angr setup
-#RUN apt-fast install -y php
 
 COPY afl /afl
 ENV AFL_PATH=/afl
 
 COPY --chown=wc:wc helpers/ /helpers/
-COPY --chown=wc:wc wc-phuzz /helpers/wc-phuzz
-RUN chown wc:wc /helpers /helpers/wc-phuzz
-RUN su - wc -c "source /home/wc/.virtualenvs/webcam/bin/activate &&  cd /helpers/wc-phuzz && pip install -e ."
+COPY --chown=wc:wc phuzzer /helpers/phuzzer
+RUN su - wc -c "source /home/wc/.virtualenvs/webcam/bin/activate &&  cd /helpers/phuzzer && pip install -e ."
 
 COPY --chown=wc:wc wclibs /wclibs
 
