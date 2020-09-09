@@ -111,3 +111,5 @@ venv.bak/
 
 #AFL file names with :
 *:*
+
+ShellParser
