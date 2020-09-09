@@ -39,7 +39,7 @@ class AppData{
     }
 
     loadDataFromJSON() {
-        let json_fn = path.join(this.base_appdir, "sifter_data.json");
+        let json_fn = path.join(this.base_appdir, "request_data.json");
 
         if (fs.existsSync(json_fn)) {
             console.log(" ************************* LOADING INCOMING ******************************");
@@ -398,7 +398,7 @@ class AppData{
     save() {
         //await exerciseTarget(page, new URL(key));
         let jdata = JSON.stringify({requestsFound: this.requestsFound, inputSet: Array.from(this.inputSet)});
-        fs.writeFileSync(path.join(this.base_appdir, "sifter_data.json"), jdata);
+        fs.writeFileSync(path.join(this.base_appdir, "request_data.json"), jdata);
     }
 }
 
@@ -475,7 +475,7 @@ class RequestExplorer {
         this.getConfigData();
     }
     getConfigData(){
-        let json_fn = path.join(this.base_appdir,"test_data.json");
+        let json_fn = path.join(this.base_appdir,"witcher_config.json");
         if (fs.existsSync(json_fn)){
             let jstrdata = fs.readFileSync(json_fn);
             this.loginData = JSON.parse(jstrdata)["request_crawler"];

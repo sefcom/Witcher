@@ -168,19 +168,10 @@ static void afl_forkserver() {
     //cgi_get_shm_mem();
 
     if (!afl_area_ptr) return;
-
-    /* Tell the parent that we're alive. If the parent doesn't want
-       to talk, assume that we're not running in forkserver mode. */
-//    FILE *forklog = fopen("/tmp/fork.log","w+");
-//
-//    //afl_area_ptr[0] = 1;
-//
-//    fprintf(myfp,"\t\tRunning forker now %d %d %p \n", afl_area_ptr[0], afl_area_ptr);
-//    fclose(myfp);
     if (write(FORKSRV_FD + 1, tmp, 4) != 4) return;
 
     afl_forksrv_pid = getpid();
-    //printf("\tPARENT pid = %d\n", afl_forksrv_pid);
+
     /* All right, let's await orders... */
     int claunch_cnt = 0;
     while (1) {
@@ -200,7 +191,7 @@ static void afl_forkserver() {
         close(t_fd[1]);
         claunch_cnt ++;
         child_pid = fork();
-        printf("\t\t\tFing FORKIT!\n");
+
         fflush(stdout);
         if (child_pid < 0) exit(4);
 
@@ -238,15 +229,7 @@ static void afl_forkserver() {
             printf("\t\tExiting Parent %d with 6\n", child_pid);
             exit(6);
         }
-//        if (WIFEXITED(status)) {
-//            printf("exited, status=%d\n", WEXITSTATUS(status));
-//        } else if (WIFSIGNALED(status)) {
-//            printf("killed by signal %d\n", WTERMSIG(status));
-//        } else if (WIFSTOPPED(status)) {
-//            printf("stopped by signal %d\n", WSTOPSIG(status));
-//        } else if (WIFCONTINUED(status)) {
-//            printf("continued\n");
-//        }
+
         //printf("\t\tStats from child (%d) is %d \n", child_pid, status);
         if (write(FORKSRV_FD + 1, &status, 4) != 4) {
             printf("\t\tExiting child %d with 7\n", child_pid);

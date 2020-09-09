@@ -21,8 +21,7 @@ shift
 
 testver=$1
 if [[ -z $testver ]]; then
-    echo "The name of the type of features to use must be included "
-    exit 9
+    testver="EXWICHR"
 fi
 
 WC_LIST_TESTVERS="AFLR AFLHR WIC WICH WICR WICHR EXWIC EXWICR EXWICH EXWICHR "
@@ -35,12 +34,12 @@ else
 fi
 shift
 
-loc="/p/webcam/$wc_type/tests/$appname"
-echo "Found location: $loc"
+apptestdir_at="/p/Witcher/$wc_type/tests/$appname"
+echo "Found apptestdir_at : $apptestdir_at"
 
 function get_config_val(){
 
-    got_val=$(cat ${loc}/test_data.json |jq .${1}|tr -d '"'|sed 's/null//g')
+    got_val=$(cat ${apptestdir_at}/test_data.json |jq .${1}|tr -d '"'|sed 's/null//g')
 
     if [[ -z ${got_val} ]]; then
         echo "${2}"
@@ -57,8 +56,9 @@ timeout=$(get_config_val "timeout" 14400 )
 first=""
 single_script=""
 skip_build=false
-results_at="/p/webcam/results"
-
+results_at="/p/Witcher/results"
+dev_options="-v /p:/p "
+no_run="--no-run"
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -66,15 +66,18 @@ do
     case $key in
         --first)
             first="--first"
-
+        ;;
+        --prod|--production)
+          dev_options=""
+          no_run=""
         ;;
         --cpustart|--cpu-start)
             cpu_start=$2
             echo "Using provided argument and cpu_start is now ${cpu_start}"
             shift
         ;;
-        --single|--single-script)
-            single_script=$2
+        --single|--single-script|target)
+            single_script="--target $2"
             shift
         ;;
         --skip-build)
@@ -128,11 +131,8 @@ PORT2=$(( 5000 + next_ip ))
 
 echo "New Container name will be : $container_name"
 if [[ ${skip_build} == false ]];then
-    cd "/p/webcam/$wc_type"
-    docker build -t webcam/${wc_type} .
-
-    cd ${loc}
-    docker build -t webcam/${wc_type}/${appname} .
+    cd ${apptestdir_at}
+    docker build -t witcher/${wc_type}/${appname} .
 fi
 
 #wc_cnt=$(docker ps --format "{{.Names}} " |grep "^wc-"|wc -l)
@@ -143,17 +143,20 @@ else
     echo "CPU start = ${cpu_start}"
 fi
 
-echo CPU_START=${cpu_start}
+echo CPU_START="--affinity ${cpu_start}"
 
-docker run -id --privileged --rm -p ${PORT1}:80 -p ${PORT2}:5900 --name ${container_name} \
-          -v ${results_at}:/results       \
+sudo chmod 777 ${results_at}
+
+docker run -id --privileged --tmpfs /tmp --rm -p ${PORT1}:80 -p ${PORT2}:5900 --name ${container_name} \
+          -v ${results_at}:/results           \
+          -v ${apptestdir_at}:/test           \
+          ${dev_options}                      \
           -e CONTAINER_NAME=${container_name} \
           -e WC_TEST_VER=${testver}           \
-          -e WC_CORES=${cores}                \
-          -e WC_TIMEOUT=${timeout}            \
+          -e WC_NO_RUN=${no_run}              \
           -e WC_FIRST=${first}                \
           -e WC_SET_AFFINITY=$cpu_start       \
           -e WC_SINGLE_SCRIPT=$single_script  \
-          webcam/${wc_type}/${appname}
+          witcher/${wc_type}/${appname}
 
 echo "Created container : $container_name"
