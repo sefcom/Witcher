@@ -1,0 +1,17 @@
+{
+  "requestsFound": {
+    "GET http://localhost/": {
+      "_id": 1,
+      "_urlstr": "http://localhost/JavaWitcherHello/ServeMe?c=001",
+      "_url": "http://localhost/JavaWitcherHello/ServeMe?c=001",
+      "_resourceType": "document",
+      "_method": "GET",
+      "_postData": "",
+      "key": "GET http://localhost/JavaWitcherHello/ServeMe?b=9"
+    }
+  },
+  "inputSet": [
+    "A=1",
+    "B=4"
+    ]
+}

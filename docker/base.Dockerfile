@@ -16,7 +16,7 @@ RUN apt-get install -y aria2 curl wget virtualenvwrapper
 RUN apt-get install -y git
 
 #APT-FAST installation
-RUN /bin/bash -c "$(curl -sL https://git.io/vokNn)"
+RUN /bin/bash -c "$(curl -sL https://git.io/vokNn) "
 RUN apt-fast update
 
 RUN apt-fast -y upgrade
@@ -32,7 +32,7 @@ RUN apt-fast install -y git build-essential  binutils-multiarch nasm \
                         # x86 Libraries
                         libc6:i386 libgcc1:i386 libstdc++6:i386 libtinfo5:i386 zlib1g:i386 \
                         #python 3
-                        python3-pip python3-pexpect \
+                        python3-pip python3-pexpect ipython3 \
                         #Utils
                         sudo openssh-server automake rsync net-tools netcat openssh-client \
                         ccache make g++-multilib pkg-config coreutils rsyslog \
@@ -45,6 +45,7 @@ RUN apt-fast install -y git build-essential  binutils-multiarch nasm \
                         afl qemu gdb \
                         # web
                         apache2 apache2-dev supervisor
+
 
 RUN rm -rf /var/lib/mysql
 RUN  /usr/sbin/mysqld --initialize-insecure
@@ -136,8 +137,11 @@ RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  cd /helper
 COPY --chown=wc:wc witcher /witcher/
 RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  cd /witcher && pip install -e ."
 
+RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate && pip install ipython "
 COPY --chown=wc:wc wclibs /wclibs
 COPY --chown=wc:wc bins /bins
+
+COPY --chown=wc:wc httpreqr /httpreqr
 
 ENV CONTAINER_NAME="witcher"
 ENV WC_TEST_VER="EXWICHR"

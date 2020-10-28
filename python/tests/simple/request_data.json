@@ -1,0 +1,17 @@
+{
+  "requestsFound": {
+    "GET http://localhost/": {
+      "_id": 1,
+      "_urlstr": "http://localhost/?A=1",
+      "_url": "http://localhost/?A=1",
+      "_resourceType": "document",
+      "_method": "GET",
+      "_postData": "",
+      "key": "GET http://localhost/"
+    }
+  },
+  "inputSet": [
+    "A=1",
+    "B=4"
+    ]
+}

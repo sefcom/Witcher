@@ -1,0 +1,48 @@
+{
+  "testname": "simpletest",
+  "war_path": "/p/Witcher/java/tests/JavaWitcherHello.war",
+  "afl_inst_interpreter_binary": "/",
+  "wc_inst_interpreter_binary": "/httpreqr/httpreqr",
+  "binary_options": "--url @@url@@",
+  "init_info_shm": "/httpreqr/httpreqr --initmemory",
+  "server_cmd": ["/opt/tomcat/port_@@PORT_INCREMENT@@/bin/catalina.sh","run"],
+  "server_env_vars": {"LD_PRELOAD":"/lib/libsqlcatch.so","PORT": "@@PORT_INCREMENT@@", "WEBPORT": "@@PORT_INCREMENT@@","JAVA_HOME": "/jdk","SHOW_WITCH": "1","STRICT": "1","JDK_JAVA_OPTIONS":"-XX:+WitcherInstrumentation"},
+  "server_delay": "20",
+  "base_url": "http://localhost/",
+  "afl_path": "/afl",
+  "run_timeout":10000,
+  "ld_library_path":"/wclibs",
+  "afl_preload":"",
+  "number_of_trials": 1,
+  "number_of_refuzzes": 3,
+  "timeout" : 3600,
+  "script_skip_list": [],
+  "script_random_order": 0,
+  "cores": 3,
+  "request_crawler": {
+    "form_url" : "http://localhost/interface/login/login.php?site=default",
+    "usernameSelector": "#authUser",
+    "usernameValue": "admin",
+    "passwordSelector": "#clearPass",
+    "passwordValue": "password",
+    "submitType": "enter",
+    "positiveLoginMessage": "title=\"Current user\"",
+    "method": "POST",
+    "form_selector": ".form-login",
+    "form_submit_selector": "input[type=submit]",
+    "ignoreValues": [],
+    "urlUniqueIfValueUnique": []
+  },
+
+  "direct":{
+    "url": "NO_LOGIN",
+       "postData": "",
+    "getData": "",
+    "method": "POST",
+    "cgiBinary": "/php/php-cgi-mysqli-wc",
+    "loginSessionCookie" : "",
+    "mandatoryGet": "",
+    "extra_authorized_requests": []
+  }
+
+}

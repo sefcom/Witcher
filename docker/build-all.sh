@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [[ -z ${1} ]]; then
-    builds=( "base" "php7" "php5" "php5/tests/wackopicko" )
+    builds=( "base" "php7" "php5" "php5/tests/wackopicko" "python" "ruby" "java" )
 else
     builds=( "$@" )
 fi

@@ -1,0 +1,8 @@
+jdksrc/test
+jdksrc/src
+jdksrc/make
+jdksrc/build/linux-x86_64-normal-server-release/hotspot
+jdksrc/build/linux-x86_64-normal-server-release/buildtools
+jdksrc/build/linux-x86_64-normal-server-release/configure-support
+
+

@@ -33,6 +33,7 @@ struct test_process_info {
     int port = 0;
     int reqr_process_id;
     int process_id=0;
+    int start_recording=0;
     char error_type[20]; /* SQL, Command */
     char error_msg[100];
 };
@@ -43,6 +44,8 @@ test_process_info *test_process_info_ptr;
 test_process_info *this_test_process_info;
 bool isparent = true;
 int tbd_shm_id = 0;
+static unsigned char *afl_area_ptr =0;
+int fake_afl_shm_id =0;
 
 string ToHex(const string& s, bool upper_case /* = true */)
 {
@@ -54,7 +57,7 @@ string ToHex(const string& s, bool upper_case /* = true */)
   return ret.str();
 }
 class RequestData {
-    string url, cookies, gets, posts, method;
+    string url, cookies="", gets="", posts="", method;
     bool json = false;
 public:
     RequestData(string urlIn){
@@ -62,14 +65,18 @@ public:
     }
     void loadVariableData(){
       int inputcount = 0;
+      cout << "Loading variable data :: " << endl;
       for (string line; getline(std::cin, line, '\x00');) {
+        cout << ToHex(line, true) << endl;
         if (inputcount == 0){
           cookies = line;
+          //cookies = "";
         } else if (inputcount == 1){
           gets = line;
+          //gets = "b=/++";
         } else if (inputcount == 2){
           posts = string(line);
-          cout << ToHex(line, true) << endl;
+          //posts = "";
         }
         inputcount++;
       }
@@ -87,7 +94,7 @@ public:
       if (gets.size() == 0){
         return url;
       } else {
-        return url + "?" + gets;
+        return url + "?" +  gets;
       }
     }
     bool hasCookies(){
@@ -239,7 +246,7 @@ void sendRequest(RequestData *reqD ){
     cout << "in da curl" << endl;
     reqD->loadVariableData();
     cout << "in da curl" << endl;
-    cout << reqD->getPosts() << endl;
+    //cout << reqD->getPosts() << endl;
 
     cout << "Cookies = " << reqD->getCookies() << endl << "gets = " << reqD->getGets() << endl << "posts = '" << reqD->getPosts() << "'" << endl << "PORT=" << reqD->getPort() << endl;
 
@@ -273,7 +280,7 @@ void sendRequest(RequestData *reqD ){
       assert (CURLE_OK == curl_easy_setopt(curl, CURLOPT_COOKIE, reqD->getCookies().c_str()));
     }
     if (reqD->hasPosts()){
-      printf("[WC][main] sending '%s'\n", reqD->getPosts().c_str());
+      printf("[WC][main] sending POST '%s'\n", reqD->getPosts().c_str());
 
       // POSTFIELDSIZE needs to be before COPYPOSTFIELDS
       curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t) reqD->getPosts().size());
@@ -281,6 +288,7 @@ void sendRequest(RequestData *reqD ){
       headers = curl_slist_append(headers, reqD->getContentType().c_str());
 
     }
+    cout << "[WC][main] URL=" << reqD->getURL() << endl;
 
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
@@ -347,7 +355,7 @@ static void recvAFLRequests(RequestData *reqD) {
 
   int parent_pid = getpid();
   //cgi_get_shm_mem();
-  printf("[WC][FORK]Starting up Forker %d \n", parent_pid);
+  printf("[WC][FORK]Starting up Forker %d __AFL_SHM_ID=%s\n", parent_pid, getenv("__AFL_SHM_ID"));
   bool infinite = true;
 
   if (write(FORKSRV_FD + 1, tmp, 4) != 4) {
@@ -393,6 +401,7 @@ static void recvAFLRequests(RequestData *reqD) {
 
       isparent=false;
       std::string cpid = std::to_string(getpid());
+
       setenv("AFL_CHILD_PID", cpid.c_str(),1);
       printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d current process IS the child, pid == %d\033[0m\n", claunch_cnt,  getpid());
       afl_fork_child = 1;
@@ -403,13 +412,14 @@ static void recvAFLRequests(RequestData *reqD) {
       int shm_id = atoi(id_str.c_str());
 
       //shm_id = shmget(449988, 65536, 0666);
-      static unsigned char *afl_area_ptr = (unsigned char*)  shmat(shm_id, NULL, 0);
+      afl_area_ptr = (unsigned char*)  shmat(shm_id, NULL, 0);
 
       printf("[WC][CHILD-FORK] AFL_SHM_ID  = %x, AFL ptr = %p trace_value=%d \n", shm_id, afl_area_ptr, afl_area_ptr[0]);
-
+      this_test_process_info->start_recording=1;
       sendRequest(reqD);
       checkForServerErrors(reqD->getPort());
       printf("[WC][CHILD-FORK] Error information => %s\n", this_test_process_info->error_type);
+
       return;
 
     }
@@ -421,6 +431,7 @@ static void recvAFLRequests(RequestData *reqD) {
     printf("[WC][PARENT-FORK]\t\tCheck for child status from Parent %d for %d \n", getpid(), child_pid);
 
     this_test_process_info->reqr_process_id = child_pid;
+
 
     printf("[WC][PARENT-FORK]\t\tCheck for child status from Parent %d for %d \n", getpid(), this_test_process_info->reqr_process_id);
 
@@ -445,7 +456,21 @@ static void recvAFLRequests(RequestData *reqD) {
     elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
     cout << "[WC][PARENT-FORK]\t\tChild exec of " << child_pid << " completed, completed in " << elapsed << " checking exit status, status=" << WEXITSTATUS(status) << " signal=" <<  WTERMSIG(status) << endl;
+    this_test_process_info->start_recording=0;
+    cout << "\033[36mAFL_ID = " << dec  << this_test_process_info->afl_id <<"\033[0m\n";
+    int memcnt=0;
+    if (this_test_process_info->afl_id){
+        if (afl_area_ptr == NULL){
+            afl_area_ptr = (unsigned char*) shmat(this_test_process_info->afl_id, NULL, 0);
+        }
+        for (int x=0; x < 65536; x++){
+            if (afl_area_ptr[x] != 0){
+                memcnt++;
+            }
+        }
+    }
 
+    printf("\033[36mMEMCNT from run is %d\n\033[0m", memcnt);
     if (WIFEXITED(status)) {
       printf("\t\t\tRESULTS exited, status=%d signal=%d, total_val=%d\n", WEXITSTATUS(status), WTERMSIG(status), status);
     } else if (WIFSIGNALED(status)) {
@@ -481,30 +506,34 @@ static void recvAFLRequests(RequestData *reqD) {
 //
 //}
 void remove_shm(){
-    if (isparent){
-        this_test_process_info->initialized = 0;
-        this_test_process_info->port = 0;
-        this_test_process_info->afl_id = 0;
-        this_test_process_info->process_id = 0;
-        //memset(test_process_info_ptr, 0, TEST_PROCESS_INFO_SMM_SIZE);
-        //shmctl(tbd_shm_id, IPC_RMID, NULL);
-        printf("[Witcher] Cleaned up and exitting.\n");
-    }
+//    if (isparent){
+//        this_test_process_info->initialized = 0;
+//        this_test_process_info->port = 0;
+//        this_test_process_info->afl_id = 0;
+//        this_test_process_info->process_id = 0;
+//        //memset(test_process_info_ptr, 0, TEST_PROCESS_INFO_SMM_SIZE);
+//        //shmctl(tbd_shm_id, IPC_RMID, NULL);
+//        if (fake_afl_shm_id != 0){
+//          shmctl(fake_afl_shm_id, IPC_RMID, NULL);
+//        }
+//
+//        printf("[Witcher] Cleaned up and exitting.\n");
+//    }
+
 }
 void signal_handler(int signal){
     printf("[Witcher] caught signal, kill shm region up and exitting.\n");
     exit(33);
 }
-void setupErrorMem(int port){
-    bool inited = false;
-
+void initMemory(bool setToZero){
     key_t mem_key = ftok("/tmp",'W');
     printf("*** mem_key %x \n", mem_key);
     int shm_id = shmget(mem_key , TEST_PROCESS_INFO_SMM_SIZE, 0666);
     if (shm_id < 0 ) {
         shm_id = shmget(mem_key , TEST_PROCESS_INFO_SMM_SIZE, IPC_CREAT | 0666);
         if (shm_id < 0 ) {
-            printf("*** shmget error (server) ***\n");
+            //printf("*** shmget error (server) ***\n");
+            perror("*** shmget error (server) *** ERROR: ");
             exit(1);
         }
     }
@@ -515,24 +544,34 @@ void setupErrorMem(int port){
          printf("*** shmat attaching error (server) ***\n");
          exit(2);
     }
-    atexit(remove_shm);
+    //atexit(remove_shm);
     printf("*** test_process_info_ptr = %p\n", test_process_info_ptr);
+    if (setToZero){
+        printf("\033[34m RESETTING SHARED MEMORY \n\033[0m");
+        memset(test_process_info_ptr, 0, TEST_PROCESS_INFO_SMM_SIZE);
+    }
+
+}
+void setupErrorMem(int port){
+    bool inited = false;
+
+    initMemory(false);
+
     for (int x=0; x < TEST_PROCESS_INFO_MAX_NBR; x++){
         if (test_process_info_ptr[x].initialized == 31337){
             inited = true;
             break;
         }
     }
-    if (!inited){
-        memset(test_process_info_ptr, 0, TEST_PROCESS_INFO_SMM_SIZE);
-    }
-    
+
     for (int x=0; x < TEST_PROCESS_INFO_MAX_NBR; x++){
         if (test_process_info_ptr[x].initialized != 31337){
             this_test_process_info = test_process_info_ptr + x;
             break;
         }
     }
+
+    printf("\033[36m*** process info for this port = %p\033[0m\n", test_process_info_ptr);
     this_test_process_info->initialized = 31337;
     this_test_process_info->port = port;
 
@@ -540,7 +579,13 @@ void setupErrorMem(int port){
     if (afl_shm_loc){
         this_test_process_info->afl_id = atoi(afl_shm_loc);
     } else {
-        this_test_process_info->afl_id = 0;
+        fake_afl_shm_id =  shmget(port , 65536, IPC_CREAT | 0666);
+        this_test_process_info->afl_id = fake_afl_shm_id;
+    }
+    for (int x=0; x < TEST_PROCESS_INFO_MAX_NBR; x++){
+        if (test_process_info_ptr[x].initialized == 31337){
+            printf("\033[36m*** TEST_DATA: port=%d, afl_id=%d\033[0m\n", this_test_process_info->port, this_test_process_info->afl_id);
+        }
     }
 }
 
@@ -554,6 +599,13 @@ int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
+
+  bool doInitMemory = getArg(argc, argv, "--initmemory");
+
+  if (doInitMemory){
+    initMemory(true);
+    return 0;
+  }
 
   string url = getArg(argc, argv, "--url", true);
   if (url.size() == 0 ){
@@ -569,7 +621,7 @@ int main(int argc, char *argv[])
 
   reqD->setMethod(method);
   reqD->setJSON(json);
-  cout << "TEST " << reqD->getPort() << endl;
+  cout << "TEST " << reqD->getURL() << " Using port:" << reqD->getPort() << endl;
 
   setupErrorMem(stoi(reqD->getPort()));
 

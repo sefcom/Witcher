@@ -1,0 +1,44 @@
+{
+  "testname": "simpletest",
+  "afl_inst_interpreter_binary": "/",
+  "wc_inst_interpreter_binary": "/httpreqr/httpreqr",
+  "binary_options": "--url @@url@@",
+  "server_cmd": ["/home/wc/.virtualenvs/pywitch/bin/python3","/home/wc/.virtualenvs/pywitch/bin/flask", "run"],
+  "server_env_vars": {"FLASK_RUN_PORT": "@@PORT@@", "FLASK_APP":"/p/Witcher/python/tests/simple/simple_flask.py" },
+  "base_url": "http://localhost/",
+  "afl_path": "/afl",
+  "ld_library_path":"/wclibs",
+  "afl_preload":"",
+  "number_of_trials": 1,
+  "number_of_refuzzes": 3,
+  "timeout" : 300,
+  "script_skip_list": [],
+  "script_random_order": 0,
+  "cores": 3,
+  "request_crawler": {
+    "form_url" : "http://localhost/interface/login/login.php?site=default",
+    "usernameSelector": "#authUser",
+    "usernameValue": "admin",
+    "passwordSelector": "#clearPass",
+    "passwordValue": "password",
+    "submitType": "enter",
+    "positiveLoginMessage": "title=\"Current user\"",
+    "method": "POST",
+    "form_selector": ".form-login",
+    "form_submit_selector": "input[type=submit]",
+    "ignoreValues": [],
+    "urlUniqueIfValueUnique": []
+  },
+
+  "direct":{
+    "url": "NO_LOGIN",
+       "postData": "",
+    "getData": "",
+    "method": "POST",
+    "cgiBinary": "/php/php-cgi-mysqli-wc",
+    "loginSessionCookie" : "",
+    "mandatoryGet": "",
+    "extra_authorized_requests": []
+  }
+
+}

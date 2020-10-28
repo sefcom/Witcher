@@ -1,0 +1,20 @@
+[
+  {
+    "name": "roenthal",
+    "ip": "192.168.0.230",
+    "port": "22",
+    "private_key": "c:\\Users\\erik\\shadowrun_rsa",
+    "username": "ubuntu",
+    "start_phuzzer": "python -m phuzzer ",
+    "heartbeat_freq": 60
+  },
+  {
+    "name": "petricus",
+    "ip": "thephuzz.trickel.com",
+    "port": "9222",
+    "private_key": "c:\\Users\\erik\\shadowrun_rsa",
+    "username": "ubuntu",
+    "start_phuzzer": "python -m phuzzer ",
+    "heartbeat_freq": 60
+  }
+]

@@ -2,12 +2,14 @@ from phuzzer.reporter import Reporter
 from urllib.parse import urlparse, urlunparse
 from datetime import datetime
 from phuzzer import Phuzzer
+import subprocess
 import pathlib
 import random
 import shutil
 import signal
 import time
 import json
+import glob
 import sys
 import os
 
@@ -15,6 +17,8 @@ class Witcher():
     AFLR, AFLHR, WICH, WICR, WICHR, EXWIC, EXWICH, EXWICHR, DEV = "AFLR", "AFLHR", "WICH", "WICR", "WICHR", "EXWIC", "EXWICH", "EXWICHR", "DEV"
     CONFIGURATIONS = ["AFLR", "AFLHR", "WICH", "WICR", "WICHR", "EXWIC", "EXWICH", "EXWICHR", "DEV"]
     WORKING_DIR = os.path.join("/tmp", "output")
+
+
 
     def __init__(self, args):
         random.seed(90210)
@@ -58,12 +62,17 @@ class Witcher():
         self.run_timeout = int(self.jconfig.get("run_timeout", 200))
         self.use_qemu = self.jconfig.get("use_qemu")
         self.server_cmd = self.jconfig.get("server_cmd", None)
+        self.init_info_shm = self.jconfig.get("init_info_shm", None)
+        self.war_path = self.jconfig.get("war_path",None)
+        self.server_base_port = 14000
 
         self.server_env_vars = self.jconfig.get("server_env_vars", {})
         print(self.server_env_vars)
         self.binary_options = self.jconfig.get("binary_options").split(" ")
-
+        self.server_procs = []
         self.kill = False
+
+        self.create_war_filter()
 
     def save_filesdata(self):
         json.dump(self.fuzz_campaign_status,open(self.fuzz_campaign_status_fn,"w"))
@@ -182,17 +191,60 @@ class Witcher():
         #open(self.dictionary_fn,"w").write(dictionary_vars)
         return dictionary_vars
 
+    def init_shared_memory(self):
+        if self.init_info_shm:
+            subprocess.check_call(self.init_info_shm.split(" "))
+            print(f"Initalized Shared Memory using '{self.init_info_shm}'")
+
+    def start_external_servers(self):
+        if self.server_cmd is not None:
+            print("Starting up servers")
+            increasing_port = self.server_base_port
+            for icnt in range(0, self.cores):
+                server_cmd = []
+                for cmd in self.server_cmd:
+                    cmd = cmd.replace("@@PORT@@", str(self.server_base_port))
+                    cmd = cmd.replace("@@PORT_INCREMENT@@", str(increasing_port))
+
+                    server_cmd.append(cmd)
+
+                server_env_vars = os.environ.copy()
+
+                for envkey, envval in self.server_env_vars.items():
+                    if "@@PORT_INCREMENT@@" in envval:
+                        envval = envval.replace("@@PORT_INCREMENT@@", str(increasing_port))
+                    server_env_vars[envkey] = envval
+                print(f"CMD = {' '.join(server_cmd)}")
+                #print(f"SERVER_ENV_VARS={server_env_vars}")
+                outfile = open(f"/tmp/server_{increasing_port}.out","w")
+                self.server_procs.append(subprocess.Popen(server_cmd, env=server_env_vars, stdout=outfile,
+                                                          stderr=outfile, close_fds=True))
+                increasing_port = increasing_port + 1
+
+            print("Giving servers a chance to come up")
+            time.sleep(10)
+            print("Servers, should be up")
+
+    def kill_servers(self):
+
+        for server in self.server_procs:
+            server.kill()
+
     def start_fuzzer(self, do_resume, target_path, method_map, dictionary_str, seeds):
 
         os.environ["method_map"] = method_map
         os.environ["SCRIPT_FILENAME"] = target_path
+        if target_path.startswith("http"):
+            binary_options = self.change_url_to_target(target_path)
+            print(f"NEW BIN OPTS {binary_options}")
+        else:
+            binary_options = self.binary_options
 
-        fuzzer = Phuzzer.phactory(phuzzer_type=Phuzzer.WITCHER_AFL, target=self.fuzzer_target_binary, target_opts=self.binary_options,
+        fuzzer = Phuzzer.phactory(phuzzer_type=Phuzzer.WITCHER_AFL, target=self.fuzzer_target_binary, target_opts=binary_options,
                                   work_dir=Witcher.WORKING_DIR, seeds=seeds, afl_count=self.cores,
                                   create_dictionary=False, timeout=self.timeout, memory=self.memory,
                                   run_timeout=self.run_timeout, dictionary=dictionary_str,
-                                  use_qemu=self.use_qemu, resume=do_resume, login_json_fn=self.config_loc,
-                                  server_cmd=self.server_cmd, server_env_vars=self.server_env_vars)
+                                  use_qemu=self.use_qemu, resume=do_resume, login_json_fn=self.config_loc)
         reporter = Reporter(self.fuzzer_target_binary, self.report_dir, self.cores, self.first_crash, self.timeout,
                             fuzzer.work_dir)
 
@@ -224,6 +276,7 @@ class Witcher():
             end_reason = "Keyboard Interrupt"
             print("\n[*] Aborting wait. Ctrl-C again for KeyboardInterrupt.")
             self.kill = True
+
         except Exception as e:
             end_reason = "Exception occurred"
             print("\n[*] Unknown exception received (%s). Terminating fuzzer." % e)
@@ -231,6 +284,7 @@ class Witcher():
             raise
         finally:
             print("[*] Terminating fuzzer.")
+            self.kill_servers()
             reporter.stop()
             fuzzer.stop()
 
@@ -282,6 +336,60 @@ class Witcher():
                 return True
         return False
 
+    def change_url_to_target(self, target):
+        url = urlparse(target)
+        netloc = url.netloc
+        if ":" in netloc:
+            netloc = netloc[0: netloc.find(":")]
+        netloc = f"{netloc}:@@PORT_INCREMENT@@"
+        url = url._replace(netloc=netloc)
+        strurl=urlunparse(url)
+        out_opts = []
+        for cmdopt in self.binary_options:
+            out_opts.append(cmdopt.replace("@@url@@", strurl))
+        return out_opts
+
+
+    def create_war_filter(self):
+        if self.war_path:
+            filelist = subprocess.check_output(["jar","-tf",self.war_path])
+            filelist = filelist.decode().split("\n")
+            print(filelist)
+            with open("/dev/shm/javafilters.dat", "w") as jfilters:
+                for f in filelist:
+                    if f.endswith(".class"):
+                        classfn = f.replace("WEB-INF/", "").replace("classes/","").replace("/",".").replace(".class","")
+                        jfilters.write(classfn + "\n")
+                        print(classfn)
+                    if f.endswith(".jsp"):
+                        jspclassfn = f.replace(".jsp","_jsp").replace("/",".")
+                        jspclassfn = f"org.apache.jsp.{jspclassfn}"
+                        jfilters.write(jspclassfn + "\n")
+                        print(jspclassfn)
+        # for dirpath in glob.iglob(os.path.join(TOMCAT_PATH, "webapps")):
+        #     with open("/dev/shm/javafilters.dat", "w") as jfilters:
+        #         if os.path.isdir(dirpath):
+        #             appdirname = os.path.basename(dirpath)
+        #             classpath = os.path.join(dirpath, "WEB-INF", "classes")
+        #             for webfile in glob.iglob(classpath + "/*.class", recursive=True):
+        #                 if os.path.isfile(webfile):
+        #                     class_fn = webfile.replace(classpath, "")
+        #                     class_fn = class_fn.replace(".class","")
+        #                     class_fn = class_fn.replace("/",".")
+        #                     jfilters.write(class_fn + "\n")
+        #                     print(class_fn)
+        #             workpath = os.path.join(TOMCAT_PATH, "work","Catalina","localhost", appdirname)
+        #             for webfile in glob.iglob(workpath + "/*.class", recursive=True):
+        #                 if os.path.isfile(webfile):
+        #                     class_fn = webfile.replace(classpath, "")
+        #                     class_fn = class_fn.replace(".class", "")
+        #                     class_fn = class_fn.replace("/", ".")
+        #                     print(class_fn)
+        #                     jfilters.write(class_fn + "\n")
+
+
+
+
     def start_fuzz_campaign(self):
         _environ_backup = os.environ.copy()
         try:
@@ -292,6 +400,9 @@ class Witcher():
             nbr_refuzzes = int(self.jconfig.get("number_of_refuzzes", "1"))
 
             for trial_index in range(0, nbr_trials):
+                self.init_shared_memory()
+                self.start_external_servers()
+
                 print(f"TRIAL INDEX = {trial_index}")
                 self.init_fuzz_campaign_status(trial_index)
                 trial = self.fuzz_campaign_status[trial_index]
@@ -322,6 +433,9 @@ class Witcher():
                         if do_resume:
                             self.copy_fuzzer_results_to_output(trial_index, target['target_path'])
 
+
+
+
                         print(f"FUZZING {target['target_path']} Trial={trial_index}, Refuzz={refuzz_index} last_completed_refuzz={target['last_completed_refuzz']}")
                         seeds = self.create_seeds(target["requests"])
                         dictionary_str = self.create_dictionary(target)
@@ -335,11 +449,12 @@ class Witcher():
                         self.save_campaign_status()
                         sys.stdout.flush()
                         time.sleep(1)
+                self.kill_servers()
 
         except Exception as exp:
             import traceback
             traceback.print_exc()
-
+            self.kill_servers()
         finally:
             os.environ.clear()
             os.environ.update(_environ_backup)
@@ -349,6 +464,7 @@ class Witcher():
                     os.kill(1, signal.SIGQUIT)
                 except Exception as e:
                     print('Could not kill supervisor: ' + e + '\n')
+
 
 
 

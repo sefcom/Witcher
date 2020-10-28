@@ -11,7 +11,9 @@ RUN su - wc -c "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && mkvi
 
 RUN su - wc -c "source /home/wc/.virtualenvs/pywitch/bin/activate && pip install termcolor flask "
 
-CMD /usr/bin/supervisord
+EXPOSE 80
+
+CMD /bin/true && /usr/bin/supervisord
 
 #RUN chmod +x /run-php-test.sh
 
