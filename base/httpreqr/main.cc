@@ -57,7 +57,7 @@ string ToHex(const string& s, bool upper_case /* = true */)
   return ret.str();
 }
 class RequestData {
-    string url, cookies="", gets="", posts="", method;
+    string url, cookies="", gets="", posts="", method, headers="";
     bool json = false;
 public:
     RequestData(string urlIn){
@@ -77,6 +77,8 @@ public:
         } else if (inputcount == 2){
           posts = string(line);
           //posts = "";
+        } else if (inputcount == 3){
+          headers = string(line);
         }
         inputcount++;
       }
@@ -122,7 +124,12 @@ public:
       return posts;
     }
 
-
+    bool hasHeaders(){
+        return headers.size() > 0;
+    }
+    string getHeaders(){
+        return headers;
+    }
     void  format_to_json(const char *str){
 
       char tostr[posts.length()+1]{};
@@ -249,6 +256,7 @@ void sendRequest(RequestData *reqD ){
     //cout << reqD->getPosts() << endl;
 
     cout << "Cookies = " << reqD->getCookies() << endl << "gets = " << reqD->getGets() << endl << "posts = '" << reqD->getPosts() << "'" << endl << "PORT=" << reqD->getPort() << endl;
+    cout << "Headers = " << reqD->getHeaders() << endl;
 
     curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 102400L);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
@@ -289,7 +297,9 @@ void sendRequest(RequestData *reqD ){
 
     }
     cout << "[WC][main] URL=" << reqD->getURL() << endl;
-
+    if (reqD->hasHeaders()){
+        headers = curl_slist_append(headers, reqD->getHeaders().c_str());
+    }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     assert (CURLE_OK == curl_easy_setopt(curl, CURLOPT_URL, reqD->getURL().c_str()));
@@ -341,8 +351,6 @@ bool getArg(int argc, char *argv[], string param){
 
 
 }
-
-
 
 static void recvAFLRequests(RequestData *reqD) {
 
@@ -506,6 +514,8 @@ static void recvAFLRequests(RequestData *reqD) {
 //
 //}
 void remove_shm(){
+    printf("\033[34m RESETTING SHARED MEMORY \n\033[0m");
+    memset(test_process_info_ptr, 0, TEST_PROCESS_INFO_SMM_SIZE);
 //    if (isparent){
 //        this_test_process_info->initialized = 0;
 //        this_test_process_info->port = 0;
@@ -527,9 +537,12 @@ void signal_handler(int signal){
 }
 void initMemory(bool setToZero){
     key_t mem_key = ftok("/tmp",'W');
+    mem_key = TEST_PROCESS_INFO_SHM_ID;
     printf("*** mem_key %x \n", mem_key);
+
     int shm_id = shmget(mem_key , TEST_PROCESS_INFO_SMM_SIZE, 0666);
     if (shm_id < 0 ) {
+        printf("*** creating shm memory %x \n", mem_key);
         shm_id = shmget(mem_key , TEST_PROCESS_INFO_SMM_SIZE, IPC_CREAT | 0666);
         if (shm_id < 0 ) {
             //printf("*** shmget error (server) ***\n");
@@ -544,7 +557,11 @@ void initMemory(bool setToZero){
          printf("*** shmat attaching error (server) ***\n");
          exit(2);
     }
-    //atexit(remove_shm);
+    if (getenv("RESETMEM")){
+        printf("Reseting shared memory!\n");
+        atexit(remove_shm);
+    }
+
     printf("*** test_process_info_ptr = %p\n", test_process_info_ptr);
     if (setToZero){
         printf("\033[34m RESETTING SHARED MEMORY \n\033[0m");
@@ -570,12 +587,16 @@ void setupErrorMem(int port){
             break;
         }
     }
+    if (this_test_process_info == 0){
+        this_test_process_info = test_process_info_ptr;
+    }
 
-    printf("\033[36m*** process info for this port = %p\033[0m\n", test_process_info_ptr);
     this_test_process_info->initialized = 31337;
     this_test_process_info->port = port;
 
+
     char * afl_shm_loc = getenv("__AFL_SHM_ID");
+    printf("\033[36m*** process info @ %p for port %d using AFL %s \033[0m\n", test_process_info_ptr, port, afl_shm_loc);
     if (afl_shm_loc){
         this_test_process_info->afl_id = atoi(afl_shm_loc);
     } else {
