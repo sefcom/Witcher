@@ -4,7 +4,7 @@
 /*
  * sudo aptitude install libcurl4-openssl-dev
  * Compile and run the code
- * # g++ main.cc -o curl_example -lcurl
+ * g++ main.cc -o httpreqr -lcurl
  */
 
 #include <sys/stat.h>
@@ -33,9 +33,9 @@ struct test_process_info {
     int port = 0;
     int reqr_process_id;
     int process_id=0;
-    int start_recording=0;
     char error_type[20]; /* SQL, Command */
     char error_msg[100];
+    bool capture;
 };
 #define TEST_PROCESS_INFO_SHM_ID 0x411911
 #define TEST_PROCESS_INFO_MAX_NBR 100
@@ -84,9 +84,14 @@ public:
       }
     }
     string getPort(){
+      size_t first = url.find(":");
+      size_t portpos = url.find(":", first+1);
+      if (portpos == string::npos){
+        return "80";
+      }
       string port = regex_replace(url, regex("http://.*:([0-9]+).*"), string("$1"));
       if (port.length() == 0){
-        return "80";
+        return "";
       } else {
         return port;
       }
@@ -246,6 +251,10 @@ void sendRequest(RequestData *reqD ){
   CURLcode code(CURLE_FAILED_INIT);
   CURLcode res;
   long timeout = 30;
+  if (getenv("DEBUG")){
+      timeout = 600;
+  }
+
   string readBuffer;
   cout << "SENDING REQUEST " << endl;
   curl = curl_easy_init();
@@ -423,8 +432,9 @@ static void recvAFLRequests(RequestData *reqD) {
       afl_area_ptr = (unsigned char*)  shmat(shm_id, NULL, 0);
 
       printf("[WC][CHILD-FORK] AFL_SHM_ID  = %x, AFL ptr = %p trace_value=%d \n", shm_id, afl_area_ptr, afl_area_ptr[0]);
-      this_test_process_info->start_recording=1;
+      this_test_process_info->capture=true;
       sendRequest(reqD);
+      this_test_process_info->capture=false;
       checkForServerErrors(reqD->getPort());
       printf("[WC][CHILD-FORK] Error information => %s\n", this_test_process_info->error_type);
 
@@ -464,7 +474,7 @@ static void recvAFLRequests(RequestData *reqD) {
     elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
     cout << "[WC][PARENT-FORK]\t\tChild exec of " << child_pid << " completed, completed in " << elapsed << " checking exit status, status=" << WEXITSTATUS(status) << " signal=" <<  WTERMSIG(status) << endl;
-    this_test_process_info->start_recording=0;
+    this_test_process_info->capture=false;
     cout << "\033[36mAFL_ID = " << dec  << this_test_process_info->afl_id <<"\033[0m\n";
     int memcnt=0;
     if (this_test_process_info->afl_id){

@@ -106,6 +106,7 @@ union node *redirnode;
 struct heredoc *heredoc;
 int quoteflag;			/* set if (part of) last token was quoted */
 
+
 STATIC union node *list(int);
 STATIC union node *andor(void);
 STATIC union node *pipeline(void);
@@ -227,7 +228,6 @@ list(int nlflag)
 			return n1;
 		}
 	}
-
 }
 
 
@@ -269,7 +269,6 @@ pipeline(void)
 
 	negate = 0;
 	TRACE(("pipeline: entered\n"));
-
 	if (readtoken() == TNOT) {
 		negate = !negate;
 		checkkwd = CHKKWD | CHKALIAS;
@@ -294,15 +293,12 @@ pipeline(void)
 		n1 = pipenode;
 	}
 	tokpushback++;
-
 	if (negate) {
 		n2 = (union node *)stalloc(sizeof (struct nnot));
 		n2->type = NNOT;
 		n2->nnot.com = n1;
-		TRACE(("pipeline: left???\n"));
 		return n2;
 	} else
-	    TRACE(("pipeline: left???\n"));
 		return n1;
 }
 
@@ -370,7 +366,6 @@ TRACE(("expecting DO got %s %s\n", tokname[got], got == TWORD ? wordtext : ""));
 	case TFOR:
 		if (readtoken() != TWORD || quoteflag || ! goodname(wordtext))
 			synerror("Bad for loop variable");
-
 		n1 = (union node *)stalloc(sizeof (struct nfor));
 		n1->type = NFOR;
 		n1->nfor.linno = savelinno;
@@ -503,10 +498,7 @@ redir:
 		}
 		n1->nredir.redirect = redir;
 	}
-    TRACE(("\033[36mCOMMAND fn: at the end of the command????\033[0m\n"));
-    FILE *logfile = fopen ("/tmp/shelltrace.log","a+");
-    fprintf (logfile, " ]");
-    fclose(logfile);
+
 	return n1;
 }
 
@@ -593,7 +585,6 @@ out:
 	n->ncmd.args = args;
 	n->ncmd.assign = vars;
 	n->ncmd.redirect = redir;
-
 	return n;
 }
 
@@ -709,12 +700,13 @@ readtoken(void)
 {
 	int t;
 	int kwd = checkkwd;
-
+#ifdef DEBUG
 	int alreadyseen = tokpushback;
-
+#endif
 
 top:
 	t = xxreadtoken();
+
 	/*
 	 * eat newlines
 	 */
@@ -753,18 +745,11 @@ top:
 	}
 out:
 	checkkwd = 0;
-	if (!alreadyseen && getenv("DOLOG")) {
-	    FILE *logfile = fopen ("/tmp/shelltrace.log","a+");
-	    fprintf (logfile, "'%s',", t == TWORD ? wordtext :  tokname[t]);
-        fclose(logfile);
-    }
-
 #ifdef DEBUG
 	if (!alreadyseen)
-
 	    TRACE(("token %s %s\n", tokname[t], t == TWORD ? wordtext : ""));
-//	else
-//	    TRACE(("reread token %s %s\n", tokname[t], t == TWORD ? wordtext : ""));
+	else
+	    TRACE(("reread token %s %s\n", tokname[t], t == TWORD ? wordtext : ""));
 #endif
 	return (t);
 }
@@ -1562,10 +1547,30 @@ STATIC void
 synerror(const char *msg)
 {
     errlinno = plinno;
+    char *strict = getenv("STRICT");
+    if (! strict){
+        char *fname = "/tmp/witcher.env";
+        if( access( fname, F_OK ) == 0 ) {
+            FILE *envf = fopen(fname,"r");
+            char val[257], ch;
+            int charindex = 0;
 
-    if (getenv("STRICT"))
+            if (envf){
+                while((ch = fgetc(envf)) != EOF && charindex < 256) {
+                    val[charindex] = ch;
+                    charindex++;
+                }
+                if (strstr(val, "STRICT")){
+                      strict = val+7;
+                }
+
+
+            }
+        }
+    }
+    if (strict)
     {
-       int strictval = atoi(getenv("STRICT"));
+       int strictval = atoi(strict);
        int ppid = getppid();
        if (strictval == 1){
 	   printf("sending SIGUSR1 (30) to self \n");
@@ -1627,8 +1632,6 @@ expandstr(const char *ps)
 
 	saveprompt = doprompt;
 	doprompt = 0;
-
-    printf("Witcher expandstr ps = %s\n", ps);
 
 	readtoken1(pgetc_eatbnl(), DQSYNTAX, FAKEEOFMARK, 0);
 
