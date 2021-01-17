@@ -249,7 +249,6 @@ void checkForServerErrors(string port){
 void sendRequest(RequestData *reqD ){
   CURL *curl;
   CURLcode code(CURLE_FAILED_INIT);
-  CURLcode res;
   long timeout = 30;
   if (getenv("DEBUG")){
       timeout = 600;
@@ -366,9 +365,6 @@ static void recvAFLRequests(RequestData *reqD) {
   static unsigned char tmp[4];
   static struct timespec start, finish;
   double elapsed;
-  unsigned int afl_forksrv_pid = 0;
-  static unsigned char afl_fork_child;
-  static double totaltracetime;
 
   int parent_pid = getpid();
   //cgi_get_shm_mem();
@@ -382,7 +378,6 @@ static void recvAFLRequests(RequestData *reqD) {
     printf("\e[1;32m[WC][FORK]\tWrote to FORKSRV_FD\e[0m\n");
   }
 
-  afl_forksrv_pid = getpid();
   //printf("\tPARENT pid = %d\n", afl_forksrv_pid);
   /* All right, let's await orders... */
   int claunch_cnt = 0;
@@ -421,7 +416,6 @@ static void recvAFLRequests(RequestData *reqD) {
 
       setenv("AFL_CHILD_PID", cpid.c_str(),1);
       printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d current process IS the child, pid == %d\033[0m\n", claunch_cnt,  getpid());
-      afl_fork_child = 1;
       close(FORKSRV_FD);
       close(FORKSRV_FD + 1);
       close(t_fd[0]);
@@ -580,13 +574,10 @@ void initMemory(bool setToZero){
 
 }
 void setupErrorMem(int port){
-    bool inited = false;
-
     initMemory(false);
 
     for (int x=0; x < TEST_PROCESS_INFO_MAX_NBR; x++){
         if (test_process_info_ptr[x].initialized == 31337){
-            inited = true;
             break;
         }
     }
