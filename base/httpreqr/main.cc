@@ -600,7 +600,7 @@ int main(int argc, char *argv[])
 
   string url = getArg(argc, argv, "--url", true);
   if (url.size() == 0 ){
-    printf ("You must provide a url");
+    fprintf(stderr, "You must provide a url\n");
     exit(11);
   }
 
