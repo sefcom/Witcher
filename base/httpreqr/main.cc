@@ -22,6 +22,83 @@
 #include <sys/shm.h>
 #include <csignal>
 
+#define HTTPREQR_ENV_VAR    "__HTTPREQR_SHM_ID"
+struct httpreqr_info {
+    int enable_logging;
+    int reqr_process_id;
+    int magic;
+};
+volatile struct httpreqr_info *httpreqr_info = NULL;
+
+#define TARGET_ENV_VAR "HTTPREQR_LAUNCH_SCRIPT"
+#define LOG(fmt, ...) do { \
+  fprintf(stderr, fmt "\n", ## __VA_ARGS__); \
+} while (0)
+
+static pid_t target_pid;
+
+/*
+ * Launch target specified by TARGET_ENV_VAR
+ */
+pid_t launch_target(void)
+{
+  const char *target_script = getenv(TARGET_ENV_VAR);
+  if ((target_script == NULL) || (strlen(target_script) == 0)) {
+    LOG("Specify launcher script via " TARGET_ENV_VAR);
+    exit(1);
+  }
+
+  pid_t p = fork();
+  if (p != 0) {
+    LOG("[*] Created child: %d", p);
+    return p;
+  }
+
+  LOG("[*] Launching subprocess via system(\"%s\");", target_script);
+  int r = execl("/bin/sh", "sh", "-c", target_script, (char *) NULL);
+  assert(r == -1);
+  LOG("[*] execl failed: %s", strerror(errno));
+  exit(1);
+  return 0;
+}
+
+bool poll_target(pid_t p)
+{
+  int wstatus;
+  pid_t s = waitpid(p, &wstatus, WNOHANG);
+
+  if (s == 0) {
+    /* No change */
+    return false;
+  } else if (s == -1) {
+    LOG("waitpid error");
+    exit(1);
+  } else {
+    assert(s == p);
+  }
+
+  if (WIFSIGNALED(wstatus)) {
+    if (WTERMSIG(wstatus) == SIGINT || WTERMSIG(wstatus) == SIGQUIT) {
+      LOG("[!] Signaled: %d!", WTERMSIG(wstatus));
+      return true;
+    }
+  } else if (WIFEXITED(wstatus)) {
+    LOG("[*] Target exited: %d", WEXITSTATUS(wstatus));
+    return true;
+  } else {
+    LOG("Unhandled exit");
+    assert(0);
+  }
+
+  return false;
+}
+
+
+
+
+
+
+
 #define FORKSRV_FD 198
 #define TSL_FD (FORKSRV_FD - 1)
 
@@ -374,6 +451,11 @@ static void recvAFLRequests(RequestData *reqD) {
   /* All right, let's await orders... */
   int claunch_cnt = 0;
   while (infinite || claunch_cnt < 1) {
+    if (poll_target(target_pid)) {
+      LOG("Target exited...\n");
+      // FIXME: Handle crashing case
+      exit(1);
+    }
 
     pid_t child_pid = -1;
     int status, t_fd[2];
@@ -404,18 +486,26 @@ static void recvAFLRequests(RequestData *reqD) {
       /* Child process. Close descriptors and run free. */
 
       isparent=false;
-      std::string cpid = std::to_string(getpid());
+      child_pid = getpid();
+      std::string cpid = std::to_string(child_pid);
+
+      httpreqr_info->reqr_process_id = child_pid;
 
       setenv("AFL_CHILD_PID", cpid.c_str(),1);
       printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d current process IS the child, pid == %d\033[0m\n", claunch_cnt,  getpid());
       close(FORKSRV_FD);
       close(FORKSRV_FD + 1);
       close(t_fd[0]);
+
+
       string id_str = getenv("__AFL_SHM_ID");
       int shm_id = atoi(id_str.c_str());
 
       //shm_id = shmget(449988, 65536, 0666);
       afl_area_ptr = (unsigned char*)  shmat(shm_id, NULL, 0);
+
+      // Set a bit so AFL doesn't give up
+      afl_area_ptr[0] = 1;
 
       printf("[WC][CHILD-FORK] AFL_SHM_ID  = %x, AFL ptr = %p trace_value=%d \n", shm_id, afl_area_ptr, afl_area_ptr[0]);
       this_test_process_info->capture=true;
@@ -460,6 +550,7 @@ static void recvAFLRequests(RequestData *reqD) {
 
     cout << "[WC][PARENT-FORK]\t\tChild exec of " << child_pid << " completed, completed in " << elapsed << " checking exit status, status=" << WEXITSTATUS(status) << " signal=" <<  WTERMSIG(status) << endl;
     this_test_process_info->capture=false;
+#if 0
     cout << "\033[36mAFL_ID = " << dec  << this_test_process_info->afl_id <<"\033[0m\n";
     int memcnt=0;
     if (this_test_process_info->afl_id){
@@ -474,6 +565,7 @@ static void recvAFLRequests(RequestData *reqD) {
     }
 
     printf("\033[36mMEMCNT from run is %d\n\033[0m", memcnt);
+#endif
     if (WIFEXITED(status)) {
       printf("\t\t\tRESULTS exited, status=%d signal=%d, total_val=%d\n", WEXITSTATUS(status), WTERMSIG(status), status);
     } else if (WIFSIGNALED(status)) {
@@ -540,8 +632,8 @@ void initMemory(bool setToZero){
         printf("\033[34m RESETTING SHARED MEMORY \n\033[0m");
         memset(test_process_info_ptr, 0, TEST_PROCESS_INFO_SMM_SIZE);
     }
-
 }
+
 void setupErrorMem(int port){
     initMemory(false);
 
@@ -578,6 +670,69 @@ void setupErrorMem(int port){
             printf("\033[36m*** TEST_DATA: port=%d, afl_id=%d\033[0m\n", this_test_process_info->port, this_test_process_info->afl_id);
         }
     }
+}
+
+
+#define MAP_SIZE_POW2       16
+#define MAP_SIZE            (1 << MAP_SIZE_POW2)
+#define ck_alloc malloc
+#define ck_free free
+#define SHM_ENV_VAR         "__AFL_SHM_ID"
+#define FATAL PFATAL
+#define PFATAL(s) do { \
+  perror(s); \
+  exit(1); \
+} while (0)
+#define alloc_printf(_str...) ({ \
+    char* _tmp; \
+    int _len = snprintf(NULL, 0, _str); \
+    if (_len < 0) FATAL("Whoa, snprintf() fails?!"); \
+    _tmp = (char*)ck_alloc(_len + 1); \
+    snprintf((char*)_tmp, _len + 1, _str); \
+    _tmp; \
+  })
+
+int shm_id, shm_id2;
+volatile void *trace_bits;
+static void remove_shm2(void) {
+  shmctl(shm_id, IPC_RMID, NULL);
+}
+static void remove_httpreqr_shm(void) {
+  shmctl(shm_id2, IPC_RMID, NULL);
+}
+
+static void setup_shm(void) {
+  char *shm_str;
+
+  shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
+  if (shm_id < 0) PFATAL("shmget() failed");
+
+  atexit(remove_shm2);
+
+  shm_str = alloc_printf("%d", shm_id);
+  setenv(SHM_ENV_VAR, shm_str, 1);
+  ck_free(shm_str);
+
+  trace_bits = shmat(shm_id, NULL, 0);
+  if (trace_bits == (void *)-1) PFATAL("shmat() failed");
+}
+
+static void setup_httpreqr_shm(void) {
+  char *shm_str;
+
+  shm_id2 = shmget(IPC_PRIVATE, sizeof(httpreqr_info), IPC_CREAT | IPC_EXCL | 0600);
+  if (shm_id2 < 0) PFATAL("shmget() failed");
+
+  atexit(remove_httpreqr_shm);
+
+  shm_str = alloc_printf("%d", shm_id2);
+  setenv(HTTPREQR_ENV_VAR, shm_str, 1);
+  ck_free(shm_str);
+
+  httpreqr_info = (volatile struct httpreqr_info *)shmat(shm_id2, NULL, 0);
+  if ((void*)httpreqr_info == (void *)-1) PFATAL("shmat() failed");
+  memset((void*)httpreqr_info, 0, sizeof(httpreqr_info));
+  httpreqr_info->magic = 0xdeadbeef;
 }
 
 /**
@@ -618,15 +773,68 @@ int main(int argc, char *argv[])
 
   writeOutAFLSHM(reqD->getPort());
 
+  setup_httpreqr_shm();
+
   if (getenv("__AFL_SHM_ID")){
+    LOG("Launching target...");
+    target_pid = launch_target();
     recvAFLRequests(reqD);
   } else {
+    LOG("Launching target...");
+    setup_shm();
+    target_pid = launch_target();
+    sleep(5); // FIXME: Replace with proper detection of listen
+    if (poll_target(target_pid)) {
+      fprintf(stderr, "Target quit?\n");
+      exit(1);
+    }
+
+    for (int i = 0; i < 8; i++) {
+
+      memset((void*)trace_bits, 0, MAP_SIZE); // Clear out the map before launching request
+      LOG("Sending request...");
+      httpreqr_info->enable_logging = 1;
+      sendRequest(reqD);
+      httpreqr_info->enable_logging = 0;
+      LOG("Request complete");
+
+
+      for (int i = 0; i < MAP_SIZE/sizeof(uint64_t); i++) {
+        uint64_t v = ((uint64_t *)trace_bits)[i];
+        if (v == 0) continue;
+        fprintf(stderr, "%04x: %016lx\n", i*sizeof(uint64_t), v);
+      }
+
+    }
+
+    LOG("About to send crashing request...\n");
+    sleep(5);
+    LOG("Time end...\n");
+
+
+    delete reqD;
+    memset((void*)trace_bits, 0, MAP_SIZE); // Clear out the map before launching request
+    reqD = new RequestData("http://192.168.0.1/crash");
+    reqD->setMethod(method);
+    reqD->setJSON(json);
+    LOG("Sending crashing request...");
+    httpreqr_info->enable_logging = 1;
     sendRequest(reqD);
+    sleep(2);
+    httpreqr_info->enable_logging = 0;
+    LOG("Request complete");
+    for (int i = 0; i < MAP_SIZE/sizeof(uint64_t); i++) {
+      uint64_t v = ((uint64_t *)trace_bits)[i];
+      if (v == 0) continue;
+      fprintf(stderr, "%04x: %016lx\n", i*sizeof(uint64_t), v);
+    }
+    sleep(2);
+
+
+
   }
 
   delete reqD;
 
   return 0;
 }
-
-
