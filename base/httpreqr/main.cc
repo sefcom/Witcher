@@ -137,7 +137,7 @@ string ToHex(const string& s, bool upper_case /* = true */)
 }
 
 class RequestData {
-    string url, cookies="", gets="", posts="", method, headers="";
+    string url, cookies="", gets="", posts="", method, headers="", uri="";
     bool json = false;
 public:
     RequestData(string urlIn){
@@ -159,6 +159,8 @@ public:
           //posts = "";
         } else if (inputcount == 3){
           headers = string(line);
+        } else if (inputcount == 4){
+          uri = string(line);
         }
         inputcount++;
       }
@@ -179,9 +181,9 @@ public:
 
     string getURL(){
       if (gets.size() == 0){
-        return url;
+        return url + (uri.size() ? ("/" + uri) : "");
       } else {
-        return url + "?" +  gets;
+        return url + (uri.size() ? ("/" + uri) : "") + "?" +  gets;
       }
     }
     bool hasCookies(){
@@ -306,6 +308,7 @@ void writeOutAFLSHM(string PORT){
 }
 
 void checkForServerErrors(string port){
+#if 0
   string error;
   string serverErrorFile = "/tmp/" + port  + ".error";
   if (fileExists(serverErrorFile)){
@@ -324,6 +327,7 @@ void checkForServerErrors(string port){
 
     }
   }
+#endif
 }
 
 void sendRequest(RequestData *reqD ){
@@ -467,15 +471,18 @@ static void recvAFLRequests(RequestData *reqD) {
       printf("\n[WC][FORK]\t\t\e[1;32mRESET and awaiting orders %d\e[0m\n", getpid());
     }
 
-    if (infinite && read(FORKSRV_FD, tmp, 4) != 4) exit(2);
+    if (infinite && read(FORKSRV_FD, tmp, 4) != 4) {
+      fprintf(stderr, "Read failed, exiting\n");
+      exit(2);
+    }
 
     /* Establish a channel with child to grab translation commands. We'll
        read from t_fd[0], child will write to TSL_FD. */
 
-    if (pipe(t_fd) || dup2(t_fd[1], TSL_FD) < 0) exit(3);
+    // if (pipe(t_fd) || dup2(t_fd[1], TSL_FD) < 0) exit(3);
     clock_gettime(CLOCK_MONOTONIC, &start);
     printf("[WC][FORK]\t\tCreating communication channel to new child from %d\n", getpid());
-    close(t_fd[1]);
+    // close(t_fd[1]);
     claunch_cnt ++;
     child_pid = fork();
 
@@ -495,7 +502,7 @@ static void recvAFLRequests(RequestData *reqD) {
       printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d current process IS the child, pid == %d\033[0m\n", claunch_cnt,  getpid());
       close(FORKSRV_FD);
       close(FORKSRV_FD + 1);
-      close(t_fd[0]);
+      // close(t_fd[0]);
 
 
       string id_str = getenv("__AFL_SHM_ID");
@@ -508,19 +515,25 @@ static void recvAFLRequests(RequestData *reqD) {
       afl_area_ptr[0] = 1;
 
       printf("[WC][CHILD-FORK] AFL_SHM_ID  = %x, AFL ptr = %p trace_value=%d \n", shm_id, afl_area_ptr, afl_area_ptr[0]);
-      this_test_process_info->capture=true;
+      httpreqr_info->enable_logging = true;
       sendRequest(reqD);
-      this_test_process_info->capture=false;
+      httpreqr_info->enable_logging = false;
+
+#if 0
       checkForServerErrors(reqD->getPort());
       printf("[WC][CHILD-FORK] Error information => %s\n", this_test_process_info->error_type);
+#endif
 
-      return;
+      // FIXME: Possible to hit an error after request finished? Possibly wait
+      // until server idles
 
+      // Request successful, exit normally
+      exit(0);
     }
 
     /* Parent. */
 
-    close(TSL_FD);
+    // close(TSL_FD);
     assert(parent_pid == getpid());
     printf("[WC][PARENT-FORK]\t\tCheck for child status from Parent %d for %d \n", getpid(), child_pid);
 
@@ -532,8 +545,8 @@ static void recvAFLRequests(RequestData *reqD) {
       printf("\t\tExiting Parent %d with 5\n", child_pid);
       exit(5);
     }
-    /* Collect translation requests until child dies and closes the pipe. */
 
+    /* Collect translation requests until child dies and closes the pipe. */
     //afl_wait_tsl(cpu, t_fd[0]);
 
     /* Get and relay exit status to parent. */
@@ -549,7 +562,7 @@ static void recvAFLRequests(RequestData *reqD) {
     elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
     cout << "[WC][PARENT-FORK]\t\tChild exec of " << child_pid << " completed, completed in " << elapsed << " checking exit status, status=" << WEXITSTATUS(status) << " signal=" <<  WTERMSIG(status) << endl;
-    this_test_process_info->capture=false;
+    httpreqr_info->enable_logging=false;
 #if 0
     cout << "\033[36mAFL_ID = " << dec  << this_test_process_info->afl_id <<"\033[0m\n";
     int memcnt=0;
@@ -775,9 +788,11 @@ int main(int argc, char *argv[])
 
   setup_httpreqr_shm();
 
+    // setup_shm();
   if (getenv("__AFL_SHM_ID")){
     LOG("Launching target...");
     target_pid = launch_target();
+    sleep(5); // FIXME: Replace with proper detection of listen
     recvAFLRequests(reqD);
   } else {
     LOG("Launching target...");
@@ -807,6 +822,7 @@ int main(int argc, char *argv[])
 
     }
 
+#if 0
     LOG("About to send crashing request...\n");
     sleep(5);
     LOG("Time end...\n");
@@ -829,7 +845,7 @@ int main(int argc, char *argv[])
       fprintf(stderr, "%04x: %016lx\n", i*sizeof(uint64_t), v);
     }
     sleep(2);
-
+#endif
 
 
   }
