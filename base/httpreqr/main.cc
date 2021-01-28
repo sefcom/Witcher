@@ -519,6 +519,10 @@ static void recvAFLRequests(RequestData *reqD) {
       sendRequest(reqD);
       httpreqr_info->enable_logging = false;
 
+
+      fprintf(stderr, "[WC][CHILD-FORK] Sleeping... waiting for signal\n");
+      sleep(5);
+
 #if 0
       checkForServerErrors(reqD->getPort());
       printf("[WC][CHILD-FORK] Error information => %s\n", this_test_process_info->error_type);
@@ -612,6 +616,11 @@ void remove_shm(){
 void signal_handler(int signal){
     printf("[Witcher] caught signal, kill shm region up and exitting.\n");
     exit(33);
+}
+
+void signal_handler_sigusr2(int signal){
+    printf("Received SIGUSR2\n");
+    exit(0);
 }
 
 void initMemory(bool setToZero){
@@ -758,6 +767,7 @@ int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
+    signal(SIGUSR2, signal_handler_sigusr2);
 
   bool doInitMemory = getArg(argc, argv, "--initmemory");
 
