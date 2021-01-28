@@ -139,11 +139,17 @@ string ToHex(const string& s, bool upper_case /* = true */)
 class RequestData {
     string url, cookies="", gets="", posts="", method, headers="", uri="";
     bool json = false;
+    bool loaded = false;
 public:
     RequestData(string urlIn){
       url = urlIn;
     }
     void loadVariableData(){
+      if (loaded) {
+        return;
+      }
+      loaded = true;
+
       int inputcount = 0;
       cout << "Loading variable data :: " << endl;
       for (string line; getline(std::cin, line, '\x00');) {
@@ -330,7 +336,7 @@ void checkForServerErrors(string port){
 #endif
 }
 
-void sendRequest(RequestData *reqD ){
+CURLcode sendRequest(RequestData *reqD ){
   CURL *curl;
   CURLcode code(CURLE_FAILED_INIT);
   long timeout = 30;
@@ -343,7 +349,6 @@ void sendRequest(RequestData *reqD ){
   curl = curl_easy_init();
   if(curl) {
     cout << "in da curl" << endl;
-    reqD->loadVariableData();
     cout << "in da curl" << endl;
 
     cout << "Cookies = " << reqD->getCookies() << endl << "gets = " << reqD->getGets() << endl << "posts = '" << reqD->getPosts() << "'" << endl << "PORT=" << reqD->getPort() << endl;
@@ -400,6 +405,7 @@ void sendRequest(RequestData *reqD ){
     cout << "Readbuffer = " << readBuffer << endl;
   }
 
+  return code;
 }
 
 string getArg(int argc, char *argv[], string param, bool getNext){
@@ -515,18 +521,29 @@ static void recvAFLRequests(RequestData *reqD) {
       afl_area_ptr[0] = 1;
 
       printf("[WC][CHILD-FORK] AFL_SHM_ID  = %x, AFL ptr = %p trace_value=%d \n", shm_id, afl_area_ptr, afl_area_ptr[0]);
+      reqD->loadVariableData();
+
       httpreqr_info->enable_logging = true;
-      sendRequest(reqD);
+      CURLcode code = sendRequest(reqD);
       httpreqr_info->enable_logging = false;
 
+      if (code == CURLE_URL_MALFORMAT) {
+        fprintf(stderr, "[WC][CHILD-FORK] Malformed URL... Exiting\n");
+        exit(0);
+      }
 
-      fprintf(stderr, "[WC][CHILD-FORK] Sleeping... waiting for signal\n");
-      sleep(5);
+      if (code != CURLE_OK && code != CURLE_GOT_NOTHING) {
+        fprintf(stderr, "[WC][CHILD-FORK] Original request failed! %d Sleeping...\n", code);
+        sleep(5);
+      }
 
-#if 0
-      checkForServerErrors(reqD->getPort());
-      printf("[WC][CHILD-FORK] Error information => %s\n", this_test_process_info->error_type);
-#endif
+      // Send request a second time to see if the server is still alive
+      code = sendRequest(reqD);
+
+      if (code != CURLE_OK && code != CURLE_GOT_NOTHING) {
+        fprintf(stderr, "[WC][CHILD-FORK] Follow-up request failed! %d Sleeping...\n", code);
+        sleep(5);
+      }
 
       // FIXME: Possible to hit an error after request finished? Possibly wait
       // until server idles
@@ -616,11 +633,6 @@ void remove_shm(){
 void signal_handler(int signal){
     printf("[Witcher] caught signal, kill shm region up and exitting.\n");
     exit(33);
-}
-
-void signal_handler_sigusr2(int signal){
-    printf("Received SIGUSR2\n");
-    exit(0);
 }
 
 void initMemory(bool setToZero){
@@ -767,7 +779,6 @@ int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
-    signal(SIGUSR2, signal_handler_sigusr2);
 
   bool doInitMemory = getArg(argc, argv, "--initmemory");
 
