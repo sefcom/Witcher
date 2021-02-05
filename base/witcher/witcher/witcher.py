@@ -110,9 +110,28 @@ class Witcher():
                 env["NO_WC_EXTRA"] = "1"
             elif self.testver.startswith("EX"):
                 env["WC_INSTRUMENTATION"] = "1"
-
-
         return env
+
+    @staticmethod
+    def find_path(urlpath):
+        fname = os.path.basename(urlpath)
+
+        cmd = ["find", "/", "-path", "/p", "-prune", "-o", "-path", "/proc", "-prune",
+               "-o", "-path", "/test", "-prune", "-o", "-path", "/etc", "-prune",
+               "-o", "-path", "/var/log", "-prune", "-o", "-path", "/var/spool", "-prune",
+               "-o", "-path", "/var/cache", "-prune",
+               "-o", "-path", "/var/lib", "-prune", "-o", "-path", "/root", "-prune",
+               "-o", "-name", fname]
+
+        print(f"Command = {' '.join(cmd)}")
+
+        results = subprocess.check_output(cmd)
+        print(f"RESULTS from find = {results}")
+        for fpath in sorted(results.split(b'\n'), key=len):
+            fpath = fpath.decode("latin-1")
+            if fpath.find(urlpath) > -1:
+                return fpath
+        raise Exception("Target path not found ")
 
     def init_fuzz_campaign_status(self, trial_index):
         if self.fuzz_campaign_status is None:
@@ -136,7 +155,12 @@ class Witcher():
                     urlpath = url.path
                     if urlpath.startswith("/"):
                         urlpath = urlpath[1:]
-                    target_path = os.path.join(self.appdir,urlpath)
+                        
+                    target_path = os.path.join(self.appdir, urlpath)
+
+                    if not os.path.exists(target_path):
+                        target_path = Witcher.find_path(urlpath)
+                print(f" THE PATH to use is :::::: > {target_path}")
                 method = req.get("_method", "GET").upper()
 
                 if not self.single_target or target_path.find(self.single_target) > -1:
@@ -245,6 +269,7 @@ class Witcher():
                                   create_dictionary=False, timeout=self.timeout, memory=self.memory,
                                   run_timeout=self.run_timeout, dictionary=dictionary_str,
                                   use_qemu=self.use_qemu, resume=do_resume, login_json_fn=self.config_loc)
+
         reporter = Reporter(self.fuzzer_target_binary, self.report_dir, self.cores, self.first_crash, self.timeout,
                             fuzzer.work_dir)
 
@@ -252,7 +277,7 @@ class Witcher():
 
         fuzzer.start()
         reporter.start()
-
+        print("Starting Reporter...")
         # Monitor phuzzer's execution
         try:
             crash_seen = False
@@ -432,9 +457,6 @@ class Witcher():
 
                         if do_resume:
                             self.copy_fuzzer_results_to_output(trial_index, target['target_path'])
-
-
-
 
                         print(f"FUZZING {target['target_path']} Trial={trial_index}, Refuzz={refuzz_index} last_completed_refuzz={target['last_completed_refuzz']}")
                         seeds = self.create_seeds(target["requests"])
