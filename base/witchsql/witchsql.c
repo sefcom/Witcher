@@ -1,4 +1,4 @@
-#include <unistd.h>
+
 #include <string.h>     /* For the real memset prototype.  */
 #include <signal.h>
 #include <stdio.h>
@@ -16,7 +16,76 @@
 #define __USE_GNU
 #include <dlfcn.h>
 
+bool file_exists (char *filename) {
+  struct stat   buffer;
+  return (stat (filename, &buffer) == 0);
+}
+
 bool error_in_buf(char *buf, int len);
+
+void report_cmd(char *const argv[]){
+    char *wl_fpath = "/tmp/shell.log";
+    FILE *cmdlog = fopen(wl_fpath,"a+");
+
+	for (char * const* argv_temp = argv; *argv_temp != 0; argv_temp++)
+    {
+        char *thisArg = *argv_temp;
+        fprintf(cmdlog, "%s,", thisArg);
+    }
+    fprintf(cmdlog, "\n");
+    fclose(cmdlog);
+}
+
+int (*real_execve)(const char *filename, char *const argv[], char *const *envp) = NULL;
+//int execl(const char *pathname, const char *arg, ... /* (char  *) NULL */);
+//int execlp(const char *file, const char *arg, ... /* (char  *) NULL */);
+//int execle(const char *pathname, const char *arg, .../*, (char *) NULL, char *const envp[] */);
+int (*real_execv)(const char *pathname, char *const argv[]) = NULL;
+int (*real_execvp)(const char *file, char *const argv[]) = NULL;
+int (*real_execvpe)(const char *file, char *const argv[], char *const envp[]) = NULL;
+
+int execv(const char *pathname, char *const argv[]) {
+    printf("I'm right here!!!!!!!\n");
+    fflush(stdout);
+    real_execv= dlsym(RTLD_NEXT, "execv");
+
+    report_cmd(argv);
+	ssize_t results = real_execv(pathname, argv);
+
+
+    return results;
+}
+
+int execvp(const char *file, char *const argv[]){
+    real_execvp= dlsym(RTLD_NEXT, "execvp");
+
+    report_cmd(argv);
+	ssize_t results = real_execvp(file, argv);
+
+
+    return results;
+}
+
+int execvpe(const char *file, char *const argv[], char *const envp[]){
+    real_execvpe= dlsym(RTLD_NEXT, "execvpe");
+
+    report_cmd(argv);
+	ssize_t results = real_execvpe(file, argv, envp);
+
+    return results;
+}
+
+int execve(const char *filename, char *const argv[], char *const *envp){
+	real_execve= dlsym(RTLD_NEXT, "execve");
+
+    report_cmd(argv);
+
+	ssize_t results = real_execve(filename, argv, envp);
+
+    return results;
+
+}
+
 
 ssize_t (*real_send)(int sockfd, const void *buf, size_t len, int flags) = NULL;
 
@@ -26,11 +95,11 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags){
 	ssize_t results = real_send(sockfd, buf, len, flags);
 	char *wl_fpath = "/tmp/do_witcher_log.env";
 
-	if (getenv("WITCHER_LOG") || access( wl_fpath, F_OK ) == 0 ){
+	if (getenv("WITCHER_LOG") || file_exists(wl_fpath) == 0 ){
 		printf("writing out for witcher log");
 		unsigned char *cptr = (unsigned char *)(buf);
 		bool found = false;
-		for (int lp=0; lp < 10 && lp < len; lp++){
+		for (size_t lp=0; lp < 10 && lp < len; lp++){
 			if (cptr[lp] == 0) {
 				found = true;
 			}
@@ -40,7 +109,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags){
 			fprintf(errorlog,"SEND >>>>>");
 
 			fprintf(errorlog, "\nERROR:\n");
-			for (int lp=0; lp < len; lp++){
+			for (size_t lp=0; lp < len; lp++){
 				if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
 				  fprintf(errorlog,"%c",cptr[lp]);
 				} else {
@@ -124,8 +193,8 @@ ssize_t recv (int sockfd, void *buf, size_t len, int flags) {
 		  printf("RECV ERROR FROM DATABASE FOUND!!!!! \n");
 		}
 	}
-	char error_msg[] = "syntax error at or\x00";
-  int error_msg_len = strlen(error_msg) +1;
+//	char error_msg[] = "syntax error at or\x00";
+//  int error_msg_len = strlen(error_msg) +1;
 
   //printf("%s\n", buf);
 //unsigned char *cptr = (unsigned char *)(buf);
