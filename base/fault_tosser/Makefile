@@ -2,9 +2,9 @@ CC = gcc  # C compiler
 CFLAGS = -fPIC -Wall -Wextra -O2 -g # C flags
 LDFLAGS = -shared  -ldl # linking flags
 RM = rm -f   # rm command
-TARGET_LIB = libwitchsql.so  # target lib
+TARGET_LIB = lib_fault_tosser.so  # target lib
 
-SRCS = witchsql.c  # source files
+SRCS = fault_tosser.c  # source files
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all
