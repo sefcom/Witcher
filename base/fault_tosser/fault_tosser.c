@@ -18,22 +18,33 @@
 
 bool file_exists (char *filename) {
   struct stat   buffer;
-  return (stat (filename, &buffer) == 0);
+  bool retval = stat (filename, &buffer) == 0;
+  return retval;
 }
 
 bool error_in_buf(char *buf, int len);
 
 void report_cmd(char *const argv[]){
     char *wl_fpath = "/tmp/shell.log";
-    FILE *cmdlog = fopen(wl_fpath,"a+");
-
-	for (char * const* argv_temp = argv; *argv_temp != 0; argv_temp++)
-    {
-        char *thisArg = *argv_temp;
-        fprintf(cmdlog, "%s,", thisArg);
+    if (!file_exists(wl_fpath)){
+        FILE *tf = fopen(wl_fpath,"w");
+        fclose(tf);
+        chmod(wl_fpath, 0x1b6); // 0x1b6 == 0o666
     }
-    fprintf(cmdlog, "\n");
-    fclose(cmdlog);
+    FILE *cmdlog = fopen(wl_fpath,"a");
+    if (cmdlog){
+        for (char * const* argv_temp = argv; *argv_temp != 0; argv_temp++)
+        {
+            printf("%p\n", argv_temp);
+            char *thisArg = *argv_temp;
+            printf("%s\n", thisArg);
+            fprintf(cmdlog, "%s,", thisArg);
+        }
+        fprintf(cmdlog, "\n");
+        fclose(cmdlog);
+    } else {
+        printf("Unable to open command log %s\n", wl_fpath);
+    }
 }
 
 int (*real_execve)(const char *filename, char *const argv[], char *const *envp) = NULL;
@@ -45,7 +56,7 @@ int (*real_execvp)(const char *file, char *const argv[]) = NULL;
 int (*real_execvpe)(const char *file, char *const argv[], char *const envp[]) = NULL;
 
 int execv(const char *pathname, char *const argv[]) {
-    printf("I'm right here!!!!!!!\n");
+
     fflush(stdout);
     real_execv= dlsym(RTLD_NEXT, "execv");
 
@@ -90,12 +101,13 @@ int execve(const char *filename, char *const argv[], char *const *envp){
 ssize_t (*real_send)(int sockfd, const void *buf, size_t len, int flags) = NULL;
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags){
+    printf("in send \n");
 	real_send= dlsym(RTLD_NEXT, "send");
 
 	ssize_t results = real_send(sockfd, buf, len, flags);
 	char *wl_fpath = "/tmp/do_witcher_log.env";
 
-	if (getenv("WITCHER_LOG") || file_exists(wl_fpath) == 0 ){
+	if (getenv("WITCHER_LOG") || file_exists(wl_fpath)){
 		printf("writing out for witcher log");
 		unsigned char *cptr = (unsigned char *)(buf);
 		bool found = false;
@@ -105,21 +117,28 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags){
 			}
 		}
 		if (found){
-			FILE *errorlog= fopen("/tmp/sqlcmds.log","a+");
-			fprintf(errorlog,"SEND >>>>>");
+		    char *slog_fpath = "/tmp/sqlcmds.log";
 
-			fprintf(errorlog, "\nERROR:\n");
+			if (!file_exists(slog_fpath)){
+                FILE *tf = fopen(slog_fpath,"w");
+                fclose(tf);
+                chmod(slog_fpath, 0x1b6); // 0x1b6 == 0o666
+            }
+            FILE *slog_fp= fopen(slog_fpath,"a");
+			fprintf(slog_fp,"SEND >>>>>");
+
+			fprintf(slog_fp, "\nERROR:\n");
 			for (size_t lp=0; lp < len; lp++){
 				if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
-				  fprintf(errorlog,"%c",cptr[lp]);
+				  fprintf(slog_fp,"%c",cptr[lp]);
 				} else {
-					fprintf(errorlog,"\\x%02x",cptr[lp]);
+					fprintf(slog_fp,"\\x%02x",cptr[lp]);
 
 				}
 			}
-			fprintf(errorlog,"END SEND <<<<< \n");
-			fflush(errorlog);
-			fclose(errorlog);
+			fprintf(slog_fp,"END SEND <<<<< \n");
+			fflush(slog_fp);
+			fclose(slog_fp);
 		}
 
 	}
@@ -155,7 +174,14 @@ bool error_in_buf(char *cptr, int len){
 		memset(cmp_str, 0, cmplen+1);
         memcpy(cmp_str, cptr+i, cmplen);
         if (strncmp(psql_error_msg, cmp_str, cmplen) == 0 || strncmp(mysql_error_msg, cmp_str, cmplen) == 0) {
-			FILE *errorlog= fopen("/tmp/sqlerrors.log","a+");
+            char *serror_fpath = "/tmp/sqlerrors.log";
+			if (!file_exists(serror_fpath)){
+                FILE *tf = fopen(serror_fpath,"w");
+                fclose(tf);
+                chmod(serror_fpath, 0x1b6); // 0x1b6 == 0o666
+            }
+            FILE *errorlog= fopen(serror_fpath,"a");
+
 			fprintf(errorlog,">>>>> RECV >>>>>");
 
 			fprintf(errorlog, "\nERROR:\n");
