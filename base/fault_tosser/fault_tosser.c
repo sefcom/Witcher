@@ -26,25 +26,21 @@ bool error_in_buf(char *buf, int len);
 
 void report_cmd(char *const argv[]){
     char *wl_fpath = "/tmp/shell.log";
-    if (!file_exists(wl_fpath)){
-        FILE *tf = fopen(wl_fpath,"w");
-        fclose(tf);
-        chmod(wl_fpath, 0x1b6); // 0x1b6 == 0o666
-    }
-    FILE *cmdlog = fopen(wl_fpath,"a");
+
+    FILE *cmdlog = fopen(wl_fpath,"a+");
     if (cmdlog){
         for (char * const* argv_temp = argv; *argv_temp != 0; argv_temp++)
         {
-            printf("%p\n", argv_temp);
             char *thisArg = *argv_temp;
-            printf("%s\n", thisArg);
             fprintf(cmdlog, "%s,", thisArg);
         }
         fprintf(cmdlog, "\n");
         fclose(cmdlog);
     } else {
         printf("Unable to open command log %s\n", wl_fpath);
+
     }
+
 }
 
 int (*real_execve)(const char *filename, char *const argv[], char *const *envp) = NULL;
@@ -101,14 +97,12 @@ int execve(const char *filename, char *const argv[], char *const *envp){
 ssize_t (*real_send)(int sockfd, const void *buf, size_t len, int flags) = NULL;
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags){
-    printf("in send \n");
-	real_send= dlsym(RTLD_NEXT, "send");
+    real_send= dlsym(RTLD_NEXT, "send");
 
 	ssize_t results = real_send(sockfd, buf, len, flags);
-	char *wl_fpath = "/tmp/do_witcher_log.env";
+	char *wl_fpath = "/tmp/do_witcher_log.env\x00";
 
 	if (getenv("WITCHER_LOG") || file_exists(wl_fpath)){
-		printf("writing out for witcher log");
 		unsigned char *cptr = (unsigned char *)(buf);
 		bool found = false;
 		for (size_t lp=0; lp < 10 && lp < len; lp++){
@@ -117,10 +111,10 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags){
 			}
 		}
 		if (found){
-		    char *slog_fpath = "/tmp/sqlcmds.log";
+		    char *slog_fpath = "/tmp/sqlcmds.log\x00";
 
 			if (!file_exists(slog_fpath)){
-                FILE *tf = fopen(slog_fpath,"w");
+                FILE *tf = fopen(slog_fpath,"a+");
                 fclose(tf);
                 chmod(slog_fpath, 0x1b6); // 0x1b6 == 0o666
             }
@@ -174,9 +168,9 @@ bool error_in_buf(char *cptr, int len){
 		memset(cmp_str, 0, cmplen+1);
         memcpy(cmp_str, cptr+i, cmplen);
         if (strncmp(psql_error_msg, cmp_str, cmplen) == 0 || strncmp(mysql_error_msg, cmp_str, cmplen) == 0) {
-            char *serror_fpath = "/tmp/sqlerrors.log";
+            char *serror_fpath = "/tmp/sqlerrors.log\x00";
 			if (!file_exists(serror_fpath)){
-                FILE *tf = fopen(serror_fpath,"w");
+                FILE *tf = fopen(serror_fpath,"a+");
                 fclose(tf);
                 chmod(serror_fpath, 0x1b6); // 0x1b6 == 0o666
             }

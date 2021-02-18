@@ -20,5 +20,5 @@ include $(SRCS:.c=.d)
 
 .PHONY: clean
 clean:
-	-${RM} ${TARGET_LIB} ${OBJS} $(SRCS:.c=.d)
+	-$(RM) ${TARGET_LIB} ${OBJS} $(SRCS:.c=.d)
 
