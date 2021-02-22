@@ -137,7 +137,7 @@ string ToHex(const string& s, bool upper_case /* = true */)
 }
 
 class RequestData {
-    string url, cookies="", gets="", posts="", method, headers="", uri="";
+    string url, cookies="", gets="", posts="", method, headers="", uri="", content_type="";
     bool json = false;
     bool loaded = false;
 public:
@@ -202,8 +202,8 @@ public:
     string getGets(){
       return gets;
     }
-    bool hasPosts(){
-      return posts.size() > 0;
+    bool isPost(){
+      return method == "POST";
     }
     string getPosts(){
       if (json){
@@ -269,7 +269,15 @@ public:
       json = jsonIn;
     }
 
+    void setContentType(string content_type_in) {
+       content_type = content_type_in;
+    }
     string getContentType(){
+      // If we were given a content type header to use, then use that
+      if (content_type.length() != 0)
+      {
+         return "Content-Type: " + content_type;
+      }
       if (json){
         return "Content-Type: application/json";
       } else {
@@ -336,7 +344,7 @@ void checkForServerErrors(string port){
 #endif
 }
 
-CURLcode sendRequest(RequestData *reqD ){
+CURLcode sendRequest(RequestData *reqD, bool debug = false ){
   CURL *curl;
   CURLcode code(CURLE_FAILED_INIT);
   long timeout = 30;
@@ -362,6 +370,10 @@ CURLcode sendRequest(RequestData *reqD ){
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
     curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
 
+    if (debug) {
+       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    }
+
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
     assert (CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout)));
@@ -378,7 +390,7 @@ CURLcode sendRequest(RequestData *reqD ){
     if (reqD->hasCookies()){
       assert (CURLE_OK == curl_easy_setopt(curl, CURLOPT_COOKIE, reqD->getCookies().c_str()));
     }
-    if (reqD->hasPosts()){
+    if (reqD->isPost()){
       printf("[WC][main] sending POST '%s'\n", reqD->getPosts().c_str());
 
       // POSTFIELDSIZE needs to be before COPYPOSTFIELDS
@@ -795,13 +807,29 @@ int main(int argc, char *argv[])
 
   string method = getArg(argc, argv, "--method", true);
 
+  string content_type = getArg(argc, argv, "--content-type", true);
+
   bool json = getArg(argc, argv, "--json");
+
+  string test_input_file = getArg(argc, argv, "--test-input-file", true);
+
+  bool debug = getArg(argc, argv, "--debug");
 
   RequestData *reqD = new RequestData(url);
 
   reqD->setMethod(method);
+  reqD->setContentType(content_type);
   reqD->setJSON(json);
-  cout << "TEST " << reqD->getURL() << " Using port:" << reqD->getPort() << endl;
+  cout << "TEST " << reqD->getURL() << " Using port:" << reqD->getPort() << " Content-Type to use " << reqD->getContentType() << endl;
+
+  if (test_input_file.length() != 0)
+  {
+     cout << "Got test input file " << test_input_file << ", going to read from there";
+     ifstream in(test_input_file);
+     std::cin.rdbuf(in.rdbuf());
+     reqD->loadVariableData();
+  }
+
 
   setupErrorMem(stoi(reqD->getPort()));
 
@@ -830,7 +858,7 @@ int main(int argc, char *argv[])
       memset((void*)trace_bits, 0, MAP_SIZE); // Clear out the map before launching request
       LOG("Sending request...");
       httpreqr_info->enable_logging = 1;
-      sendRequest(reqD);
+      sendRequest(reqD, debug);
       httpreqr_info->enable_logging = 0;
       LOG("Request complete");
 
