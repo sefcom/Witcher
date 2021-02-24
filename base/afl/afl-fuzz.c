@@ -1,4 +1,4 @@
-A/*
+/*
    american fuzzy lop - fuzzer code
    --------------------------------
 
