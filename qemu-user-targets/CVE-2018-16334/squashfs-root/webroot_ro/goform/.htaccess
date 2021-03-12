@@ -1,0 +1,3 @@
+RewriteEngine on
+RewriteRule ^([\w]+)$ $1.txt
+RewriteRule ^(set[\w]+)$ $1.php

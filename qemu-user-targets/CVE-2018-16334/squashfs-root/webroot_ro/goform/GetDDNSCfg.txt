@@ -1,0 +1,7 @@
+{"ddnsEn":"1",
+"serverName": "oray.com",
+"ddnsUser":"123",
+"ddnsPwd":"456",
+"ddnsDomain":"baidu.com",
+"ddnsStatus":"0"
+}

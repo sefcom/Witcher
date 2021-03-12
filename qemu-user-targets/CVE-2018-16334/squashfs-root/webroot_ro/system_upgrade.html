@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+  <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+<script>
+B.setTextDomain(["translate"]);
+</script>
+</head>
+  <body>
+  	<fieldset class="ifmwrap-time">
+        <div class="legend-main">
+        	<form name="frmSetup" method="POST" action="/cgi-bin/upgrade" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="0">
+            	<div class="control-group">
+                	<label class="control-label">Current Version:</label>
+                    <div class="controls controls-text" id="cur_fw_ver"></div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Upgrade Type:</label>
+                    <div class="controls" style="height:24px;">
+                        
+                        <label class="radio" for="online_upgrade">
+                            <input type="radio" name="upgradeType" id="online_upgrade" checked="" value="1">Online Upgrade</label>
+                        <label class="radio" for="local_upgrade">
+                            <input type="radio" name="upgradeType" id="local_upgrade" value="0">Local Upgrade</label>
+                    </div>
+                </div>
+                
+                <div id="local_upgrade_wrap" class="none">
+                    <div class="control-group">
+                        <label class="control-label">Select Upgrade File:</label>
+                        <div class="controls">
+                            <input type="file" name="upgradeFile" id="upgradeFile" class="input-xlarge">
+                        </div>
+                    </div>
+                    <div class="control-group" style="margin-bottom:0px;">
+                        <div class="red page-err" id="msg-err">&nbsp;</div>
+                    </div>
+                    <div class="btn-group" style="margin-top:30px;">
+                        <input type="button" class="btn btn-normal" id="sys_upgrade" value="Upgrade">
+                    </div>
+                </div>
+                
+                <div id="online_upgrade_wrap">
+                
+                	<div id="detect_version_wrap">
+                        <!--<div class="btn-group" style="margin-top:30px;" id="status_start">
+                            <input type="button" class="btn btn-normal" id="sys_detect_version" value="检测新版本">
+                        </div>
+                        -->
+                        <!-- <div id="download_note" class="none">
+                            <div class="control-group">
+                                <label class="control-label">Downloading…<span class="hide-white">：</span></label>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label red">Note:</label>
+                                <div class="controls red">After the firmware is downloaded, the Router will start upgrade automatically. Keep the power supply on during the upgrade in case of damage to the Router.</div>
+                            </div>
+                        </div> -->
+                        
+                        <!--如果已经完成攻心检测，则显示版本信息和更新内容-->
+                        
+                        <div id="status_checked" class="none">
+                            <div class="control-group">
+                                <label class="control-label">Latest Version:</label>
+                                <div class="controls controls-text" id="new_fw_ver"></div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Update Content:</label>
+                                <div class="controls controls-text">
+                                    <ul id="releaseNote">
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+						<div class="control-group">
+							<div class="controls controls-text" id="status_checking">
+							</div>
+
+						    <div class="controls controls-text none" id="upgrade_err">
+							</div>
+                        </div>
+						
+                        <!--<div class="btn-group none" style="margin-top:30px;" id="upgrade_err"></div>-->
+                	</div>
+                
+                   
+                    <div class="btn-group" style="margin-top:30px;">
+                        <input type="button" class="btn btn-normal" id="download_soft" value="Upgrade">
+                       
+                    </div>
+                    
+                    
+                    <div id="status_progress" class="control-group none">
+                        <!--进度条-->
+                        <div id="progress_num" style="margin-bottom:15px;width:400px;margin-left:auto;margin-right:auto;">
+                            <span id="progressMsg">Downloading...</span>
+                            <span class="progressNum" style="text-align:center; font-size:12px;">0%</span>
+                            <span style="font-size:12px;float:right;">
+                                <span>Time Remaining:</span>
+                                <span id="remainingTime"></span>
+                            </span>
+                        </div>
+                        <div id="progress_bg" style="background:#afadb1; width:400px; position:relative; height:8px; border-radius:5px; margin:auto;">
+                            <div id="progress_bar" style="background:#0c7cfa; position:relative; width:40px; height:8px;border-radius:12px;">
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div id="download_note" class="none" style="margin-top:60px;">
+                        
+                        <div class="control-group txt-center">
+                            <div class=" red">Do not power off the router during the upgrade.</div>
+                            <div>Otherwise, the router may be damaged.</div>
+                        </div>
+                    </div>
+                        
+                </div>
+                    
+                    
+                    
+                <!--进度条完成以后，则显示在线升级并重启-->
+            </form>
+        </div>
+    </fieldset>
+  
+  <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/libs/ajaxfileupload.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/directupgrade.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body></html>

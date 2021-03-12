@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+  <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+<script>B.setTextDomain(["translate"]);</script>
+</head>
+  <body>
+        <fieldset class="ifmwrap-dhcp">
+        	<div class="legend-main" style="margin-top: 40px;">
+            	<div class="control-group">
+                	<label class="control-label">DDNS:</label>
+                    <div class="controls">
+                    	<div id="ddnsEn" class="btn-off"></div>
+                    </div>
+                </div>
+                <div id="ddns_set" class="none">
+                    <div class="control-group">
+                        <label class="control-label">Service Provider:</label>
+                        <div class="controls">
+                            <select id="serverName" class="input-medium">
+                                <option value="no-ip.com">no-ip.com</option> 
+                                <option value="3322.org">3322.org</option> 
+                                <option value="dyn.com/dns/">dyndns.org</option>
+                                <option value="88ip.cn">88ip.cn</option>
+                                <option value="oray.com">oray.com</option>
+                            </select>
+                            <span><a class="text-link" id="btnLink">Register</a></span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">User Name:</label>
+                        <div class="controls">
+                            <input type="text" id="ddnsUser" required="required" class="input-medium validatebox" maxlength="32" data-options="{&quot;type&quot;:&quot;fh1901Ascii&quot;}">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Password:</label>
+                        <div class="controls">
+                            <input type="password" id="ddnsPwd" required="required" class="input-medium validatebox" maxlength="32" data-options="{&quot;type&quot;:&quot;fh1901Ascii&quot;}">
+                        </div>
+                    </div>
+                    <div class="control-group" id="domainContainer">
+                        <label class="control-label">Domain Name:</label>
+                        <div class="controls">
+                            <input type="text" id="ddnsDomain" required="required" class="input-medium validatebox" maxlength="64" data-options="{&quot;type&quot;:&quot;domain&quot;}">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Connection Status:</label>
+                        <div class="controls controls-text">
+                            <span id="ddnsStatus"></span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="red page-err" id="msg-err">&nbsp;</div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                	<input type="button" class="btn btn-normal" id="submit" value="Save">
+                </div>
+            </div>
+        </fieldset>
+    
+    <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/ddns_config.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body></html>

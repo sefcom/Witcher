@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+    <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script>
+    B.setTextDomain(["translate"]);
+    </script>
+</head>
+
+<body>
+    <fieldset class="sys-pwd">
+        <div class="legend-main" style="margin-top:80px;">
+            <div class="control-group">
+                <label class="control-label">System Reboot Schedule:</label>
+                <div class="controls">
+                    <div id="autoRebootEn" class="btn-off"></div>
+                </div>
+            </div>
+            <div id="rebootSetWrap">
+                <div class="control-group">
+                    <label class="control-label">Reboot At:</label>
+                    <div class="controls">
+                        <select class="input-small" id="rebootHour">
+                        </select> <span>&nbsp;&nbsp; : &nbsp;&nbsp;</span>
+                        <select class="input-small" id="rebootMin">
+                        </select>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">
+                        Delay:
+                    </label>
+                    <div class="controls">
+                        <label class="radio">
+                            <input type="checkbox" id="delayRebootEn">Delay rebooting the router when it is exchanging data with a device at a speed higher than 3 KB/s.</label>
+                    </div>
+                </div>
+                <p class="text-warning txt-center" id="timeUpTip">Automatic maintenance takes effect only if the system time is synchronized with the internet time.</p>
+            </div>
+            <div class="btn-group">
+                <input type="button" class="btn btn-normal" id="submit" value="Save">
+            </div>
+        </div>
+    </fieldset>
+    <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/system_automaintain.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body>
+
+</html>

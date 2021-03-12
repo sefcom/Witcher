@@ -1,0 +1,52 @@
+[
+
+{"ssid":"Jiemi_00DAA9",
+"mac":"C8:3A:35:00:DA:A9",
+"channel":"10",
+"nctrlsb":"none",
+"bandwidth":"20",
+"security":"none",
+"signal":"-81",
+"nettype":"bgn",
+"wifi_chkHz":"0"},
+
+
+
+
+ {"ssid":"Tenda_18A823' \"asdfasdf",
+ "mac":"C8:3A:35:18:A8:23",
+ "channel":"10",
+ "nctrlsb":"none",
+ "bandwidth":"20",
+ "security":"wpa&wpa2/aes",
+ "signal":"-85",
+ "nettype":"bgn",
+ "wifi_chkHz":"0"},
+
+
+ {"ssid":"!@@#$%^&*()!#$%$^%^><asdfaf",
+ "mac":"C8:3A:35:03:35:E4",
+ "channel":"10",
+ "nctrlsb":"none",
+ "bandwidth":"20",
+ "security":"none",
+ "signal":"-86",
+ "nettype":"bgn",
+ "wifi_chkHz":"0"},
+
+ 
+ {"ssid":"Tenda_009C70sdfzsdfasdfasdfasdfasdfasfasdf","mac":"C8:3A:35:00:9C:70","channel":"10","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-64","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"Tenda_0335E8","mac":"C8:3A:35:03:35:E8","channel":"9","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-64","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"Tenda_0335EC","mac":"C8:3A:35:03:35:EC","channel":"10","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-63","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"Tenda_6q3HmKSY;@SH","mac":"38:33:44:14:DD:38","channel":"11","nctrlsb":"none","bandwidth":"20","security":"wpa&wpa2/tkip&aes","signal":"-84","nettype":"bg","wifi_chkHz":"0"},
+ {"ssid":"Tenda_121216","mac":"00:90:4C:12:12:16","channel":"10","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-85","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"chengchiwo","mac":"C8:3A:35:00:FF:FF","channel":"1","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-79","nettype":"b","wifi_chkHz":"0"},
+ {"ssid":"ipcom_chenfuming","mac":"C8:3A:35:03:38:10","channel":"2","nctrlsb":"none","bandwidth":"20","security":"wpa2/aes","signal":"-79","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"w30e_pxy","mac":"C8:3A:35:11:66:88","channel":"10","nctrlsb":"none","bandwidth":"20","security":"wpa&wpa2/aes","signal":"-79","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"Tenda_110","mac":"C8:3A:35:5D:7A:90","channel":"9","nctrlsb":"none","bandwidth":"20","security":"wpa&wpa2/aes","signal":"-83","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"Tenda_888888","mac":"00:90:4C:88:88:88","channel":"6","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-89","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"tenda-office","mac":"00:B0:C6:11:9D:40","channel":"10","nctrlsb":"none","bandwidth":"20","security":"wpa&wpa2/tkip&aes","signal":"-81","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"heqiwei_test","mac":"C8:3A:35:36:6F:50","channel":"5","nctrlsb":"upper","bandwidth":"40","security":"none","signal":"-57","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"Jiemi_weiqi007","mac":"C8:3A:35:00:BB:D1","channel":"10","nctrlsb":"none","bandwidth":"20","security":"wpa2/aes","signal":"-86","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"NNNNNNNN","mac":"5C:90:4C:88:88:8A","channel":"10","nctrlsb":"none","bandwidth":"20","security":"none","signal":"-83","nettype":"bgn","wifi_chkHz":"0"},
+ {"ssid":"BSSSSSSSSP_5G","mac":"00:99:4F:EE:FF:55","channel":"157","nctrlsb":"lower","bandwidth":"40","security":"wpa&wpa2/aes","signal":"-89","nettype":"ac","wifi_chkHz":"1"}]

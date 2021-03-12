@@ -1,0 +1,3 @@
+{"ver_info":{"err_code":0,"resp_type":0,"detail":{"newest_ver":"V15.03.3.11(4400)_circle","newest_data":"2016-10-23","fw_size":10174528,"description":["1、AC18总部自测试在线升级\r\n2、策略为自己升级自己\r\n3、自测完成后，删除该镜像"],"description_zh_tw":["V15.03.3.11(4400)\r\n"]}},
+"up_info":{"err_code":0,"resp_type":3,"detail":{"fw_size":10174528,"recved":3765857, "remainingTime":"123"}}
+}

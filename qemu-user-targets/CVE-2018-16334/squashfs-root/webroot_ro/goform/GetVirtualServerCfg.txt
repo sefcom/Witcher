@@ -1,0 +1,20 @@
+{
+
+	"lanIp": "192.168.0.1",
+	"lanMask": "255.255.255.128",
+	"virtualList": 
+	[{"ip":"192.168.89.1","inPort": "50", "outPort":"8080", "protocol":"2"},
+	{"ip":"192.168.89.1","inPort": "80", "outPort":"8080", "protocol":"0"},
+	{"ip":"192.168.89.1","inPort": "60", "outPort":"8080", "protocol":"1"},
+	{"ip":"192.168.89.1","inPort": "86", "outPort":"8080", "protocol":"0"},
+	{"ip":"192.168.89.1","inPort": "84", "outPort":"8080", "protocol":"2"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"2"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"0"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"2"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"2"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"0"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"2"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"1"},
+	{"ip":"192.168.89.1","inPort": "82", "outPort":"8080", "protocol":"0"},
+	{"ip":"192.168.89.1","inPort": "81", "outPort":"8080", "protocol":"2"}]
+}

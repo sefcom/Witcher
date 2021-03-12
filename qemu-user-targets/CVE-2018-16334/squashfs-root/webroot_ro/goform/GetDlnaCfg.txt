@@ -1,0 +1,21 @@
+{
+    "dlnaEn":"1",
+    "deviceName":"Tenda",
+    "dlnaScanStatus":"scanned",
+    "deviceList":[{
+        "deviceName":"金士顿移动硬盘",
+        "diskList":[
+            {"fileName":"小白的U盘","hasChildFile": "true"},
+            {"fileName":"大白的U盘","hasChildFile": "true"},
+            {"fileName":"老白的U盘","hasChildFile": "false"}
+        ]
+    },{
+        "deviceName":"纽曼移动硬盘",
+        "diskList":[
+            {"fileName":"胡萝卜的U盘","hasChildFile": "true"},
+            {"fileName":"西红柿的U盘","hasChildFile": "true"},
+            {"fileName":"草莓的U盘","hasChildFile": "false"}
+        ]
+    }],
+    "scanList":["小白的U盘/大闸蟹"]
+}

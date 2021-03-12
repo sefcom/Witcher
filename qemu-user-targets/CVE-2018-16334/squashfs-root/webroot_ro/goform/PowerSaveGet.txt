@@ -1,0 +1,10 @@
+{
+"powerSavingEn":"1",
+"time":"06:00-18:00",
+"powerSaveDelay": "1",
+"wl_mode":"ap",
+"timeUp": "0",
+"ledTime": "12:00-18:00",
+"wifiTime": "20:00-08:00",
+"ledCloseType":"unpowerClose"
+}

@@ -1,0 +1,6 @@
+{
+"enable":"1",
+"sn":"",
+"password":"NjE3MzA1NjI=",
+"list":"12345678@mail.com"
+}

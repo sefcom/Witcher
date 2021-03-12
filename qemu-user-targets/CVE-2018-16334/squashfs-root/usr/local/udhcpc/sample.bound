@@ -1,0 +1,46 @@
+#!/bin/sh
+# Sample udhcpc renew script
+
+RESOLV_CONF="/etc/resolv_wisp.conf"
+RESOLV_CONF_STANDARD="/etc/resolv.conf"
+
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+
+/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+
+if [ -n "$router" ]
+then
+	echo "deleting routers"
+	while /sbin/route del default gw 0.0.0.0 dev $interface
+	do :
+	done
+
+	for i in $router
+	do
+		/sbin/route add default gw $i dev $interface
+	done
+fi
+
+echo -n > $RESOLV_CONF
+echo -n > $RESOLV_CONF_STANDARD
+#tenda add
+[ $ip ] && echo ip $ip >> $RESOLV_CONF
+[ $subnet ] && echo mask $subnet >> $RESOLV_CONF
+[ $router ] && echo gateway $router >> $RESOLV_CONF
+[ $lease ] && echo lease $lease >> $RESOLV_CONF
+
+[ -n "$domain" ] && echo domain $domain >> $RESOLV_CONF
+[ -n "$domain" ] && echo domain $domain >> $RESOLV_CONF_STANDARD
+for i in $dns
+do
+	echo adding dns $i
+	echo nameserver $i >> $RESOLV_CONF
+	echo nameserver $i >> $RESOLV_CONF_STANDARD
+done
+
+#tenda add, notify dnsmasq to reconfig
+#killall -1 dnsmasq
+#ifdef CONFIG_NEW_NETCTRL
+cfm post netctrl wan?op=12
+#endif

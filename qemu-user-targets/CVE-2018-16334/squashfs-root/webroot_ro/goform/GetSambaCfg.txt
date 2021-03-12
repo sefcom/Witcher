@@ -1,0 +1,13 @@
+{
+"fileCode": "Big5",
+"password":"1asdf23",
+"guestuser": "guest",
+"guestpwd": "rewrewf",
+"guestaccess": "r",
+"ftpLink":"192.168.9.2",
+"premitEn":"1",
+"internetLink":"122.22.22.22",
+"outPort":"21",
+"internetPort": "5678",
+"wl_mode": "apclientd"
+}

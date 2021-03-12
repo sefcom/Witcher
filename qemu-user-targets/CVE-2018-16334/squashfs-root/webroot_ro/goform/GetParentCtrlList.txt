@@ -1,0 +1,110 @@
+[
+    {
+        "deviceId":"c8:3a:35:d1:d9:a1",
+        "ip":"192.168.0.109",
+        "devName":"user-PCfasd'\"asdfasdf",
+        "isControled": "0",
+        "line":"0",
+        "isSet":"1",
+        "connectType":"2.4G",
+        "block":0,
+        "devType":"apple",
+        "onlineTime":"1d21h25m"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:a2",
+        "ip":"192.168.0.109",
+        "devName":"中[]'>想\\]'>ssss d",
+        "isControled": "1",
+        "line":"1",
+        "isSet":"1",
+        "connectType":"5G",
+        "block":0,
+        "devType":"huawei",
+        "onlineTime":"12312"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:a3",
+        "ip":"192.168.0.109",
+        "devName":"1本机中[]'>想d",
+        "isControled": "0",
+        "line":"0",
+        "isSet":"1",
+        "connectType":"line",
+        "block":0,
+        "devType":"xiaomi",
+        "onlineTime":"123245"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:10",
+        "ip":"192.168.0.10",
+        "devName":"dev2",
+        "isControled": "0",
+        "line":"0",
+        "isSet":"0",
+        "connectType":"line",
+        "block":0,
+        "devType":"vivo",
+        "onlineTime":"3456"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:11",
+        "ip":"192.168.0.11",
+        "devName":"samsung",
+        "isControled": "0",
+        "line":"1",
+        "isSet":"1",
+        "connectType":"line",
+        "block":0,
+        "devType":"samsung",
+        "onlineTime":"23452"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:12",
+        "ip":"192.168.0.12",
+        "devName":"dev4",
+        "isControled": "0",
+        "line":"0",
+        "isSet":"1",
+        "connectType":"line",
+        "block":0,
+        "devType":"leshi",
+        "onlineTime":"213243"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:13",
+        "ip":"192.168.0.13",
+        "devName":"abcdefg",
+        "isControled": "0",
+        "line":"1",
+        "isSet":"0",
+        "connectType":"line",
+        "block":0,
+        "devType":"meizu",
+        "onlineTime":"6723"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:14",
+        "ip":"192.168.0.12",
+        "devName":"dev4",
+        "isControled": "0",
+        "line":"0",
+        "isSet":"1",
+        "connectType":"line",
+        "block":0,
+        "devType":"oppo",
+        "onlineTime":"1234"
+    },
+    {
+        "deviceId":"c8:3a:35:d1:d9:15",
+        "ip":"192.168.0.13",
+        "devName":"1234567890123456789012345678901234567890123456789012345678900123",
+        "isControled": "0",
+        "line":"1",
+        "isSet":"0",
+        "connectType":"line",
+        "block":0,
+        "devType":"unknown",
+        "onlineTime":"1234"
+    }
+]

@@ -1,0 +1,20 @@
+{
+"wifi_chkHz":"1",
+"country_code":"US",
+"wl_enable":"1",
+"wl_mode":"wisp",
+"wpsEn": "1",
+"guestEn": "1",
+"iptvEn": "0",
+"wifiTimerEn": "1",
+"smartSaveEn": "1",
+"dmzEn": "1",
+"handset": "1",
+"ssid": "fcniux",
+"wpapsk_key": "adfasdfasdf",
+"security": "wpapsk",
+"wpapsk_type": "wpa",
+"wpapsk_crypto": "tkip",
+"wifi_chkHz": "1",
+"relayCloseFlag":"2.4G_closed"
+}

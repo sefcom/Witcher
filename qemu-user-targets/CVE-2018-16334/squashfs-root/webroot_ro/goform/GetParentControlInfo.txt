@@ -1,0 +1,9 @@
+{
+    "enable": 1,
+    "mac": "c8:3a:35:d5:74:aa",
+    "url_enable": 1,
+    "urls": "",
+    "time": "18:00-22:00",
+    "day": "1,1,1,1,1,1,1",
+    "limit_type": 0
+}

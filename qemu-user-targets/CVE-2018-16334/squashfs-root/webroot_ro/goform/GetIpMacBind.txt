@@ -1,0 +1,23 @@
+{
+    "lanIp": "192.168.0.1",
+    "lanMask": "255.255.255.128",
+
+    "bindList": 
+    [{"ipaddr":"192.168.0.16","macaddr": "22:33:22:44:55:16", "devname":"dev1","status":"1"},
+    {"ipaddr":"192.168.0.2","macaddr": "22:33:22:44:55:26", "devname":"dev2","status":"1"},
+    {"ipaddr":"192.168.0.3","macaddr": "22:33:22:44:55:36", "devname":"dev3","status":"0"},
+    {"ipaddr":"192.168.0.4","macaddr": "22:33:22:44:55:46", "devname":"dev4","status":"1"},
+    {"ipaddr":"192.168.0.5","macaddr": "22:33:22:44:55:56", "devname":"dev5","status":"0"},
+    {"ipaddr":"192.168.0.6","macaddr": "22:33:22:44:55:66", "devname":"dev6","status":"1"},
+    {"ipaddr":"192.168.0.7","macaddr": "22:33:22:44:55:76", "devname":"dev7","status":"0"},
+    {"ipaddr":"192.168.0.8","macaddr": "22:33:22:44:55:86", "devname":"dev8","status":"1"},
+    {"ipaddr":"192.168.0.9","macaddr": "22:33:22:44:55:96", "devname":"dev9","status":"0"},
+    {"ipaddr":"192.168.0.10","macaddr": "22:33:22:44:55:62", "devname":"dev10","status":"1"},
+    {"ipaddr":"192.168.0.11","macaddr": "22:33:22:44:55:64", "devname":"dev11","status":"0"},
+    {"ipaddr":"192.168.0.15","macaddr": "22:33:22:44:55:44", "devname":"dev12","status":"1"}
+    ],
+    "dhcpClientList":
+    [{"ipaddr":"192.168.0.16","macaddr": "22:33:22:44:55:06", "devname":"dev16","status":"0"},
+    {"ipaddr":"192.168.0.17","macaddr": "22:33:22:44:55:96", "devname":"dev17","status":"1"}
+    ]
+}

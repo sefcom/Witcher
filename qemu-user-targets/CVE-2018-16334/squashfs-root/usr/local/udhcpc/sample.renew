@@ -1,0 +1,42 @@
+#!/bin/sh
+# Sample udhcpc bound script
+
+RESOLV_CONF="/etc/resolv_wisp.conf"
+RESOLV_CONF_STANDARD="/etc/resolv.conf"
+
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+
+/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+
+if [ -n "$router" ]
+then
+	echo "deleting routers"
+	while /sbin/route del default gw 0.0.0.0 dev $interface
+	do :
+	done
+
+	for i in $router
+	do
+		/sbin/route add default gw $i dev $interface
+	done
+fi
+
+echo -n > $RESOLV_CONF
+echo -n > $RESOLV_CONF_STANDARD
+#tenda add
+[ $ip ] && echo ip $ip >> $RESOLV_CONF
+[ $subnet ] && echo mask $subnet >> $RESOLV_CONF
+[ $router ] && echo gateway $router >> $RESOLV_CONF
+[ $lease ] && echo lease $lease >> $RESOLV_CONF
+
+[ -n "$domain" ] && echo domain $domain >> $RESOLV_CONF
+[ -n "$domain" ] && echo domain $domain >> $RESOLV_CONF_STANDARD
+for i in $dns
+do
+        echo adding dns $i
+        echo nameserver $i >> $RESOLV_CONF
+        echo nameserver $i >> $RESOLV_CONF_STANDARD
+done
+
+[ "$reloaddns" ] && cfm post netctrl 2?op=17,wan_id=6 

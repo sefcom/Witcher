@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+    <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script>
+    B.setTextDomain(["translate"]);
+    </script>
+</head>
+
+<body>
+    <fieldset class="ifmwrap-dhcp">
+        <div class="legend-main">
+            <div class="control-group">
+                <label class="control-label">DLNA Server:</label>
+                <div class="controls">
+                    <div id="dlnaEn" class="btn-off"></div>
+                </div>
+            </div>
+            <div id="dlna_set" class="none">
+                <div class="control-group">
+                    <label class="control-label">Media Server Name:</label>
+                    <div class="controls">
+                        <input type="text" id="deviceName" data-options="{&quot;type&quot;:&quot;pwd&quot;, &quot;args&quot;:[5,15]}" required="required" class="input-medium validatebox" maxlength="15">
+                        <input type="button" value="Refresh" id="refresh" class="btn btn-small" style="margin-left:20px;display:none;">
+                        <div style="display: none; vertical-align: middle;">
+                            <img src="./img/loading.gif?9eb6e02df2c224f2603af8a53c1349b0" style="width:20px;margin-left:15px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Media Server Status</label>
+                    <div class="controls" id="serverStatus"></div>
+                </div>
+                <div class="media-content">
+                    <div class="text-muted">Please select folders of media files (such as image, audio, and video files) for better DLNA service experience.</div>
+                    <div class="layout-left" style="width: 240px;">
+                        <div class="file-content">
+                            <div class="folder-title" style="margin-bottom: 6px;">
+                                <div class="layout-left">Storage Devices</div>
+                                <div class="folder-scan"></div>
+                            </div>
+                            <hr>
+                            <div class="folder-wrap">
+                                <div id="folderWrap">
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-muted">Only level-2 folders in the media library are displayed.</span>
+                    </div>
+                    <div class="layout-right" style="width: 240px;">
+                        <div class="file-content">
+                            <div class="folder-title">
+                            <div>Selected Folders</div>
+                            </div>
+                            <hr>
+                            <div class="folder-wrap">
+                                <div id="fileWrap">
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-muted">A maximum of 10 folders can be selected.</span>
+                        <span class="text-muted">(You can click a folder to deselect it.)</span>
+                    </div>
+                </div>
+                <div class="control-group cb">
+                    <div class="red page-err" id="msg-err">&nbsp;</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <input type="button" class="btn btn-normal" id="submit" value="Save">
+            </div>
+        </div>
+    </fieldset>
+    <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/dlna.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body>
+
+</html>
