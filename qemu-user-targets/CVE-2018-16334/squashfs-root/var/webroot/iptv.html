@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+  <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+<script>
+B.setTextDomain(["translate"]);
+</script>
+</head>
+  <body>
+        <fieldset class="ifmwrap-dmz">
+        	<div class="legend-main">
+            	<!-- <div class="control-group">
+                	<label class="control-label">IPTV:</label>
+                    <div class="controls">
+                    	<div id="iptvEn" class="btn-off"></div>
+                    </div>
+                </div> -->
+                <div id="iptv_set">
+                    <div class="control-group none">
+                        <label class="control-label">Multicast:</label>
+                        <div class="controls">
+                            <div id="igmpEn" class="btn-off"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">IPTV<span>:</span></label>
+                        <div class="controls">
+                            <div id="stbEn" class="btn-off"></div>
+                        </div>
+                    </div>
+                    <div id="vlan_set" class="none">
+                        <div class="control-group">
+                            <div class="controls">
+                                <span class="help-tips">Connect the IPTV STB to the IPTV port of the router.</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">VLAN:</label>
+                            <div class="controls">
+                                <select id="iptvType" class="input-medium">
+                                    <option value="none">Default</option>
+                                    <option value="shanghai">Shanghai VLAN</option>
+                                    <option value="manual">Custom VLAN</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="area_set" class="none">
+                            <div class="control-group">
+                                <label class="control-label"></label>
+                                <div class="controls">
+                                    <label class="radio" for=""><input type="radio" name="areaVlan" id="areaVlan1" value="51">51</label>&nbsp;&nbsp;
+                                    <label class="radio" for=""><input type="radio" name="areaVlan" id="areaVlan1" value="85" checked="">85</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="vlanList" class="table-scroll-right" style="max-height:280px;">
+                            <table class="table table-fixed small-table">
+                                <tbody><tr>
+                                    <th style="width:40%">VLAN for Uplink Packets</th>
+                                    <th class="fixed" style="width:30%">VLAN</th>
+                                    <th class="fixed">Operation</th>
+                                </tr>
+                                </tbody><tbody id="vlanBody">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="red page-err" id="msg-err">&nbsp;</div>
+                </div>
+                <div class="btn-group">
+                    <input type="button" class="btn btn-normal" id="submit" value="Save">
+                </div>
+            </div>
+        </fieldset>
+    
+    <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/iptv.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body></html>

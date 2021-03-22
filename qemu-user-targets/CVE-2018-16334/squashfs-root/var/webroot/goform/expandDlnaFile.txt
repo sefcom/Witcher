@@ -1,0 +1,25 @@
+{
+    "subfileList": [
+        {
+            "fileName":"你",
+            "selectedFlag":"false",
+            "hasChildFile": "true"
+        }, {
+            "fileName":"好",
+            "selectedFlag":"true",
+            "hasChildFile": "true"
+        }, {
+            "fileName":"漂",
+            "selectedFlag":"true",
+            "hasChildFile": "false"
+        }, {
+            "fileName":"亮",
+            "selectedFlag":"false",
+            "hasChildFile": "true"
+        }, {
+            "fileName":"啊",
+            "selectedFlag":"false",
+            "hasChildFile": "true"
+        }
+    ]
+}

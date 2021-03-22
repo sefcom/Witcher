@@ -1,0 +1,46 @@
+{
+    "localhostIP": "192.168.0.2",
+    "localhostName": "PC-ZHOU",
+    "localhostMac": "00:24:70:22:11:AD",
+    "isWirelessConnect": "true",
+    "macFilterType": "black",
+    "blackList": [{
+        "devName": "black123121",
+        "devMac": "C8:3A:35:AB:CC:21"
+    },{
+        "devName": "black123122",
+        "devMac": "C8:3A:35:AB:CC:22"
+    },{
+        "devName": "black123123",
+        "devMac": "C8:3A:35:AB:CC:23"
+    },{
+        "devName": "black123124",
+        "devMac": "C8:3A:35:AB:CC:24"
+    },{
+        "devName": "black123125",
+        "devMac": "C8:3A:35:AB:CC:25"
+    },{
+        "devName": "black123126",
+        "devMac": "C8:3A:35:AB:CC:26"
+    }],
+    "whiteList": [], 
+    "onlineList": [{
+        "devName": "online123121",
+        "devMac": "C4:3A:35:AB:CC:21"
+        },{
+            "devName": "online123122",
+            "devMac": "C4:3A:35:AB:CC:22"
+        },{
+            "devName": "online123123",
+            "devMac": "C4:3A:35:AB:CC:23"
+        },{
+            "devName": "online123124",
+            "devMac": "C4:3A:35:AB:CC:24"
+        },{
+            "devName": "online123125",
+            "devMac": "C4:3A:35:AB:CC:25"
+    }, {
+        "devName":"PC-ZHOU",
+        "devMac": "00:24:70:22:11:AD"
+    }]
+}

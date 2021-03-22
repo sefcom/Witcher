@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8">
+	<meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+	<title></title>
+  <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+<script>
+B.setTextDomain(["translate"]);
+</script>
+</head>
+  <body>
+		<fieldset class="ifmwrap-dmz">
+			<div class="legend-main" style="margin-top:60px;">
+				<div class="control-group">
+                	<label class="control-label">WPS:</label>
+                    <div class="controls">
+                    	<div id="wpsEn" class="btn-off"></div>
+                    </div>
+                </div>
+                <div id="waitingTip" class="txt-center none text-warning"></div>
+                <div id="wpsMethod" class="none">
+					<div class="container" style="width:500px;">
+						<div class="control-group">
+							<h3>Method 1:</h3>
+
+							<p>Press the WPS button on the router or <a id="wpsSubmit" class="online-link" style="text-decoration: none;">Click Here</a>. Then, press the WPS button on the wireless network adapter within 2 minutes.</p>
+						</div>
+					</div>
+                    
+					<div class="container" style="width:500px;">
+						<div class="control-group">
+							<h3>Method 2:</h3>
+							<div>Enter this pin on receiver:<span id="pinCode" class="online-link" style="text-decoration: none;"></span></div>
+						</div>
+						
+					</div>                	
+                </div>
+
+	            <div class="control-group">
+	                <div class="red page-err" id="msg-err"></div>
+	            </div>
+	            <!-- <div class="btn-group">
+	                <input type="button" class="btn btn-normal" id="submit" value="Save">
+	            </div> -->
+			</div>
+
+		</fieldset>
+  
+  <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+  <script src="js/wifi_wps.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body></html>

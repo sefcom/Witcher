@@ -1,0 +1,50 @@
+[
+    {
+        "serverEn": "0",
+        "guestIp": "192.168.10.1",
+        "guestMask": "255.255.255.0",
+        "wanIp": "192.168.11.1",
+        "wanMask": "255.255.255.0",
+        "wanIp2": "192.168.22.1",
+        "wanMask2": "255.255.255.0",
+        "lanIp": "192.168.8.1",
+        "lanMask": "255.255.255.0",
+        "serverIp": "192.168.5.1",
+        "vlan2Ip": "192.168.6.1",
+        "vlan2Mask": "255.255.255.0",
+        "startIp": "192.168.0.12",
+        "endIp": "192.168.0.88",
+        "mppe": "1",
+        "mppeOp": "40"
+    },
+    {
+        "connsta": "1",
+        "userName": "mrwho1",
+        "password": "123456789",
+        "netEn": "1",
+        "serverIp": "192.168.0.12",
+        "serverMask": "255.255.255.0",
+        "remark": "pptprule",
+        "enable": "1"
+    },
+    {
+        "connsta": "0",
+        "userName": "mrwho2",
+        "password": "123456789",
+        "netEn": "1",
+        "serverIp": "192.168.0.12",
+        "serverMask": "255.255.255.0",
+        "remark": "pptprule",
+        "enable": "0"
+    },
+    {
+        "connsta": "1",
+        "userName": "mrwho3",
+        "password": "123456789",
+        "netEn": "1",
+        "serverIp": "192.168.0.12",
+        "serverMask": "255.255.255.0",
+        "remark": "pptprule",
+        "enable": "1"
+    }
+]

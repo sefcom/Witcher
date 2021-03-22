@@ -1,0 +1,97 @@
+/* Fixed for reasy-ui.css */
+.control-group {
+	overflow: hidden;
+	*zoom: 1;
+}
+
+/* Fixed for pages */
+/*IE does not work with position fixed */
+.main-html {
+	overflow-y: hidden;
+}
+.nav {
+	position:absolute;
+}
+.nav-list {
+	height: 46px;
+}
+
+.nav .nav-label {
+	display: none;
+	top: 60px;
+	left: 130px;
+	width: 5px;
+	height: 40px;
+	border-bottom: 0;
+	border-top: 0;
+	border-left: 0;
+	border-right: 0;
+	background-color: #fff;
+}
+
+/* For dailog and save message */
+.main-dailog, .dailog-iframe, .save-msg {
+	position: absolute;
+}
+
+.iframe-title {
+	line-height: 24px;
+}
+
+
+/*toselect兼容*/
+
+.input-append {
+	display: inline;
+	*zoom: 1;
+}
+.caret {
+	display: inline;
+	width: 0;
+	height: 0;
+	vertical-align: top;
+	border-top: 4px solid #000000;
+	border-right: 4px solid #ececec;
+	border-left: 4px solid #ececec;
+	content: "";
+	margin-top:8px;
+}
+.input-append input{
+	-webkit-border-radius:4px 0 0 4px ;
+    -moz-border-radius: 4px 0 0 4px;
+	border-radius:4px 0 0 4px;
+	height:24px;
+	padding-left: 4px;
+	overflow: hidden;
+	line-height: 24px;
+	display:inline;
+}
+
+.input-append .btn-group{
+	margin-top:0;
+	width:30px;
+	height:24px;
+	white-space: nowrap;
+	word-spacing: 0;
+	margin-left:-3px;
+	display:inline;
+}
+
+.input-append .btn-group .btn-small {
+	font-size:0;
+	margin-left:0;
+	vertical-align: bottom;
+	line-height:7px;
+	height:24px;
+	border-left:0 none;
+	-webkit-border-radius: 0 4px 4px 0;
+		-moz-border-radius: 0 4px 4px 0;
+			border-radius: 0 4px 4px 0;
+	display:inline;
+}
+
+.input-append .btn-group .btn-small:hover{
+	border:1px solid #cccccc;
+	border-left:0 none;
+}
+

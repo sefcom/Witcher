@@ -1,0 +1,20 @@
+[
+    {
+        "username":"wangjiangman",
+        "dailinip":"192.168.0.1",
+        "assignedip":"192.168.0.2",
+        "onlinetime":"1天22小时33分"
+    },
+    {
+        "username":"fiona",
+        "dailinip":"192.168.0.3",
+        "assignedip":"192.168.0.4",
+        "onlinetime":"3天22小时44分"
+    },
+    {
+        "username":"Johnny",
+        "dailinip":"192.168.0.5",
+        "assignedip":"192.168.0.6",
+        "onlinetime":"4天21小时55分"
+    }
+]

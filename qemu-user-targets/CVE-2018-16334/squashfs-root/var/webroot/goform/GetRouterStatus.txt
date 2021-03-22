@@ -1,0 +1,34 @@
+{
+"deviceName":"FH1901",
+"clientNum":6,
+"blackNum":6,
+"usbNum":"2",
+"lanIP":"192.168.0.1",
+"lanMAC": "C8:3A:35:22:AD:32",
+"workMode":"router",
+"homePageLink":"http://www.tenda.com.cn",
+"wanInfo": [{
+    "wanStatus":"2301007",
+    "wanIp":"220.192.3.1",
+    "wanUploadSpeed":"100",
+    "wanDownloadSpeed":"80"
+    },{
+    "wanStatus":"1311007",
+    "wanIp":"",
+    "wanUploadSpeed":"123",
+    "wanDownloadSpeed":"76"
+    }
+],
+"apStatus":"2103001",
+"wl24gEn": "1",
+"wl24gName":"fcniuxasdfasdfasdfasdfasdfasdfasdfabababab",
+"wl24gsec":"1",
+"wl5gEn":"1",
+"wl5gName":"fcniux5G",
+"wl5gsec":"0",
+"onlineUpgradeInfo": {
+    "newVersionExist": "1",
+    "curVersion": "V2.0.1",
+    "newVersion": "V2.0.10"
+    }
+}

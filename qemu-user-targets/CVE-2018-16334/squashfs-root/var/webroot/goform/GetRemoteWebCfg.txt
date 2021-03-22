@@ -1,0 +1,7 @@
+{
+"remoteWebEn":"1",
+"remoteIp":"192.168.7.2",
+"remotePort":"8080",
+"lanIp":"192.168.1.23",
+"wlGuestIp": "192.168.2.3"
+}

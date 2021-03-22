@@ -1,0 +1,7 @@
+{
+"ledType": "time",
+"time":"03:30-07:00",
+"timeUp": "0",
+"powerSaveTime": "08:00-20:00",
+"ledCloseType": "allClose"
+}

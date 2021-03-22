@@ -1,0 +1,8 @@
+{
+    "status": 2,
+    "resp_code":672,
+    "update_info": {
+        "new_version": "V2.0.10",
+        "description": "1.修复了无线中继中部分Bug问题；2.新增WAN口速率修改功能；"
+    }
+}

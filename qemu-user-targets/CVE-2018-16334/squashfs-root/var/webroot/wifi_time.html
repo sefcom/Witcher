@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+  <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+<script>
+B.setTextDomain(["translate"]);
+</script>
+</head>
+  <body>
+        <fieldset class="ifmwrap-time">
+        	<div class="legend-main" style="margin-top: 40px;">
+            	<div id="wifi_set_wrap">
+                    <div id="wifi_set">
+                        <div class="control-group">
+                            <label class="control-label">WiFi Schedule:</label>
+                            <div class="controls">
+                                <div id="schedWifiEnable" class="btn-off"></div>
+                            </div>
+                        </div>
+                        <div id="time_set" class="none">
+                            <div class="control-group">
+                                <label class="control-label">Turn Off During:</label>
+                                <div class="controls">
+                                    <select name="startHour" id="startHour" class="input-mini"></select>:<select name="startHour" id="startMin" class="input-mini"></select>~<select name="startHour" id="endHour" class="input-mini"></select>:<select name="startHour" id="endMin" class="input-mini"></select></div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">In:</label>
+                                <div class="controls" style="height:30px;">
+                                    <label class="radio" for="everyday">
+                                        <input type="radio" name="timeType" id="everyday" value="0">Every Day</label>
+                                    <label class="radio" for="thatday">
+                                        <input type="radio" name="timeType" id="thatday" value="1">Specified Day</label>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label"></label>
+                                <div class="controls">
+                                    <label class="radio" for="day1">
+                                        <input type="checkbox" id="day1">Mon.</label>
+                                    <label class="radio" for="day2">
+                                        <input type="checkbox" id="day2">Tue.</label>
+                                    <label class="radio" for="day3">
+                                        <input type="checkbox" id="day3">Wed.</label>
+                                    <label class="radio" for="day4">
+                                        <input type="checkbox" id="day4">Thur.</label>
+                                    <label class="radio" for="day5">
+                                        <input type="checkbox" id="day5">Fri.</label>
+                                    <label class="radio" for="day6">
+                                        <input type="checkbox" id="day6">Sat.</label>
+                                    <label class="radio" for="day7">
+                                        <input type="checkbox" id="day7">Sun.</label>
+                                    
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="red page-err" id="msg-err"></div>
+                    </div>
+                    
+                    <div class="control-group btn-group">
+                        <input type="button" class="btn btn-normal" id="submit" value="Save">
+                    </div>
+                    <p class="txt-center text-warning none" id="timeUpTip">The schedule takes effect only if the system time is synchronized with the internet time.</p>
+                    <div class="txt-help-tips txt-center">To restore WiFi connectivity when WiFi is disabled as scheduled, press the WiFi button on the router.</div>
+            	</div>
+             </div>
+        </fieldset>
+    
+    <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/wifi_time.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body></html>

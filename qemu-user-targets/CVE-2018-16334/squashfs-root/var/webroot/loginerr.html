@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta http-equiv="pragma" content="no-cache">
+<title>The number of online clients has reached the upper limit.</title>
+<style>* {margin:0; padding: 0;}
+.err-txt {position: absolute; top:40%; width:100%; font-size: 20px; font-family: 'Microsoft YaHei', 'Helvetica', 'Arial', 'Sans-serif'; text-decoration: none; font-weight: normal; text-align: center;}</style>
+<script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+<script>B.setTextDomain(["translate"]);</script>
+</head>
+<body>
+    <h2 class="err-txt" id="errTxt">
+    
+    </h2>
+<script>
+	var searchStr = window.location.search.replace(/[^\d]/g, ""),
+		onlineMaxNum = searchStr;
+    document.getElementById("errTxt").innerHTML = _("The number of online clients has reached the upper limit (%s). Please try again later.", [onlineMaxNum]);
+</script>
+</body></html>

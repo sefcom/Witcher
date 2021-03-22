@@ -1,0 +1,12 @@
+{
+"lan":"192.168.0.1",
+"firmware":"V1.0.0.2",
+"rebootEn":"0",
+"wl_mode": "ap",
+"apClientConnect":"1",
+"ipMacBindEn":"0",
+"timeZone": "1",
+"remoteWeb":"1",
+"nopwd": false,
+"syncInternetTime":"1"
+}

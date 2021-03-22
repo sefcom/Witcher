@@ -1,0 +1,11 @@
+{
+"guestEn": "0",
+"guestSsid": "Tenda_guest",
+"guestWrlPwd":"12345678",
+"guestEn_5g": "1",
+"guestSsid_5g": "Tenda_guest_5g",
+"guestWrlPwd_5g":"12345678",
+"wl_mode": "ap",
+"shareSpeed": "15744",
+"wl_en": "1"
+}

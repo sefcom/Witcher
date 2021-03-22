@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="css/reasy-ui.css?9eb6e02df2c224f2603af8a53c1349b0" rel="stylesheet">
+    <title></title>
+    <script src="lang/b28n_async.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script>
+    B.setTextDomain(["translate"]);
+    </script>
+</head>
+
+<body>
+    <fieldset class="ifmwrap-cloud">
+        <div class="legend-main" style="margin-top: 40px;">
+            <form id="power-form">
+                <div class="control-group">
+                    <label class="control-label">Sleeping Mode:</label>
+                    <div class="controls">
+                        <div id="powerSavingEn" class="btn-off"></div>
+                        <span class="text-warning" id="timeUpTip">The Sleeping mode takes effect only if the system time is synchronized with the internet time.</span>
+                    </div>
+                </div>
+                <div class="control-group none" id="power_time_set">
+                    <label class="control-label">Sleeping Time:</label>
+                    <div class="controls">
+                        <select name="startHour" id="startHour" class="input-mini"></select>:<select name="startHour" id="startMin" class="input-mini"></select>~<select name="startHour" id="endHour" class="input-mini"></select>:<select name="startHour" id="endMin" class="input-mini"></select>&nbsp;
+                    </div>
+                </div>
+                
+                <div class="control-group none" id="power_save_led_set">
+                    <label class="control-label">Indicator:</label>
+                    <div class="controls">
+                        <label class="radio">
+                            <input type="radio" name="ledCloseType" value="allClose">All off</label>
+                        <label class="radio">
+                            <input type="radio" name="ledCloseType" value="unpowerClose">All off except power</label>
+                    </div>
+                </div>
+
+                <div class="control-group none" id="power_save_delay_set">
+                    <label class="control-label" data-lang="Delay :">Delay:</label>
+                    <div class="controls">
+                        <label class="radio" for="power_save_delay">
+                            <input type="checkbox" id="power_save_delay" name="power_energy_save">Delay enabling the Sleep mode when there is an online user.</label>
+                    </div>
+                </div>
+            </form>
+
+            <div class="control-group" id="powerCloseTips">
+                <label></label>
+                <div class="controls">
+                    <span class="help-tips" id="powerTipsMsg">When it is enabled, indicators are turned off and the WiFi network and USB port enter the Sleeping mode to reduce power consumption.</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div class="controls">
+                    <div id="msg-err" class="red"></div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <input type="button" id="power_submit" class="btn btn-normal" value="Save">
+            </div>
+            
+
+            <div class="control-group none" id="power_notice" style="margin-top: 80px;margin-left: 10px;">
+                <div>How to use the WiFi network when the router is in Sleeping mode?</div>
+                <div class="help-tips">Method 1: Press the WiFi button on the router.</div>
+                <div class="help-tips">Method 2: Wake up the router using Tenda App. (To download Tenda App, choose Advanced Settings &gt; Tenda App and scan the QR code.)</div>
+            </div>
+            <!-- <div class="control-group none" id="power_notice">
+                <div id="power_usb_notice">If sleeping mode is enabled, the router will work in a power saving state. LEDs and WiFi funtion will be in a sleeping state.</div>
+                <div>Here's two ways to enable WiFi if you need to use it in sleeping mode:</div>
+                <div>1. Enable WiFi from the Tenda App by using Wake Up feature</div>
+                <div>2. Press the WiFi button to turn on WiFi</div>
+                <div>Note: Go to Advanced Settings > Tenda App to scan the QR code for downloading.</div>
+            </div> -->
+        </div>
+    </fieldset>
+
+    <script src="js/libs/j.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/reasy-ui-1.0.3.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/libs/public.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+    <script src="js/sleep_mode.js?9eb6e02df2c224f2603af8a53c1349b0"></script>
+</body>
+
+</html>

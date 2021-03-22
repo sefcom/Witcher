@@ -1,0 +1,9 @@
+{
+"iptvEn":"0",
+"stbEn":"1",
+"igmpEn":"1",
+"iptvType": "manual",
+"vlanId":"29",
+"list":"29,82,882,823,322",
+"wl_mode": "ap"
+}

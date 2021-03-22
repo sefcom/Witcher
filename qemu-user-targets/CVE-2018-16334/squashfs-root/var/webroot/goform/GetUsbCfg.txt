@@ -1,0 +1,43 @@
+{
+    "usbList": [{
+        "devName":"WD My Passport 0837",
+        "devId":"sda",
+        "diskList": [{
+            "diskName":"本地磁盘（C盘）",
+            "memoryUnUse": "0.04",
+            "memoryTotal": "32"
+        },{
+            "diskName":"本地磁盘（E盘）",
+            "memoryUnUse": "11.4",
+            "memoryTotal": "24"
+        },{
+            "diskName":"本地磁盘（F盘）",
+            "memoryUnUse": "1.4",
+            "memoryTotal": "12"
+        },{
+            "diskName":"本地磁盘（G盘）",
+            "memoryUnUse": "2.3",
+            "memoryTotal": "8"
+        }]
+    },{
+        "devName":"WD M1y Passport 2837",
+        "devId":"sda2",
+        "diskList": [{
+            "diskName":"d地磁盘（C盘）",
+            "memoryUnUse": "18.4",
+            "memoryTotal": "32"
+        },{
+            "diskName":"d地磁盘（E盘）",
+            "memoryUnUse": "11.4",
+            "memoryTotal": "24"
+        },{
+            "diskName":"d地磁盘（F盘）",
+            "memoryUnUse": "1.4",
+            "memoryTotal": "12"
+        },{
+            "diskName":"d地磁盘（G盘）",
+            "memoryUnUse": "2.3",
+            "memoryTotal": "8"
+        }]
+    }]
+}

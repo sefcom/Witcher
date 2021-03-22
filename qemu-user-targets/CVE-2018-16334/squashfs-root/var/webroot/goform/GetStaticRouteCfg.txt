@@ -1,0 +1,72 @@
+{
+    "wanGateway": "",
+    "wanMask": "",
+    "wanGateway2": "192.168.91.157",
+    "wanMask2": "255.255.255.0",
+    "routeList": [
+        {
+            "network": "192.168.98.1",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN1",
+            "effective":"1"
+        },
+        {
+            "network": "192.168.98.2",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN2",
+            "effective":"0"
+        },
+        {
+            "network": "192.168.98.3",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN2",
+            "effective":"0"
+        },
+        {
+            "network": "192.168.98.4",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN1",
+            "effective":"0"
+        },
+        {
+            "network": "192.168.98.5",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "1",
+            "ifname":"WAN1",
+            "effective":"1"
+        },
+        {
+            "network": "192.168.98.6",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN2",
+            "effective":"1"
+        },
+        {
+            "network": "192.168.98.7",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN1",
+            "effective":"0"
+        },
+        {
+            "network": "192.168.98.8",
+            "mask": "255.255.255.0",
+            "gateway": "192.168.98.1",
+            "operateType": "0",
+            "ifname":"WAN1",
+            "effective":"1"
+        }
+    ]
+}

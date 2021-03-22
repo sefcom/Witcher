@@ -1,0 +1,6 @@
+{
+    "dlna":"1",
+    "printer":"0",
+    "hasusb":"1",
+    "thunderEn":"0"
+}

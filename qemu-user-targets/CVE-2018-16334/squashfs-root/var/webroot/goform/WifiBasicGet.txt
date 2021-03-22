@@ -1,0 +1,12 @@
+{
+"wrlEn": "1",
+"ssid": "Tenda123",
+"wrlPwd": "12345678",
+"security": "none",
+"hideSsid": "1",
+"wrlEn_5g": "0",
+"ssid_5g": "Tenda_43543_5g",
+"wrlPwd_5g": "12345678",
+"security_5g": "wpapsk",
+"hideSsid_5g": "0"
+}
