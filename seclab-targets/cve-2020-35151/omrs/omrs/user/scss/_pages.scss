@@ -1,0 +1,193 @@
+
+// Signin & Signup Page
+.am-signin-wrapper,
+.am-signup-wrapper {
+  min-height: 100vh;
+  background-color: $app-primary;
+  @include gradient-x($app-primary, darken($app-primary, 10%));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px 0;
+}
+
+.am-signin-box,
+.am-signup-box {
+
+  > .row {
+    > div {
+      &:first-child {
+        text-align: center;
+        padding: 40px;
+        background-color: $orange;
+        @include gradient-y($orange, darken($orange, 5%));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        a {
+          color: #fff;
+          text-decoration: underline;
+        }
+      }
+
+      &:last-child {
+        padding: 50px;
+        background-color: #fff;
+      }
+    }
+  }
+
+  h2 { letter-spacing: -1px; }
+  hr { border-color: rgba(#fff,0.5); }
+
+  .form-control-label { color: $gray-700; }
+
+  .form-control {
+    border-color: $gray-500;
+
+    &:focus,
+    &:active { border-color: $gray-600; }
+  }
+
+  .btn {
+    background-color: $app-primary;
+    color: rgba(#fff,.8);
+
+    &:hover,
+    &:focus {
+      background-color: darken($app-primary, 5%);
+      color: #fff;
+    }
+  }
+}
+
+.am-signin-box { width: 700px; }
+.am-signup-box { width: 750px; }
+
+
+// Tooltip and Popover
+.tooltip-static-demo {
+  .tooltip {
+    z-index: 1;
+    opacity: 1;
+    position: relative;
+    display: inline-block;
+    margin: 0 10px;
+  }
+
+  .bs-tooltip-top,
+  .bs-tooltip-bottom {
+    .arrow {
+      left: 50%;
+      margin-left: -2px;
+    }
+  }
+
+  .bs-tooltip-left,
+  .bs-tooltip-right {
+    margin-top: 5px;
+
+    .arrow {
+      top: 50%;
+      margin-top: -3px;
+    }
+  }
+}
+
+.popover-static-demo {
+  .popover {
+    z-index: 1;
+    opacity: 1;
+    position: relative;
+    display: inline-block;
+    margin: 0 10px;
+  }
+
+  .bs-popover-top,
+  .bs-popover-bottom {
+    .arrow {
+      left: 50%;
+      margin-left: -5px;
+    }
+  }
+
+  .bs-popover-left,
+  .bs-popover-right {
+    margin-top: 5px;
+
+    .arrow {
+      top: 50%;
+      margin-top: -5px;
+    }
+  }
+}
+
+/***** WIDGETS *****/
+.widget-list-group {
+  .list-group-item {
+    border: 0;
+
+    &:first-child { @include border-top-radius(0); }
+    &:last-child { @include border-bottom-radius(0); }
+
+    + .list-group-item { border-top: 1px solid $gray-200; }
+
+    &.d-flex {
+      align-items: center;
+      padding: 20px;
+    }
+  }
+
+  &.bg-primary,
+  &.bg-success,
+  &.bg-warning,
+  &.bg-danger,
+  &.bg-info,
+  &.bg-app-primary {
+    .list-group-item {
+      background-color: transparent;
+      color: #fff;
+      .text-muted { color: rgba(#fff,.5) !important; }
+      + .list-group-item { border-color: rgba(#fff, 0.2); }
+    }
+  }
+}
+
+// Page Inbox
+.email-content-header {
+  display: flex;
+  justify-content:  space-between;
+  margin-bottom: 20px;
+
+  .btn-group {
+    .btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $gray-600;
+      border: 0;
+      background-color: $gray-300;
+
+      i {
+        line-height: 0;
+
+        &::before,
+        &::after { line-height: 0; }
+      }
+
+      &:hover,
+      &:focus {
+        &:not(.disabled) {
+          background-color: $gray-400;
+          color: $gray-700;
+        }
+      }
+
+      + .btn { margin-left: 1px; }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+/* ------------------------------------------ */
+/* ############### Navigation ############### */
+/* ------------------------------------------ */
+
+// Nav
+.nav-tabs {
+  .nav-link { border-radius: 0; }
+}
+
+.nav-tabs-for-dark {
+  .nav-link {
+    color: rgba(#fff, .8);
+    &.active { border-color: transparent; }
+
+    &:hover,
+    &:focus { color: #fff; }
+  }
+}
+
+
+// Nav Custom Color
+.nav-gray-600 { @include nav-color-variant($gray-600, $gray-800); }
+.nav-gray-700 { @include nav-color-variant($gray-700, $gray-900); }
+.nav-white-800 { @include nav-color-variant(rgba(#fff, .8), #fff); }
+
+.nav-pills {
+  @include nav-color-variant($gray-700, $gray-800, #fff, transparent, $brand-info);
+
+  .nav-link { border-radius: 0; }
+}
+
+.nav-pills-for-dark { @include nav-color-variant(rgba(#fff,.7), #fff, #fff, transparent, $brand-info); }
+
+.nav.active-primary .nav-link.active { color: $brand-primary; }
+.nav.active-success .nav-link.active { color: $brand-success; }
+.nav.active-warning .nav-link.active { color: $brand-warning; }
+.nav.active-danger .nav-link.active { color: $brand-danger; }
+.nav.active-info .nav-link.active { color: $brand-info; }
+.nav.active-indigo .nav-link.active { color: $indigo; }
+.nav.active-purple .nav-link.active { color: $purple; }
+.nav.active-pink .nav-link.active { color: $pink; }
+.nav.active-teal .nav-link.active { color: $teal; }
+.nav.active-orange .nav-link.active { color: $orange; }

@@ -1,0 +1,217 @@
+/* ------------------------------------------ */
+/* ############### Pagination ############### */
+/* ------------------------------------------ */
+
+.pagination {
+  .page-item {
+    + .page-item {
+      padding-left: 3px;
+      margin: 0;
+    }
+
+    .page-link {
+      color: $gray-700;
+      padding: 11px 0;
+      width: 35px;
+      height: 40px;
+      text-align: center;
+      border-radius: 0;
+
+      &:hover,
+      &:focus {
+        background-color: $gray-200;
+      }
+    }
+  }
+
+  .active {
+    .page-link {
+      &,&:hover,&:focus {
+        color: #fff;
+        background-color: $brand-info;
+        border-color: transparent;
+      }
+    }
+  }
+}
+
+.pagination-basic {
+  .page-item {
+
+    .page-link {
+      border: 0;
+      width: 35px;
+      height: 40px;
+      text-align: center;
+      padding: 11px 0;
+      background-color: $gray-200;
+
+      &:hover,
+      &:focus { background-color: $gray-300; }
+    }
+  }
+
+  .active {
+    .page-link {
+      &,&:hover,&:focus {
+        border: 0;
+        background-color: $brand-info;
+      }
+    }
+  }
+
+  .disabled .page-link { background-color: transparent; }
+}
+
+.pagination-dark {
+  .page-item {
+
+    &.disabled {
+      .page-link {
+        background-color: transparent;
+        color: rgba(#fff,0.2);
+      }
+    }
+
+    &.active {
+      .page-link {
+        border-color: transparent;
+        background-color: #fff;
+        color: $gray-800;
+      }
+    }
+
+    .page-link {
+      color: rgba(#fff, 0.5);
+      border: 0;
+      width: 35px;
+      text-align: center;
+      padding-left: 0;
+      padding-right: 0;
+
+      &:hover,
+      &:focus {
+        background-color: rgba(#fff,.2);
+        color: #fff;
+      }
+    }
+  }
+}
+
+// Pagination color variant
+.pagination-primary { @include pagination-variant($brand-primary); }
+.pagination-success { @include pagination-variant($brand-success); }
+.pagination-warning { @include pagination-variant($brand-warning); }
+.pagination-danger { @include pagination-variant($brand-danger); }
+.pagination-info { @include pagination-variant($brand-info); }
+.pagination-inverse { @include pagination-variant($gray-800); }
+.pagination-indigo { @include pagination-variant($indigo); }
+.pagination-purple { @include pagination-variant($purple); }
+.pagination-pink { @include pagination-variant($pink); }
+.pagination-orange { @include pagination-variant($orange); }
+.pagination-teal { @include pagination-variant($teal); }
+
+
+.pagination-circle {
+  .page-item {
+    + .page-item { margin-left: 5px; }
+
+    .page-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 1px solid $gray-300;
+      @include border-radius(100%);
+    }
+
+    span.page-link { border: 0; }
+
+    &.active {
+      .page-link {
+        &,&:hover,&:focus {
+          border-color: transparent;
+        }
+      }
+    }
+  }
+
+  &.pagination-dark {
+    .page-item {
+      .page-link { border-color: rgba(#fff, 0.2); }
+    }
+
+    .active {
+      .page-link { border-color: transparent; }
+    }
+  }
+}
+
+.pagination-rounded {
+  .page-item {
+    + .page-item { padding-left: 8px; }
+
+    .page-link {
+      background-color: transparent;
+      border: 1px solid $gray-300;
+      @include border-radius();
+    }
+  }
+
+  .active {
+    .page-link {
+      &,&:hover,&:focus {
+        border-color: transparent;
+        background-color: $brand-info;
+      }
+    }
+  }
+
+  &.pagination-dark {
+    .page-item {
+      .page-link { border-color: rgba(#fff,0.1); }
+      span.page-link { border: 0; }
+    }
+  }
+}
+
+.pagination-circle,
+.pagination-rounded {
+  .page-item {
+    span.page-link {
+      border-color: transparent;
+      padding-left: 0;
+      padding-right: 0;
+      width: auto;
+    }
+
+    &.disabled .page-link { background-color: transparent; }
+  }
+}
+
+
+.pagination-dark {
+  .page-link {
+    background-color: transparent;
+    color: #fff;
+    border-color: rgba(#fff, .2);
+
+    &:hover,
+    &:focus {
+      background-color: $gray-800;
+    }
+  }
+}
+
+/* ########## RTL SUPPORT ########## */
+.rtl {
+  .pagination {
+    padding: 0;
+    .page-item + .page-item {
+      padding-left: 0;
+      padding-right: 3px;
+    }
+  }
+}

@@ -1,0 +1,107 @@
+/* -------------------------------------- */
+/* ############### Tables ############### */
+/* -------------------------------------- */
+
+.table {
+  background-color: $gray-200;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th,
+  td {
+    border-top-color: #fff;
+    color: darken($gray-600, 7%);
+    &.valign-middle { vertical-align: middle; }
+  }
+
+  thead,
+  tfoot {
+    > tr > th,
+    > tr > td {
+      border-top: 0;
+      border-bottom: 0;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      background-color: $gray-300;
+      color: $gray-800;
+      letter-spacing: 0.5px;
+    }
+
+    &.bg-primary { @include table-head-variant($brand-primary); }
+    &.bg-success { @include table-head-variant($brand-success); }
+    &.bg-warning { @include table-head-variant($brand-warning); }
+    &.bg-danger { @include table-head-variant($brand-danger); }
+    &.bg-info { @include table-head-variant($brand-info); }
+    &.bg-indigo { @include table-head-variant($indigo); }
+    &.bg-purple { @include table-head-variant($purple); }
+    &.bg-teal { @include table-head-variant($teal); }
+    &.bg-orange { @include table-head-variant($orange); }
+    &.bg-pink { @include table-head-variant($pink); }
+    &.bg-gray-800 { @include table-head-variant($gray-800); }
+    &.bg-gray-500 { @include table-head-variant($gray-500); }
+  }
+
+  tbody {
+    > tr > th {
+      color: $gray-800;
+      font-weight: 500;
+    }
+  }
+
+  .ckbox span::before,
+  .rdiobox span::before { border-color: transparent; }
+
+  // full-table-variant($head-color, $body-color)
+  &.table-primary { @include full-table-variant($brand-primary, lighten($brand-primary, 43%)); }
+  &.table-success { @include full-table-variant($brand-success, lighten($brand-success, 50%)); }
+  &.table-warning { @include full-table-variant($brand-warning, lighten($brand-warning, 40%)); }
+  &.table-danger { @include full-table-variant($brand-danger, lighten($brand-danger, 40%)); }
+  &.table-info { @include full-table-variant($brand-info, lighten($brand-info, 35%)); }
+  &.table-indigo { @include full-table-variant($indigo, lighten($indigo, 42%)); }
+  &.table-purple { @include full-table-variant($purple, lighten($purple, 42%)); }
+  &.table-teal { @include full-table-variant($teal, lighten($teal, 50%)); }
+  &.table-pink { @include full-table-variant($pink, lighten($pink, 37%)); }
+  &.table-orange { @include full-table-variant($orange, lighten($orange, 42%)); }
+}
+
+.table-bordered {
+  border: 0;
+  thead,
+  tfoot {
+    tr {
+      th,
+      td {
+        border-left: 1px solid rgba(#fff, 0.8);
+        border-right: 0;
+        &:first-child { border-left: 0; }
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      th,
+      td {
+        border: 1px solid #fff;
+        border-right: 0;
+        border-bottom: 0;
+
+        &:first-child { border-left: 0; }
+      }
+    }
+  }
+}
+
+.table-white {
+  thead,
+  tbody {
+    tr {
+      th,
+      td {
+        background-color: #fff;
+        border-color: $gray-200;
+      }
+    }
+  }
+}

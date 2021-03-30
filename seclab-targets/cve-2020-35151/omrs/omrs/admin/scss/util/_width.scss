@@ -1,0 +1,113 @@
+/* ------------------------------------- */
+/* ############### Width ############### */
+/* ------------------------------------- */
+
+
+//width mixin
+@mixin make-width($num, $viewport: "") {
+  $p: $num + "%";
+
+  @if $viewport == "" {
+    $viewport: "-";
+  } @else {
+    $viewport: "-" + $viewport + "-";
+  }
+
+  .wd#{$viewport}#{$num} { width: #{$num}px; }
+  .wd#{$viewport}#{$num}p { width: #{$p}; }
+  .mx-wd#{$viewport}#{$num}p { max-width: #{$p}; }
+  .mn-wd#{$viewport}#{$num}p { min-width: #{$p}; }
+
+  .wd#{$viewport}#{$num}-force { width: #{$num}px !important; }
+  .wd#{$viewport}#{$num}p-force { width: #{$p} !important; }
+  .mx-wd#{$viewport}#{$num}p-force { max-width: #{$p} !important; }
+  .mn-wd#{$viewport}#{$num}p-force { min-width: #{$p} !important; }
+}
+
+$num: 5;
+@while $num <= 100 {
+  @include make-width($num);
+  $num: $num + 5;
+}
+
+$num: 150;
+@while $num <= 1000 {
+  .wd-#{$num} { width: #{$num}px; }
+  .wd-#{$num}-force { width: #{$num}px !important; }
+  $num: $num + 50;
+}
+
+@mixin do-make-width($viewport, $num, $max, $plus) {
+  @while $num <= $max {
+    @include make-width($num,$viewport);
+    $num: $num + $plus;
+  }
+}
+
+@media (min-width: 480px) {
+  @include do-make-width("xs",5,100,5);
+  @include do-make-width("xs",150,1000,50);
+
+  .wd-xs-auto { width: auto; }
+  .wd-xs-auto-force { width: auto !important; }
+}
+
+@include media-breakpoint-up(sm) {
+  @include do-make-width("sm",5,100,5);
+  @include do-make-width("sm",150,1000,50);
+
+  .wd-sm-auto { width: auto; }
+  .wd-sm-auto-force { width: auto !important; }
+}
+
+@include media-breakpoint-up(md) {
+  @include do-make-width("md",5,100,5);
+  @include do-make-width("md",150,1000,50);
+
+  .wd-md-auto { width: auto; }
+  .wd-md-auto-force { width: auto !important; }
+}
+
+@include media-breakpoint-up(lg) {
+  @include do-make-width("lg",5,100,5);
+  @include do-make-width("lg",150,1000,50);
+
+  .wd-lg-auto { width: auto; }
+  .wd-lg-auto-force { width: auto !important; }
+}
+
+@include media-breakpoint-up(xl) {
+  @include do-make-width("xl",5,100,5);
+  @include do-make-width("xl",150,1000,50);
+
+  .wd-xl-auto { width: auto; }
+  .wd-xl-auto { width: auto !important; }
+}
+
+// Viewport width
+.wd-100v { width: 100vw; }
+
+
+// some additional custom widths
+.wd-1    { width: 1px;  }
+.wd-2    { width: 2px;  }
+.wd-3    { width: 3px;  }
+.wd-4    { width: 4px;  }
+.wd-6    { width: 6px;  }
+.wd-7    { width: 7px;  }
+.wd-8    { width: 8px;  }
+.wd-9    { width: 9px;  }
+.wd-16   { width: 16px; }
+.wd-32   { width: 32px; }
+.wd-36   { width: 36px; }
+.wd-48   { width: 48px; }
+.wd-64   { width: 64px; }
+.wd-72   { width: 72px; }
+
+.wd-170  { width: 170px; }
+.wd-180  { width: 180px; }
+.wd-190  { width: 190px; }
+.wd-220  { width: 220px; }
+.wd-230  { width: 230px; }
+
+.mx-wd-1350 { max-width: 1350px; }

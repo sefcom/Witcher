@@ -1,0 +1,36 @@
+/* -------------------------------------- */
+/* ############### Alerts ############### */
+/* -------------------------------------- */
+
+// Base Alerts
+.alert-success {
+  @include alert-variant(lighten($brand-success, 45%), $brand-success, darken($brand-success, 8%));
+}
+
+.alert-info {
+  @include alert-variant(lighten($brand-info, 30%), $brand-info, darken($brand-info, 8%));
+}
+
+.alert-warning {
+  @include alert-variant(lighten($brand-warning, 36%), $brand-warning, darken($brand-warning, 12%));
+}
+
+.alert-danger {
+  @include alert-variant(lighten($brand-danger, 36%), $brand-danger, darken($brand-danger, 12%));
+}
+
+.alert {
+  border-width: 0;
+  border-radius: 0;
+  padding: 15px 20px;
+  position: relative;
+
+  .close { opacity: .25; }
+}
+
+.alert-icon {
+  opacity: .95;
+  line-height: 0;
+  margin-right: 10px;
+  position: relative;
+}

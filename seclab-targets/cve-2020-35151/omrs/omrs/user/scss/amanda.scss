@@ -1,0 +1,87 @@
+/*!
+ * Amanda Responsive Bootstrap 4 Admin Template
+ * Version: 2.0.0
+ * Author: ThemePixels (@themepixels)
+ * URL: http://themepixels.me/amanda
+ *
+**/
+
+/* --------------------------------------------------- */
+/* ############### GOOGLE FONTS IMPORT ############### */
+/* --------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700');
+@import url('https://fonts.googleapis.com/css?family=Lato:300,400,700');
+
+// Bootstrap variable overrides
+@import "bootstrap/variables";
+
+/* --------------------------------------------------- */
+/* ############### BOOTSTRAP FRAMEWORK ############### */
+/* --------------------------------------------------- */
+@import "../bower_components/bootstrap/scss/bootstrap";
+
+// Custom mixins and variables
+@import "variables";
+@import "mixins";
+
+/* --------------------------------------------------- */
+/* ############### BOOTSTRAP OVERRIDES ############### */
+/* --------------------------------------------------- */
+@import "bootstrap/alerts";
+@import "bootstrap/buttons";
+@import "bootstrap/card";
+@import "bootstrap/custom";
+@import "bootstrap/custom-forms";
+@import "bootstrap/forms";
+@import "bootstrap/form-layouts";
+@import "bootstrap/modal";
+@import "bootstrap/nav";
+@import "bootstrap/pagination";
+@import "bootstrap/popover";
+@import "bootstrap/progress";
+@import "bootstrap/tooltip";
+@import "bootstrap/tables";
+
+// Custom mixins for lib styles
+@import "lib/mixins";
+
+/* ---------------------------------------------------- */
+/* ############### CUSTOM VENDOR STYLES ############### */
+/* ---------------------------------------------------- */
+@import "lib/datatables";
+@import "lib/flot";
+@import "lib/jquery-steps";
+@import "lib/jqvmap";
+@import "lib/jquery-ui";
+@import "lib/medium-editor";
+@import "lib/morris";
+@import "lib/parsley";
+@import "lib/perfect-scrollbar";
+@import "lib/rickshaw";
+@import "lib/select2";
+@import "lib/sparkline";
+@import "lib/spectrum";
+@import "lib/summernote";
+@import "lib/toggles";
+
+
+/* ---------------------------------------------------- */
+/* ############### TEMPLATE CORE STYLES ############### */
+/* ---------------------------------------------------- */
+@import "app";
+@import "pages";
+
+
+/* ---------------------------------------------------------- */
+/* ############### UTILITIES / HELPER CLASSES ############### */
+/* ---------------------------------------------------------- */
+@import "util/background";
+@import "util/border";
+@import "util/height";
+@import "util/hover";
+@import "util/margin";
+@import "util/misc";
+@import "util/padding";
+@import "util/position";
+@import "util/typography";
+@import "util/width";

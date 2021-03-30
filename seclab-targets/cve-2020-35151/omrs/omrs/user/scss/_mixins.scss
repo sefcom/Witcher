@@ -1,0 +1,134 @@
+
+// Responsive visibility utilities
+@each $bp in map-keys($grid-breakpoints) {
+  .hidden-#{$bp}-up {
+    @include media-breakpoint-up($bp) {
+      display: none !important;
+    }
+  }
+  .hidden-#{$bp}-down {
+    @include media-breakpoint-down($bp) {
+      display: none !important;
+    }
+  }
+}
+
+// Text hover
+@mixin hover-color($color) {
+  &:hover,
+  &:focus { color: $color; }
+}
+
+@mixin hover-color-force($color) {
+  &:hover,
+  &:focus { color: $color !important; }
+}
+
+@mixin nav-color-variant($color, $hover-color, $active-color: $hover-color, $hover-bg-color: transparent, $active-bg-color: transparent) {
+  .nav-link {
+    color: $color;
+    &:hover,
+    &:focus {
+      color: $hover-color;
+      background-color: $hover-bg-color;
+    }
+
+    &.active {
+      &,
+      &:hover,
+      &:focus {
+        color: $active-color;
+        background-color: $active-bg-color;
+      }
+    }
+  }
+}
+
+@mixin nav-outline-variant($color, $hover-color, $active-color: $hover-color) {
+  .nav-link {
+    color: $color;
+    &::before { border-color: $active-color; }
+
+    &:hover,
+    &:focus { color: $hover-color; }
+
+    &.active {
+      &,&:hover,&:focus {
+        color: $active-color;
+      }
+    }
+  }
+}
+
+@mixin nav-outline-active-variant($color) {
+  .nav-link.active {
+    &,&:hover,&:focus {
+      color: $color;
+      &::before { border-color: $color; }
+    }
+  }
+}
+
+@mixin pagination-variant($active-bg-color, $active-color: #fff, $text-color: $gray-600, $hover-text-color: $gray-800, $hover-bg-color: $gray-200) {
+  .page-link {
+    color: $text-color;
+
+    &:hover,
+    &:focus {
+      color: $hover-text-color;
+      background-color: $hover-bg-color;
+    }
+  }
+
+  .active {
+    .page-link {
+      &,&:hover,&:focus {
+        background-color: $active-bg-color;
+        color: $active-color;
+        border-color: transparent;
+      }
+    }
+  }
+
+  &.pagination-dark {
+    .active {
+      .page-link {
+        background-color: $active-bg-color;
+        color: $active-color;
+      }
+    }
+  }
+}
+
+
+// ICON
+@mixin iconwrap-size($padding, $icon-size) {
+  padding: $padding;
+  .fa,
+  .icon {
+    font-size: $icon-size;
+    width: $icon-size;
+    height: $icon-size;
+  }
+}
+
+// TABLE HEAD VARIATIONS
+@mixin table-head-variant($color, $text-color: #fff) {
+  > tr > th,
+  > tr > td {
+    background-color: $color;
+    color: $text-color;
+  }
+}
+
+@mixin full-table-variant($head-color, $body-color, $head-text-color: #fff) {
+  background-color: $body-color;
+  thead,
+  tfoot {
+    > tr > th,
+    > tr > td {
+      background-color: $head-color;
+      color: $head-text-color;
+    }
+  }
+}

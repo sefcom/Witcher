@@ -1,0 +1,60 @@
+/* ------------------------------------- */
+/* ############### Forms ############### */
+/* ------------------------------------- */
+
+.form-control {
+  border-radius: 0;
+  background-color: $gray-100;
+
+  &:focus,
+  &:active { background-color: #fff; }
+}
+
+/* #################### VALIDATION #################### */
+
+.is-valid,
+.is-invalid {
+  &:focus,
+  &:active { box-shadow: none !important; }
+}
+
+.is-warning {
+  &,&:focus,&:active {
+    border-color: $brand-warning;
+  }
+}
+
+
+/* #################### INPUT FORM STYLES #################### */
+
+.fc-outline,
+.fc-outline-dark {
+  &,&:focus,&:active { background-color: transparent; }
+}
+
+.fc-outline {
+  &:focus,
+  &:active { border-color: $gray-500; }
+}
+
+.fc-outline-dark {
+  border-color: rgba(#fff,0.3);
+  color: #fff;
+
+  &:focus,
+  &:active {
+    border-color: rgba(#fff,0.75);
+    color: rgba(#fff,0.75);
+  }
+}
+
+.fc-focus-primary { &:focus,&:active { border-color: $brand-primary; }}
+.fc-focus-success { &:focus,&:active { border-color: $brand-success; }}
+.fc-focus-warning { &:focus,&:active { border-color: $brand-warning; }}
+.fc-focus-danger { &:focus,&:active { border-color: $brand-danger; }}
+.fc-focus-info { &:focus,&:active { border-color: $brand-info; }}
+.fc-focus-indigo { &:focus,&:active { border-color: $indigo; }}
+.fc-focus-purple { &:focus,&:active { border-color: $purple; }}
+.fc-focus-teal { &:focus,&:active { border-color: $teal; }}
+.fc-focus-pink { &:focus,&:active { border-color: $pink; }}
+.fc-focus-orange { &:focus,&:active { border-color: $orange; }}

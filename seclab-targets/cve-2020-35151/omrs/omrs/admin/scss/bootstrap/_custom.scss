@@ -1,0 +1,182 @@
+/* -------------------------------------- */
+/* ############### Custom ############### */
+/* -------------------------------------- */
+
+// General
+a { @include transition($transition-base); }
+
+a:focus,
+a:active { outline: none !important; }
+
+p { margin-bottom: 20px; }
+
+// Status Indicator
+.square-8 {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+}
+
+.square-10 {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.more {
+  color: #fff;
+  opacity: .2;
+  display: inline-block;
+  padding: 2px 5px;
+
+  i { line-height: 0; }
+
+  &:hover,
+  &:focus {
+    color: #fff;
+    opacity: .5;
+  }
+}
+
+// Dropdowns
+.dropdown-menu {
+  box-shadow: 0 1px 4px 0px rgba(#000, 0.16);
+}
+
+// Custom Forms
+.form-control-inverse {
+  border: 0;
+  background-color: darken($app-primary, 3%);
+  color: rgba(#fff, .6);
+
+  &:focus {
+    background-color: darken($app-primary, 5%);
+    color: rgba(#fff, .6);
+  }
+}
+
+// Overlay
+.overlay { position: relative; }
+.overlay-body {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+// Grid
+.row-sm {
+  margin-left: -10px;
+  margin-right: -10px;
+  > div {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+.row-xs {
+  margin-left: -5px;
+  margin-right: -5px;
+  > div {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+// Input Group
+.input-group-addon { border-radius: 0; }
+
+// Image Option
+.img-option {
+  display: flex;
+  margin-bottom: 15px;
+  position: relative;
+  flex-direction: row;
+
+  .img-option-link {
+    display: block;
+    color: #fff;
+    background-color: #000;
+    opacity: .65;
+
+    div {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @include media-breakpoint-up(sm) {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    i {
+      font-size: 20px;
+      line-height: 0;
+
+      @include media-breakpoint-up(sm) {
+        font-size: 24px;
+      }
+    }
+
+    &:hover,
+    &:focus { opacity: 1; }
+
+  }
+}
+
+.img-option-sm {
+  .img-option-link {
+    div {
+      width: 40px;
+      height: 40px;
+    }
+    i { font-size: 18px; }
+  }
+}
+
+// Striped List Group
+.list-group-striped {
+  .list-group-item:nth-child(even) {
+    background-color: $gray-100;
+  }
+}
+
+// Icon
+.iconwrap {
+  display: inline-block;
+  line-height: 0;
+  border: 1px solid transparent;
+  text-align: center;
+
+  .fa,
+  .icon {
+    display: inline-block;
+    position: relative;
+    top: -.5px;
+  }
+
+  // iconwrap-size($padding, $icon-size);
+  &.icon-16 { @include iconwrap-size(6px, 16px); }
+  &.icon-18 { @include iconwrap-size(8px, 18px); }
+  &.icon-20 { @include iconwrap-size(8px, 20px); }
+  &.icon-24 { @include iconwrap-size(10px, 24px); }
+  &.icon-28 { @include iconwrap-size(10px, 28px); }
+  &.icon-32 { @include iconwrap-size(12px, 32px); }
+  &.icon-36 { @include iconwrap-size(12px, 36px); }
+  &.icon-40 { @include iconwrap-size(14px, 40px); }
+  &.icon-44 { @include iconwrap-size(14px, 44px); }
+  &.icon-48 { @include iconwrap-size(16px, 48px); }
+}
+
+.icon {
+  &.tx-size-64 {
+    line-height: 0;
+    &::before { line-height: 45px; }
+  }
+}

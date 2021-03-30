@@ -1,0 +1,122 @@
+/* ------------------------------------ */
+/* ############### Misc ############### */
+/* ------------------------------------ */
+
+
+// This generate a class name of .op-1 having a style of opacity: 0.1.
+// Values goes up to 0.9;
+$num: 0;
+@while $num < 10 {
+  .op-#{$num} { opacity: 0 + ($num * 0.1); }
+  .op-#{$num}-force { opacity: 0 + ($num * 0.1) !important; }
+  $num: $num + 1;
+}
+
+@mixin do-opacity($viewport) {
+  $num: 0;
+  @while $num < 10 {
+    .op-#{$viewport}-#{$num} { opacity: 0 + ($num * 0.1); }
+    .op-#{$viewport}-#{$num}-force { opacity: 0 + ($num * 0.1) !important; }
+    $num: $num + 1;
+  }
+}
+.opacity-1 { opacity: 1; }
+
+// Flex
+.flex-1 { flex: 1; }
+
+// Transition
+.transition { @include transition($transition-base); }
+
+// Overflow Property
+.overflow-auto { overflow: auto; }
+.overflow-y-auto { overflow-y: auto; }
+.overflow-x-auto { overflow-x: auto; }
+
+.overflow-hidden { overflow: hidden; }
+.overflow-y-hidden { overflow-y: hidden; }
+.overflow-x-hidden { overflow-x: hidden; }
+
+.overflow-visible { overflow: visible; }
+.overflow-y-visible { overflow-y: visible; }
+.overflow-x-visible { overflow-x: visible; }
+
+.overflow-scroll { overflow: scroll; }
+.overflow-y-scroll { overflow-y: scroll; }
+.overflow-x-scroll { overflow-x: scroll; }
+
+// Object Fit
+.object-position-top { object-position: top; }
+.object-fit-cover { object-fit: cover; }
+.no-object-fit .object-fit-cover { visibility: hidden; }
+
+.img-fit-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Horizontal line
+.hr-light-100 { border-color: rgba(#fff, 0.05); }
+
+// Float
+.ft-left { float: left; }
+.ft-right { float: right; }
+.ft-none { float: none; }
+
+// Float Force
+.ft-none-force { float: none !important; }
+
+// Shadow
+.shadow-base { box-shadow: 0px 1px 3px 0px rgba(#000, 0.21); }
+
+// Vertical Alignment
+.valign-middle { vertical-align: middle; }
+
+// Transform
+.tr-y-1 { transform: translateY(1px);}
+
+// Typography
+.space-nowrap { white-space: nowrap; }
+
+// Display Property
+@mixin do-display($viewport) {
+  .d-#{$viewport}-block { display: block; }
+  .d-#{$viewport}-inline { display: inline; }
+  .d-#{$viewport}-inline-block { display: inline-block; }
+  .d-#{$viewport}-none { display: none; }
+  .d-#{$viewport}-flex { display: flex; }
+  .d-#{$viewport}-table { display: table; }
+
+  .d-#{$viewport}-block-force { display: block !important; }
+  .d-#{$viewport}-inline-force { display: inline !important; }
+  .d-#{$viewport}-inline-block-force { display: inline-block !important; }
+  .d-#{$viewport}-none-force { display: none !important; }
+  .d-#{$viewport}-flex-force { display: flex !important; }
+  .d-#{$viewport}-table-force { display: table !important; }
+}
+
+@media (min-width: 480px) {
+  @include do-opacity("xs");
+  @include do-display("xs");
+}
+
+@include media-breakpoint-up(sm) {
+  @include do-opacity("sm");
+  @include do-display("sm");
+}
+
+@include media-breakpoint-up(md) {
+  @include do-opacity("md");
+  @include do-display("md");
+}
+
+@include media-breakpoint-up(lg) {
+  @include do-opacity("lg");
+  @include do-display("lg");
+}
+
+@include media-breakpoint-up(xl) {
+  @include do-opacity("xl");
+  @include do-display("xl");
+}

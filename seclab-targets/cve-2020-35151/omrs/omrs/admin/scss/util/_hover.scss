@@ -1,0 +1,20 @@
+/* ------------------------------------- */
+/* ############### Hover ############### */
+/* ------------------------------------- */
+
+// Hover for colored anchor
+a.tx-success { @include hover-color(darken($brand-success, 5%)); }
+a.tx-warning { @include hover-color(darken($brand-warning, 5%)); }
+a.tx-danger { @include hover-color(darken($brand-danger, 5%)); }
+a.tx-info { @include hover-color(darken($brand-info, 5%)); }
+
+// Hover property to anchor
+a.hover-gray-700 { @include hover-color($gray-700); }
+a.hover-primary { @include hover-color($brand-primary); }
+a.hover-success { @include hover-color($brand-success); }
+a.hover-info { @include hover-color($brand-info); }
+a.hover-white { @include hover-color(#fff); }
+a.hover-dark { @include hover-color($gray-900); }
+
+// white half transparency
+a.hover-white-8 { @include hover-color(rgba(#fff, .8)); }

@@ -1,0 +1,15 @@
+
+// brand colors
+$brand-primary:                 theme-color('primary');
+$brand-success:                 theme-color('success');
+$brand-warning:                 theme-color('warning');
+$brand-danger:                  theme-color('danger');
+$brand-info:                    theme-color('info');
+
+// app layouts
+$app-primary:                   #32415A;
+$app-secondary:                 #FB9337;
+
+$app-header-height:             60px;
+$app-header-bg:                 $app-primary;
+$app-sideleft-width:            240px;

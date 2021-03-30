@@ -1,0 +1,362 @@
+/*
+Author: W3layout
+Author URL: http://w3layouts.com
+License: Creative Commons Attribution 3.0 Unported
+License URL: http://creativecommons.org/licenses/by/3.0/
+*/
+body{
+	background:url(../images/bg1.jpg)0px 0px no-repeat;
+	background-size: cover;
+	background-position: 50% 50%;
+	min-height: 700px;
+}
+body a{
+	transition:0.5s all;
+	-webkit-transition:0.5s all;
+	-moz-transition:0.5s all;
+	-o-transition:0.5s all;
+	-ms-transition:0.5s all;
+	font-weight:400;
+}
+input[type="button"],input[type="submit"]{
+	transition:0.5s all;
+	-webkit-transition:0.5s all;
+	-moz-transition:0.5s all;
+	-o-transition:0.5s all;
+	-ms-transition:0.5s all;
+	font-family: 'Titillium Web', sans-serif;
+}
+h1,h2,h3,h4,h5,h6{
+	margin:0;	
+	font-weight:400;
+	transition:0.5s all;
+	-webkit-transition:0.5s all;
+	-moz-transition:0.5s all;
+	-o-transition:0.5s all;
+	-ms-transition:0.5s all;
+	font-family: 'Basic', sans-serif;
+	
+}
+.clear {
+	clear:both;
+}
+p{
+	margin:0;
+		font-family: 'Titillium Web', sans-serif;
+}
+
+ul{
+	margin:0;
+	padding:0;
+}
+label{
+	margin:0;
+}
+button{
+	font-family: 'Titillium Web', sans-serif;
+}
+img {
+    width: 100%;
+}
+footer{
+		font-family: 'Titillium Web', sans-serif;
+}
+footer a{
+		font-family: 'Titillium Web', sans-serif;
+}
+/*--/Reset code--*/
+.w3ls-head h1 {
+    font-size: 50px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    padding: 45px 0 45px 0;
+    color: #fff;
+}
+ .w3ls-content {
+    width: 40%;
+    padding: 4em;
+    margin: 0 auto;
+    background-color: rgba(20, 23, 25, 0.81);
+    box-shadow: 2px 2px #fff;
+}
+ .w3ls-headding h2 {
+    font-size: 30px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: capitalize;
+    letter-spacing: 2px;
+    line-height: 1.5;
+    padding: 20px 0px 20px 0;
+    color: #fff;
+}
+.w3ls-headding p {
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: capitalize;
+    letter-spacing: 1px;
+    padding: 25px 0 25px 0;
+    color: #fff;
+}
+ .w3ls-input input[type="email"] {
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+    text-transform: capitalize;
+    letter-spacing: 3px;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    padding: 15px;
+    width: 100%;
+    margin: 0 auto 20px;
+    background-color: #fff;
+   
+}
+.w3ls-btn button {
+    font-size: 20px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: uppercase;
+    box-sizing: border-box;
+    border: 3px solid #fff;
+    outline: none;
+    letter-spacing: 2px;
+    padding: 10px;
+    width: 40%;
+    display: block;
+    cursor: pointer;
+    margin: 20px auto 0;
+    color: #fff;
+    background-color: transparent;
+    transition: 0.5s ease-in;
+   
+}
+.w3ls-btn button:hover {
+    background-color: rgba(43, 177, 132, 0.8);
+}
+.w3ls-icons {
+    text-align: center;
+    margin: 40px 0 0 0;
+}
+.w3ls-icons ul li a i {
+    font-size: 15px;
+    color: #fff;
+    margin: 13px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border: 2px solid;
+	cursor: pointer;
+}
+.w3ls-icons ul li {
+    display: inline-block;
+}
+.w3ls-icons i.fa.fa-facebook:hover {
+    background: #3b5998;
+    color: #fff;
+    transition: 0.5s ease-in;
+}
+.w3ls-icons i.fa.fa-twitter:hover {
+    background: #1da1f2;
+    color: #fff;
+    transition: 0.5s ease-in;
+}
+.w3ls-icons i.fa.fa-google-plus:hover {
+    background: #dd4b39;
+    color: #fff;
+    transition: 0.5s ease-in;
+}
+footer{
+	font-size: 15px;
+	font-weight: 500;
+	text-align: center;
+	padding: 5px 0 5px 0;
+	text-transform: capitalize;
+	letter-spacing: 2px;
+	color :#fff;
+	
+}
+footer a {
+    font-size: 15px;
+    text-decoration: none;
+    text-transform: capitalize;
+    letter-spacing: 2px;
+    color: #fff;
+	
+}
+footer a:hover{
+    color: #fda708;
+}	
+/*--responsive--*/
+@media(max-width:1920px){
+
+}
+@media(max-width:1680){
+	
+}
+@media(max-width:1600px){
+
+}
+@media(max-width:1440px){
+	.w3ls-content {
+		width: 50%;
+	}
+}
+@media(max-width:1366px){
+	.w3ls-content {
+		width: 50%;
+	}
+}
+@media(max-width:1280px){
+	.w3ls-content {
+		width: 55%;
+	}
+@media(max-width:1080px){
+	.w3ls-content {
+		width: 60%;
+	}
+}
+@media(max-width:1050px){
+	
+}
+@media(max-width:1024px){
+	           
+}
+@media(max-width:991px){
+	.w3ls-content {
+		padding: 3em;
+	}
+}
+@media(max-width:900px){
+	
+}
+@media(max-width:800px){
+	.w3ls-head h1 {
+		font-size: 45px;
+	}
+	.w3ls-headding h2 {
+		font-size: 25px;
+	}
+}
+@media(max-width:768px){
+	
+}
+@media(max-width:736px){
+	
+}
+@media(max-width:667px){
+	.w3ls-head h1 {
+		font-size: 40px;
+	}
+	.w3ls-headding h2 {
+		font-size: 20px;
+		letter-spacing: 1px;
+	}
+}
+@media(max-width:640px){
+	.w3ls-headding p {
+		font-size: 14px;
+	}
+}
+@media(max-width:600px){
+	.w3ls-head h1 {
+		font-size: 40px;
+	}
+	.w3ls-headding h2 {
+		font-size: 20px;
+		letter-spacing: 1px;
+	}
+	.w3ls-btn button {
+		font-size: 18px;
+		width: 50%;
+	}
+	footer {
+		font-size: 14px;
+	}
+	footer a {
+		font-size: 14px;
+	}
+}
+@media(max-width:568px){
+	.w3ls-head h1 {
+		font-size: 35px;
+	}
+	footer {
+		font-size: 14px;
+	}
+	footer a {
+		font-size: 14px;
+	}
+}
+@media(max-width:480px){
+	.w3ls-head h1 {
+		font-size: 30px;
+	}
+	.w3ls-headding h2 {
+		font-size: 17px;
+	}
+	.w3ls-btn button {
+		font-size: 18px;
+		width: 60%;
+	}
+	
+}
+@media(max-width:414px){
+	.w3ls-head h1 {
+		font-size: 25px;
+	}
+	.w3ls-headding h2 {
+		font-size: 15px;
+		letter-spacing: 1px;
+	}
+	.w3ls-headding p {
+		font-size: 12px;
+	}
+	.w3ls-btn button {
+		font-size: 18px;
+		width: 70%;
+	}
+	footer {
+		font-size: 14px;
+		letter-spacing: 1px;
+	}
+	footer a{
+		font-size: 14px;
+		letter-spacing: 1px;
+	}
+
+}
+@media(max-width:384px){
+	.w3ls-head h1 {
+		font-size: 20px;
+	}
+	.w3ls-headding h2 {
+		font-size: 12px
+	}
+	.w3ls-headding p {
+		font-size: 11px;
+	}
+	footer {
+		font-size: 13px;
+		
+	}
+	footer a{
+		font-size: 13px;
+	}
+}
+@media(max-width:375px){
+	
+}
+@media(max-width:320px){
+	.w3ls-head h1 {
+		font-size: 20px;
+		letter-spacing: 3px;
+	}
+	.w3ls-btn button {
+		font-size: 15px;
+	}
+}
+/*--/responsive--*/

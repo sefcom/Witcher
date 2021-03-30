@@ -1,0 +1,17 @@
+/* ---------------------------------------- */
+/* ############### Progress ############### */
+/* ---------------------------------------- */
+
+.progress,
+.progress-bar {
+  border-radius: 0;
+}
+
+.progress-bar {
+  height: 15px;
+  font-size: 11px;
+}
+
+.progress-bar-xs  { height: 5px;  }
+.progress-bar-sm { height: 10px; }
+.progress-bar-lg { height: 20px; }

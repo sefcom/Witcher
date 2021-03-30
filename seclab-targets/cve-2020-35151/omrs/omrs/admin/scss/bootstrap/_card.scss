@@ -1,0 +1,253 @@
+/* ------------------------------------- */
+/* ############### Cards ############### */
+/* ------------------------------------- */
+
+.card {
+  border: 0;
+  border-radius: 0;
+  //box-shadow: 0 0 3px 0px rgba(#000, 0.21);
+}
+
+.card-header,
+.card-footer {
+  border-color: $gray-300;
+}
+
+.card-header {
+  border-bottom: 0;
+  &:first-child { border-radius: 0; }
+}
+
+.card-header-default {
+  background-color: lighten($app-primary, 6%);
+  color: #fff;
+  padding: 0 20px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+
+
+  .card-title {
+    margin: 0;
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.card-title {
+  color: $gray-900;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+
+.card-body { padding: 20px; }
+.card-body-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  //font-family: $font-family-montserrat;
+  font-weight: 700;
+  color: $app-primary;
+}
+
+.card-footer {
+  border-top-width: 0;
+  border-radius: 0;
+}
+
+/** ACCORDION **/
+.accordion {
+  .card {
+    @include border-radius(0);
+
+    + .card { margin-top: 1px; }
+  }
+
+  .card-header {
+    padding: 0;
+    background-color: transparent;
+    border-bottom-width: 0;
+    min-height: 0;
+
+    a {
+      display: block;
+      padding: 15px 20px;
+      font-size: 14px;
+
+      &,
+      &:hover,
+      &:focus {
+        background-color: $brand-info;
+        color: #fff;
+      }
+
+      &.collapsed {
+        background-color: $gray-200;
+        color: $gray-600;
+
+        &:hover,
+        &:focus {
+          background-color: $gray-300;
+          color: $gray-800;
+        }
+      }
+    }
+  }
+
+  .card-body {
+    padding: 20px;
+    background-color: $gray-100;
+  }
+}
+
+.card-deck-xs {
+  .card:not(:last-child),
+  .card:not(:first-child) {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+  .card:first-child { margin-left: 0; }
+  .card:last-child { margin-right: 0; }
+}
+
+.card-deck-sm {
+  .card:not(:last-child),
+  .card:not(:first-child) {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  .card:first-child { margin-left: 0; }
+  .card:last-child { margin-right: 0; }
+}
+
+.card-deck-lg {
+  .card:not(:last-child),
+  .card:not(:first-child) {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .card:first-child { margin-left: 0; }
+  .card:last-child { margin-right: 0; }
+}
+
+.card-deck {
+  @media (max-width: 799px) {
+    display: block;
+    .card {
+      &:not(:last-child),
+      &:not(:first-child) {
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      + .card { margin-top: 20px; }
+    }
+  }
+}
+
+.card-columns {
+  .card { margin-bottom: 20px; }
+
+  @include media-breakpoint-up(sm) { column-count: 2; }
+  @include media-breakpoint-up(lg) { column-count: 3; }
+
+  &.column-count-2 {
+    @include media-breakpoint-up(sm) { column-count: 2;}
+  }
+
+  &.column-count-4 {
+    @media (min-width: 480px) { column-count: 2; }
+    @include media-breakpoint-up(md) { column-count: 3;}
+    @include media-breakpoint-up(lg) { column-count: 4; }
+  }
+
+  &.column-count-5 {
+    @media (min-width: 480px) { column-count: 2; }
+    @include media-breakpoint-up(md) { column-count: 3;}
+    @include media-breakpoint-up(lg) { column-count: 4; }
+    @include media-breakpoint-up(xl) { column-count: 5; }
+  }
+
+  &.column-count-6 {
+    @media (min-width: 480px) { column-count: 2; }
+    @include media-breakpoint-up(md) { column-count: 3;}
+    @include media-breakpoint-up(lg) { column-count: 4; }
+    @include media-breakpoint-up(xl) { column-count: 6; }
+  }
+}
+
+.card-columns-sm {
+  margin-top: -10px;
+  -webkit-column-gap: 10px;
+  column-gap: 10px;
+  .card {
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+}
+
+.card-columns-md {
+  margin-top: -20px;
+  -webkit-column-gap: 30px;
+  column-gap: 30px;
+  .card { margin-top: 20px; }
+}
+
+.card-columns-lg {
+  margin-top: -30px;
+  -webkit-column-gap: 40px;
+  column-gap: 40px;
+  .card { margin-top: 30px; }
+}
+
+.card-item-img {
+  margin-bottom: 0;
+
+  img {
+    opacity: 0.2;
+    @include transition($transition-base);
+  }
+
+  &:hover,
+  &:focus {
+    img { opacity: 0.5; }
+  }
+}
+
+
+// Card With Navigation
+.card-header-tabs {
+  .nav-link {
+    &.active {
+      &,
+      &:hover,
+      &:focus {
+        background-color: #fff;
+        border: 1px solid $gray-300;
+        color: $gray-800;
+        @include border-radius(0);
+      }
+    }
+
+    &:hover,
+    &:focus {
+      border-color: transparent;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .nav-link {
+      &.active {
+        &,
+        &:hover,
+        &:focus {
+          background-color: #fff;
+          border-bottom-color: #fff;
+          color: $gray-800;
+        }
+      }
+    }
+  }
+}
