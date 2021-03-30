@@ -1,0 +1,457 @@
+/* --- CSS Reset --- */
+
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, code,
+del, dfn, em, img, q, dl, dt, dd, ol,  li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0px;
+  padding: 0px;
+  font-weight: inherit;
+  font-style: inherit;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+body,
+html {
+	margin:0;
+	padding:0;
+	color:#000;
+	background:#F5F6FA;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 100%;
+	color: #666;
+	margin: 0;
+	padding: 0;
+	text-align : center; /* fix body div left in IE*/
+	height:auto !important; /* FF and compliant browsers should automatically size the body/html */
+	height:100%; /* ie will set the body/html to 100%, anything overflowing that will (incorrectly) resize it. go IE */
+	min-height:100%; /* when FF/etc automatically size the body/html it should be AT LEAST the height of the entire browser window, but can expand based on content. */
+	min-width: 900px;
+}
+a img
+{
+  border:none;
+}
+
+/* Hyperlinks */
+a:link,a:visited {
+	color: #004470;
+	text-decoration: underline;
+}
+a:hover {
+	color: #1378B0;
+	text-decoration: underline;
+}
+
+/* HEADERS and NAV */
+/* Custom Fieldsets */
+/* DIV Layouts */
+#headwrap {
+	margin:0 auto;
+	background:#295B96;
+	border-bottom: 1px solid #ffffff;
+}
+#header {
+	min-width: 900px;
+	width: 92%;
+	margin: 0px auto;
+	height: 75px;
+	background: #F5F6FA url(../images/headerBg.jpg) left top repeat-x;
+	border-left: 2px solid #ffffff;
+	border-right: 2px solid #ffffff;
+}
+
+#header h2 {
+	margin-bottom: 8px;
+	color: #48718D;
+	font-size: 1.4em;
+}
+
+#header #title {
+	float:left;
+	width:500px;
+	margin: 5px;
+	height: auto;
+	padding-top: 15px;
+	padding-left: 15px;
+	color: #48718D;
+	text-align: left;
+}
+#header #user-section {
+	float:right;
+	width:30%;
+	height: 40px;
+	padding: 0 0 0;
+	color: #48718D;
+	text-align: right;
+	font-size:11px;
+	line-height:18px;
+	margin:4px 12px !important
+}
+#header #logo {
+	float:right;
+	position: relative;
+	margin: 0;
+}
+/* NAVIGATION */
+#navwrap{
+	overflow:hidden;
+}
+#nav #navtitle {
+	padding-top:3px;
+	float: right;
+	color: #fff;
+	padding-right: 5px;
+}
+#nav {
+	font-size:0.8em;
+	background:#536281;
+	float: left;
+	width: 100%;
+	list-style-type:none;
+	overflow: hidden;
+}
+#nav ul {
+  margin: 0px;
+  padding: 0px;
+}
+#nav li {
+	display:inline;
+	float: left;
+	border-right: 1px solid #ccc; 
+}
+#nav a {
+	display: block;
+	padding: 3px 15px;
+	text-decoration: none;
+	color: #fff;
+}
+#nav li a:hover {
+	padding: 3px 15px;
+	color: #fff;
+	background-color: #27293D; 
+}
+#nav li .active {
+padding: 3px 15px;
+	color: #fff;
+	background-color: #27293D; 
+}
+#nav2{
+	font-size:0.7em;
+	background:#fff;
+	float: left;
+	width: 99.8%;
+	border: 1px solid #ccc; 
+	margin-top: 2px;
+}
+#nav2 ul {
+  margin: 0px;
+  padding: 0px;
+}
+#nav2 li {
+	display:inline;
+	float: left;
+	padding:2px 0px;
+}
+#nav2 a {
+	display: inline;
+	padding: 2px 7px;
+	text-decoration: none;
+	color: #536281;
+	border-right: 1px solid #ccc; 
+}
+#nav2 li a:hover {
+	font-size:1em;
+	color: #536281;
+	background-color: #F5F6FA; 
+}
+.nav2Selected {
+	font-weight: bold;
+	color: #536281;
+	background-color: #F5F6FA; 
+}
+/* BREADCRUMBS */
+#breadcrumb {
+	margin-top:0px;
+}
+#breadcrumb h2 {
+	font-size:1.3em;
+	color: #00436C;
+	padding: 0;
+	font-weight: 500;
+	letter-spacing: -1px;
+}
+#helpIcon {
+	cursor:pointer;
+}
+/* MAIN Divs Layouts */	
+#mainwrap {
+	width: 92%;
+	min-width: 900px;
+	margin: 0 auto;
+	background: #F5F6FA;
+	border-left: 2px solid #ffffff;
+	border-right: 2px solid #ffffff;
+	border-bottom: 2px solid #ffffff;
+	text-align : left; /* fix body div left in IE*/
+}
+#main {
+	margin: 0 auto;
+	margin-top: 2px;
+	padding:10px;
+	background:#fff;
+	border: 1px solid #C1CDCD;
+	height:100%;
+}
+#main #helpIcon {
+	width: 16px;
+	height: 16px;
+} 
+
+.error {
+	color:red;
+	font-size:0.8em;
+	margin-bottom:15px;
+	font-weight:normal;
+}
+/* FOOTER */
+#footer {
+	margin: 0 auto;
+	border-top: 2px solid #ffffff;
+	clear:both;
+	padding:5px 10px;
+	padding-top: 1px;
+	background-color: #536281;
+	text-align: center;
+	display: block;
+}
+#footer ul {
+	margin: 0 0 10px;
+	padding: 0;
+}
+#footer ul li {
+	display: inline;
+	padding: 0;
+	margin: 0
+}
+#footer p {
+	text-align: left;
+	margin: 0;
+	padding: 0;
+	font-size:11px;
+	color: #fff;
+	font-size:11px;
+}
+#footer ul li a {
+	color: #fff;
+	text-decoration: underline;
+	font-size:11px;
+}
+#footer ul li a:HOVER {
+	color: #99C8FF;
+	text-decoration: underline;
+	font-size:11px;
+}
+#footer-copyright {
+	margin: 0;
+	padding: 0px;
+	width: auto;
+	margin: 0 auto;
+	text-align: center;
+}
+#footer-copyright  p {
+	text-align: center;
+	margin: 0;
+	padding: 0;
+	font-size: x-small;
+	color: #fff;
+}
+/* Login Styles*/
+#login_content {
+	width: auto;
+	margin: 0 auto;
+	float: left;
+}
+#loginMainLogo  { 
+	float: right;
+	margin-left:80px;
+	padding-bottom:10px;
+}
+
+
+
+/* Misc Styling below */	 
+
+/* MESSAGE BOXES
+/////////////////////////////*/
+/* Acquired from here http://r-ednalan.blogspot.com/2010/05/css-jquery-message-box.html*/
+.notification {  
+	 line-height: 10px;  
+	 font-size: 11px;  
+	 /*cursor: pointer;  */
+	 clear: both;  
+	 height: auto;  
+	 margin: 8px 0px 15px 0px;  
+	 padding: 10px 25px 10px 10px;  
+	 -moz-border-radius:4px;  
+	 -webkit-border-radius: 4px;  
+}  
+.notification strong  { 
+	margin-right: 5px;
+}  
+.notification p   {  
+	 font-size: 11px;  
+	 padding: 0px;  
+	 margin: 0px;  
+	 color: #333333;  
+}  
+.message p {  
+	font-size: 11px;  
+}  
+.warning {  
+	 background-image: url(images/msgbox/error000.png);  
+	 background-position: 15px center;  
+	 background-repeat: no-repeat;  
+	 border: 1px solid #FFC237;  
+	 background-color: #FFEAA8;  
+	 color: #826200;  
+}  
+.success {  
+	 background-position: 15px center;  
+	 background-repeat: no-repeat;  
+	 border: 1px solid #99C600;  
+	 background-color: #EFFFB9;  
+	 color: #3C5A01;  
+}  
+.failure {  
+	 background-image: url(images/msgbox/exclamat.png);  
+	 background-position: 15px center;  
+	 background-repeat: no-repeat;  
+	 border: 1px solid #EB5339;  
+	 background-color: #FCCAC2;  
+	 color: #AC260F;  
+}  
+.information {  
+	 background-image: url(../images/msgbox/infosrmat.png);  
+	 background-position: 15px center;  
+	 background-repeat: no-repeat;  
+	 border: 1px solid #418ACC;  
+	 background-color: #D0E4F4;  
+	 color: #235685;  
+}  
+/*Message box below is unique to Login page with no logo and text padding to 15 on the left */
+.loginNotification strong  { 
+	margin-right: 5px;
+}  
+.loginInformation {  
+	 background-position: 15px center;  
+	 background-repeat: no-repeat;  
+	 border: 1px solid #418ACC;  
+	 background-color: #D0E4F4;  
+	 color: #235685;  
+}  
+
+
+/* Javascript Effects CSS */
+.show_hide {
+    display:none;
+}
+
+/*
+ * jQuery UI Autocomplete 1.8.18
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Autocomplete#theming
+ */
+.ui-autocomplete { position: absolute; cursor: default; }	
+
+/* workarounds */
+* html .ui-autocomplete { width:1px; } /* without this, the menu expands to 100% in IE6 */
+
+
+.ui-menu {
+	list-style:none;
+	padding: 1px;
+	margin: 0;
+	display:block;
+	float: left;
+	text-align:left;
+}
+
+.ui-menu .ui-menu-item {
+	margin:0;
+	padding: 0;
+	zoom: 1;
+	float: left;
+	clear: left;
+	width: 100%;
+	font-size:0.8em;
+
+}
+.ui-menu .ui-menu-item a {
+	font-weight: normal;
+	margin: -1px;
+	text-decoration:none;
+	display:block;
+	padding:.2em .4em;
+}
+.ui-menu .ui-menu-item a.ui-state-hover{
+	color: #4381D8;
+	background:#EAF1F9;
+	font-weight: normal;
+	margin: -1px;
+	}
+.ui-menu .ui-menu-item a.ui-state-active {
+	font-weight: normal;
+	margin: -1px;
+}
+
+
+/* Component containers
+----------------------------------*/
+.ui-widget { font-family: Verdana,Arial,sans-serif/*{ffDefault}*/; font-size: 0.9em/*{fsDefault}*/; }
+.ui-widget .ui-widget { font-size: 1em; }
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: Verdana,Arial,sans-serif/*{ffDefault}*/; font-size: 1em; }
+.ui-widget-content { border: 1px solid #aaaaaa/*{borderColorContent}*/; background: #ffffff/*{bgColorContent}*/ url(../images/ui-bg_flat_75_ffffff_40x100.png)/*{bgImgUrlContent}*/ 50%/*{bgContentXPos}*/ 50%/*{bgContentYPos}*/ repeat-x/*{bgContentRepeat}*/; color: #222222/*{fcContent}*/; }
+.ui-widget-content a { color: #222222/*{fcContent}*/; }
+.ui-widget-header { border: 1px solid #aaaaaa/*{borderColorHeader}*/; background: #cccccc/*{bgColorHeader}*/ url(../images/ui-bg_highlight-soft_75_cccccc_1x100.png)/*{bgImgUrlHeader}*/ 50%/*{bgHeaderXPos}*/ 50%/*{bgHeaderYPos}*/ repeat-x/*{bgHeaderRepeat}*/; color: #222222/*{fcHeader}*/; font-weight: bold; }
+.ui-widget-header a { color: #222222/*{fcHeader}*/; }
+
+.ui-autocomplete-loading { background: white url('../images/ajax_loader.gif') right center no-repeat; }
+
+/* Compare Class Styling */
+
+/* Style update notification pop-up */
+#updateNotice {
+	
+	position:relative;
+	top:-10px;
+	right:-10px;
+	float:right;
+	padding-left:5px;
+	padding-right:5px;
+    background: url('jqueryNotification/images/warn_bg.png') 0 0 repeat-x;
+    text-align: center;
+	font-size:0.75em;
+    line-height: 1.5;
+    overflow: hidden; 
+}
+#updateNotice  img{
+	position:relative;
+	top:2px;
+	padding-right:5px;
+}
+#updateNow {
+	cursor:pointer;
+	text-decoration:underline;
+}
+/*custom css to remove autocomplete text at botton of page*/
+.ui-helper-hidden-accessible{
+    display: none;
+}

@@ -1,0 +1,7 @@
+some lines info<br />
+with breaks <br />
+<br/>
+and ====<br />
+<br />
+
+<strong>HTML</strong>

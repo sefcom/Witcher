@@ -1,0 +1,108 @@
+/* --- CSS Reset --- */
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, code,
+del, dfn, em, img, q, dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0px;
+  padding: 0;
+  border: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+
+body {
+ font-family: Verdana, Arial, Helvetica, sans-serif;
+ font-size: 13px;
+}
+
+p {
+ padding: 10px;
+}
+
+h1{
+	font-size:1.5em;
+}
+
+#title{
+	text-align:center;
+	width:100%;
+	margin-left:10px;
+}
+
+#wrapper { 
+ margin: 0 auto;
+ width: 960px;
+}
+
+#content { 
+ float: left;
+ color: #333;
+ background: #FFFFFF;
+ height: auto;
+ width: 960px;
+ display: inline;
+}
+
+#header {
+ color: #FFF;
+ width: 960px;
+ float: left;
+ height: 35px;
+ background: #295B96;
+ margin-bottom:5px;
+}
+#summDiv {
+	border: 1px solid #FFF;
+}
+
+hr {
+ margin:10px;
+}
+#links{
+	margin-left:10px;
+}
+#hor-zebra
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: 15px;
+	width: 480px;
+	text-align: left;
+	border-collapse: collapse;
+}
+#hor-zebra th
+{
+	font-size: 14px;
+	font-weight: normal;
+	padding: 5px 3px;
+	color: #039;
+}
+#hor-zebra td
+{
+	padding: 3px;
+	color: #669;
+}
+#hor-zebra .odd
+{
+	background: #e8edff;	
+}
+#hor-zebra .indentRow
+{
+	margin-left:10px;	
+}
+#footer { 
+ width: 960px;
+ height: 25px;
+ clear: both;
+ color: #FFF;
+ background: #295B96;
+ margin-right:100px;
+ position: relative;
+ margin-top: -150px;
+ padding-left: 10px;
+}

@@ -1,0 +1,19 @@
+/*
+* All IE only CSS
+*/
+
+/* fix LEGEND FIELDSET issue displaying incorrctlyt in IE 
+http://www.mattheerema.com/web-tech-design/2006/04/getting-fieldset-backgrounds-and-legends-to-behave-in-ie/
+*/
+html fieldset{position: relative; margin-top:1em; padding-top:16px;}
+html legend{position:absolute; top: -0.5em; left: 0.5em;}
+
+/* replacement for border attr on table.tableSimple thead selector from content.css */
+table.tableSimple thead tr th {	border: 1px solid #C2C6CC;border-bottom:none;	 }
+
+
+/* fix display:cell-table per this article
+*  http://tycoontalk.freelancer.com/css-forum/151671-vertical-align-table-cell-ie-not.html 
+* from contents.css
+*/
+div.tableSummary div.row div.cell {clear: none; display: inline; float:left; vertical-align: middle;}

@@ -1,0 +1,353 @@
+Version 3.9.2
+
+12-Sept-2018
+Fixed - Write Snippet support not working for some SSH connections
+Fixed - fixed ldap_host NOT NULL for sql install file
+Fixed - remove echo from DBinstall script
+Fixed - Config Compare not showing list of commands, Issue resolved
+
+------------------------------------------------------------------------------------
+Version 3.9.1
+
+25-June-2018
+Added - LDAP Authentication Support
+
+------------------------------------------------------------------------------------
+Version 3.9.0
+
+25-May-2018
+Fixed - Bug: - Resolved multiple issues on Telnet connections returning blank configurations
+Added - Confirm dialog if password fields on devices page are blank. User can proceed  to form submit anyway if they click 'ok'
+
+------------------------------------------------------------------------------------
+
+30-March-2018
+Author: Stephen Stack
+
+Fixed - Bug: - [Fixed] Compare in Scheduled Tasks not working #83 github rconfig/rconfig
+Fixed - Bug: - Fix issue where final check for install was returning no response. Maintenance Workaround added to config file for https redirect.
+Fixed - Bug: - writeSnippetTelnet() commented out in connection2.class.php
+Fixed - Bug: - configoverview.php hangs on purge when no configs in DB to delete. Error notice added. 
+Fixed - Bug: - configoverview.php page crashes when counting over 100k directories or files in the data directory
+Fixed - Bug: - Reports are malformed due to overlap when written on same day. 
+Fixed - Bug: - Modification to Centos6 apache config file to prevent SSL errors
+
+------------------------------------------------------------------------------------
+
+Version 3.8.7
+20-Oct-2017
+Author: Stephen Stack
+
+Fixed - Bug: - Modifications to connection class for faster telnet connections/ downloads
+Fixed - Bug: - #66 install DB check failing on password with special characters
+Fixed - Bug: - #67 IE 11 not allowing updates to default credentials in settings page
+
+------------------------------------------------------------------------------------
+
+Version 3.8.6
+01-Oct-2017
+Author: Stephen Stack
+
+Added - Permenant HTTPS redirect to config template file
+Fixed - Bug: - #64 Encryption check is reversed when selected Default username/password 
+Fixed - Resolved Missing HPAnyKey yml config from out of box 3.8 templates
+Fixed - Issue if dots in host name, config files will not open from web console. dots replaced with dashes
+Fixed - If blank usernames and password password, rConfig will continue with script - i.e. blank usernames/ passwords should be allowed
+Added - Remove Special characters from filenames
+
+------------------------------------------------------------------------------------
+
+Version 3.8.0
+29-Sept-2017
+Author: Stephen Stack
+
+Added - Templates to specify connection parameters to devices
+Added - Device password encryption function in settings section
+Update - Remove mandatory user/pass fields
+Update - Remove password confirm field
+Update - do not retrieve PWs when editing devices
+Update - updated favicon.ico to new rConfig logo
+Fixed - debug notice div on settings page not working
+Update - Remove old phpseclib
+Delete - devicesaccessmethod table
+Delete - deviceAccessMethodId field removed
+Delete - deviceEnableMode field removed
+Delete - termLength field removed
+Fixed - fix default user/pass tick box - added warning if PWs blank in settings
+Fixed - defaultEnablePassword not saving on add edit
+Fixed - red border around default vendor image
+Update - fix login images
+Fixed - move dashboard toaster to bottom right
+.. and many more minor bug fixes
+
+------------------------------------------------------------------------------------
+
+Version 3.7.5
+8-July-2017
+Author: Stephen Stack
+
+        Added - New online help files and removed old help files
+        Added - Updated masthead for new rConfig Logo
+        Fixed - Images bug where images would not upload correctly
+        Fixed - issue where connport on devices page would reset to 23 if saving form and required field not completed
+        Fixed - deleted device showing up twice in compare device selection
+        Fixed - fixed page hangs for connection checks if device not avaiilable on devicemgmt pages. bug#36
+
+------------------------------------------------------------------------------------
+
+Version 3.6.9
+30-Aug-2016
+Author: Jose Diaz
+        Fixed - Make task e-mail reports display properly with different e-mail client programs, specially Outlook.
+
+------------------------------------------------------------------------------------
+
+Version 3.6.8
+28-Aug-2016
+Author: Jose Diaz
+        Fixed - Check getHostStatus results ($status) in lib/showCmdScript.php
+        Fixed - Check getHostStatus results ($status) in lib/downloadNowScript.php
+        Fixed - Check getHostStatus results ($status) in lib/configCategoryScript.php
+        Fixed - Check getHostStatus results ($status) in lib/configDeviceScript.php
+        Fixed - Reimplement getHostStatus() function using sockets API instead of fsockopen() to reduce Connection Refused errors 
+
+------------------------------------------------------------------------------------
+
+Version 3.6.7
+18-Aug-2016
+Author: Stephen Stack
+
+        Fixed - Connection ports not updating automatically when selecting ssh/telnet in devices.php
+        Fixed - SMTP Auth checkbox not display credentials boxes
+        Fixed - Fixed full backup failure issue
+        Fixed - Issue where users cannot be deleted
+        Fixed - Bug#9 (GitHub) run rconfig.sql without requiring ALLOW_ZEROS and SUPER
+        Fixed - bug where scheduling a Compliance Report task would fail with a 500 error
+        Fixed - fixed upload of vendor images to images/vendors dir
+
+------------------------------------------------------------------------------------
+Version 3.6.0
+30-Jun-2016
+Author: Stephen Stack
+        
+        Fixed - fixed install/rconfig.sql for customprop view, if multiple rconfig DBs exists, custom props display php errors
+        Fixed - Undefined Offset error when downloading configs via scheduled task or manually
+        Fixed - Errors displayed if incorrect credentials passed for device on manual download
+        Fixed - Error 'CONN Command or Prompt Empty' - due to invalid entries in `cmdCatTbl` table - rconfig.sql installer
+        Fixed - Errors if incorrect password for DB installer are incorrect
+
+------------------------------------------------------------------------------------
+Version 3.5.4
+14-Jun-2016
+Author: Stephen Stack
+
+        Fixed - Many Minor Interface improvements
+        Added - Device Edit button from devicemgmt page
+        Added - Scheduled Tasks view - Show categories if selected for the task or devices if selected
+        Fixed - All identified Security issues in relation to multiple CSRF and file access on AJAX code
+
+------------------------------------------------------------------------------------
+Version 3.5.2
+29-May-2016
+Author: Stephen Stack
+
+        Fixed - Backup may hang if tmp dir is missing. Added Check if tmp is present and create if not
+        Fixed - scheduled tasks footer fix
+        Fixed - Removed default install commands that were not working from SQL
+        Changed - configcompare re-factored for new config file search functionality
+        Changed - Updated to jquery 2.2.4 & jqueryui 1.11.3 
+        Changed - All alert, confirmation and modals changed to modern design for better look and feel
+        Added - Move phpLogging() function to global functions so that it is called for all scripts - makes logging more available
+
+------------------------------------------------------------------------------------
+Version 3.5.1
+23-May-2016
+Author: Stephen Stack
+
+        Fixed - Some Edits not appear to be working due to AJAX caching 'feature' in version of IE
+        Fixed - Updater hanging on update due to mis-configured PDO statement in updater class
+
+------------------------------------------------------------------------------------
+Version 3.5.0
+20-May-2016
+Author: Stephen Stack
+
+	Deprecated - Config template generation feature (new build coming in V4)
+        Deprecated - Option to require user credentials before manually downloading configs - Not working
+        Added - Show password tick box on settings page
+        Added - Login Timeout Setting (default 15 minutes) on settings page
+        Added - New Installer Bash Scripts for Centos 6.x and 7
+        Changed - Refactor Menu to dynamic DB based
+        Fixed - Password not emailed for forgot password page
+        Fixed - Multiple UI tweaks
+        Fixed - Vendors Edit - does not keep logo on Edit
+        Fixed - Download Now/ Snippets script bugs
+        Fixed - Reports Bugs
+        Major Update - DB connections Layer migrated to PDO 
+	Updated - Help files updates
+        Updated - Help files updates
+        Security - Removed LFI & Path Traversal Bugs
+
+------------------------------------------------------------------------------------
+
+Version 3.1.1
+19-Apr-2016
+Author: Stephen Stack
+
+	Fixed - LFI Bug in downloadFile.php
+
+------------------------------------------------------------------------------------
+Version 3.1.0
+28-Aug-2015
+Author: Matt Vitale
+
+	Added - Config template generation feature
+	Added - Option to require user credentials before manually downloading configs or pushing config snippets (instead of the default stored credentials)
+		-Must be an admin to toggle this setting on the Settings page
+		-Mainly used for security/auditors needing to know who exactly logged into a device, instead of the logs always showing rConfig's stored credentials
+	Added - rConfig now disables HTTP and only uses HTTPS by default.  This can be reverted in the /etc/httpd/conf/httpd.conf file by uncommenting the "#Listen 80" line
+	Fixed - Compliance reports not working correctly
+	Changed - Various user interface tweaks and improvements
+	Updated - Help files with newer features
+
+------------------------------------------------------------------------------------
+Version 3.0.3
+17-Mar-2015
+Author: Matt Vitale
+
+	Added - New changes from version 3.0.2 (currently unreleased) listed below
+	Added - Auto update feature for the default credentials
+		-Original behavior:	Each device would have to be individually updated with the new credentials when changed on the settings page
+		-New behavior:		When the default credentials are updated on the settings page, it will automatically update any devices configured with the Default Credentials check box checked
+	Added - Default username/password link on add device page to a check box
+	Added - Enabled automatic welcome email sent to new users when a new account is created
+	Fixed - Modified the default welcome email for use with rConfig
+	Fixed - Various grammatical and typographical fixes, including in comments
+	Fixed - Default Configuration Comparison report when run from a scheduled task.  It now should look for the correct filenames and compare them correctly.
+	Fixed - Error logging in below fix for 3.0.2 (it previously wouldn't log errors correctly)
+	Changed - Ordering of devices in device list to be alphabetical
+
+------------------------------------------------------------------------------------
+Version 3.0.2
+16-Nov-2014
+Author: Kyle Little
+
+	Fixed - Allow variable telnet port number for connections
+
+------------------------------------------------------------------------------------
+Version 3.0.1
+20-June-2014
+
+	Fixed - storing downloaded config files in wrong timezone
+	Fixed - issue where search was not working
+
+------------------------------------------------------------------------------------
+Version 3.0.0
+08-March-2014
+	
+	Added - Manual 'Download Now' Button to devicemgmt page
+	Added - Feature to upload configuration snippets to devices on both SSH and TELNET 
+	Added - Feature to upload configuration snippets to multiple devices as a scheduled task
+	Added - Timestamp to downloaded configuration files so that configs can be downloaded multiple times in a single day
+	Added - Config snippets reports section to reports under configuration tools
+	Fixed - added a check for a lowercase username prompt as Cisco ACS5.x chnage the login prompt for somme Cisco gear to all lowercase
+
+------------------------------------------------------------------------------------
+Version 2.0.3
+17-Jan-2014
+	
+	Fixed - Typo problem where 'emtpy' was replaced with correct spelling of empty (Credit: Matt Vitale)
+
+------------------------------------------------------------------------------------
+Version 2.0.1
+30-Nov-2013
+	
+	Fixed - If '#' character was found in config where SSH was the connection type. Config download would fail at '#' (Credit: Matt Vitale)
+
+------------------------------------------------------------------------------------
+Version 2.0.0
+07-Sept-2013
+	
+	Added - Compliance Manager Feature
+	Fixed - Minor Code fixes
+
+------------------------------------------------------------------------------------
+Version 1.2.9
+06-Sept-2013
+	
+	Fixed - Fixed scheduler where all nodes where being add to a task
+	Fixed - Updated code to allow for HTTP or HTTPs rConfig UI
+	Fixed - Backup archives not deleting
+	Added - Update Copyright Year
+	Added - Extended field for telnet/SSH port numbers to allow up to 5 numbers i.e. port 22222
+
+------------------------------------------------------------------------------------
+Version 1.2.8
+21-Jun-2012
+	
+	Fixed - Whitespace not allowed in hostname for devices for - will cause file system level folder name problems
+	Added - No html form autocomplete allowed for username and password - you should use the 'default username/password function'
+
+------------------------------------------------------------------------------------
+Version 1.2.7
+05-Jun-2012
+	
+	Added - Purge configs older than X days feature on configoverview.php page
+
+------------------------------------------------------------------------------------
+Version 1.2.6
+01-Jun-2012
+	
+	Update - Allowed passconf, enableMode Checkbox and Enable password to be returned to devices form on submission error
+
+------------------------------------------------------------------------------------
+Version 1.2.5
+31-Jan-2012
+	
+	Fixed - Enable mode checkbox not working on device add form
+	
+------------------------------------------------------------------------------------
+Version 1.2.4
+6-Jan-2012
+	
+	Added - Feature to retain devices form fill-in information when submitted and errors returned
+	Fixed - Easy update to remove install dir after update is completed
+	Fixed - 'Undefined variable: i in /home/rconfig/lib/showCmdScript.php' notice when running from CLI
+	Fixed - HTTP_HOST not set error when running showCmdScript.php from CLI
+	
+------------------------------------------------------------------------------------
+Version 1.2.0
+6-Jan-2012
+	
+	Added - Easy rConfig Update installation feature
+	Fixed - Broken Footer Links
+	Fixed - Installation final page and checklist
+	
+------------------------------------------------------------------------------------
+Version 1.1.2
+31-Dec-2012
+	
+	Added - Version information to footer
+	Added - Hyperlink to remove install directory from 'install dir' banner warning
+
+------------------------------------------------------------------------------------
+Version 1.0.11
+21-Dec-2012
+
+	Fixed - Update lib/showCmdScript.php to use SmtpFromAddr from Db, not not hardcoded 'from' address for sending mail
+	Fixed - could not delete categories due to misconfigured crud path
+	Fixed - Updated installer to display 'WANOptimizers' under categories as no spaces allowed in categories
+	Added - Request to reduce username length to 4
+	Fixed - Issue where if 'data' dir was empty, PHP Notice:  Undefined variable: files in /home/rconfig/config/functions.inc.php on line 221 (scan_dir()) function
+	Fixed - Issue where could not delete compareReports because wrong path was referenced in reports.php
+	Fixed - issue if showCmdScript.php was run on shell by another user, it would reset perms for data directory. 
+				Added some checking to showCmdScript.php see how script was run and change back owner to apache if script was run from shell
+	Fixed - duplicate '<?php' from devices.crud.php
+	Fixed - PHP Notice:  Undefined variable: categories in ...scheduler.crud.php when adding task for devices only
+	Fixed - Full backup not backing up MySQL DB
+
+------------------------------------------------------------------------------------
+Version 1.0.0
+14-Dec-2012
+
+	rConfig Released

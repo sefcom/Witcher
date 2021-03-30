@@ -1,0 +1,26 @@
+body {
+	position:relative;
+	background-color:#fff;
+}
+body img {
+	position:absolute;
+	top:0;
+	right:0;
+	border:none;
+}
+#topDiv {
+	float: left;
+	width: 70%;
+	height: auto;
+	margin-bottom: 20px;
+	padding-bottom: 15px;
+	text-align:left; 
+	border-bottom:1px solid #565656;
+}
+.spacer{
+clear:both; 
+height:1px;
+}
+pre {
+	line-height: 0.9;
+}

@@ -1,0 +1,258 @@
+/* --- CSS Reset --- */
+
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, code,
+del, dfn, em, img, q, dl, dt, dd, ol,  li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0px;
+  padding: 0px;
+  font-weight: inherit;
+  font-style: inherit;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+  font-family:Sans-serif;
+}
+/* LAYOUT */
+#container
+{
+width: 960px;
+margin: 10px auto;
+background-color: #fff;
+color: #333;
+line-height: 130%;
+min-width:960px;
+}
+
+#top{
+padding: .5em;
+border-bottom: 1px solid gray;
+}
+
+#leftnav
+{
+float: left;
+width: 160px;
+margin: 0;
+padding: 1em;
+}
+
+#content
+{
+margin-left: 200px;
+border-left: 1px solid gray;
+padding: 1em;
+max-width: 45em;
+}
+
+#footer
+{
+clear: both;
+margin: 0;
+padding: 5px;
+color: #333;
+background-color: #ddd;
+border-top: 1px solid gray;
+height:24px;
+}
+
+#leftnav p { 
+	margin: 0 0 1em 0; 
+}
+
+/* LAYOUT */
+
+/* CONTENT STYLE */
+h1 {
+	font-size:			30px;
+	color:				#5B5B5B;
+}	
+h2 {
+	font-size:			20px;
+	color:				#5B5B5B;
+}
+#content h2 { 
+	margin: 			0 0 .5em 0; 
+}
+h3 {
+	color:				#C64934;
+	font-weight:      	bold;
+}
+hr{
+	color: 				#C64934;
+	background-color: 	#C64934;
+	height: 			1px;
+	border: 0;
+}
+p {
+	font-size:		0.72em;
+	line-height:	120%;
+	color:			#707070;
+	padding:		5px; 
+}
+ul {
+	list-style-type:none;
+	margin:0;
+	padding:0;
+} 
+ul a {
+	display:block;
+	width:150px;
+	padding: 3px;
+	font-size:0.8em;
+}
+li a {
+	float: left;
+}
+li a:link  {
+  /* Applies to all unvisited links */
+  text-decoration:  none;
+  font-weight:      normal;
+  background-color: white;
+  color:            #878787;
+  margin:			5px;
+  border:			1px solid #ddd;
+} 
+li a:hover  {
+  /* Applies to links under the pointer */
+  text-decoration:  none;
+  font-weight:      normal;
+  background-color: #B54534;
+  color:            white !important; 
+  border:			1px solid #ddd;
+} 
+ li a:visited{
+	color:          #878787;
+	border:			1px solid #ddd;
+}
+li  a.selected  {
+  /* Applies to activated links */
+  text-decoration:  none;
+  font-weight:      normal;
+  background-color: #B54534;
+  color:            white;
+  border:			1px solid #ddd;
+  border-right:		1px solid #ddd;
+} 
+#section{
+	width:			100%;
+	float:			left;
+}
+#notes{
+	width:			35%;
+	float:			left;
+}
+#items{
+	float:			left;
+	width:			58%;
+	border:			1px solid #CCCCCC;
+	margin-left:	15px;
+	padding:		5px; 
+	background:		#E9ECEF;
+	font-size:		0.72em;
+
+}
+#items ul {
+	float:			left;
+}
+.cell{
+	display:		table-cell;
+	float:			left;	
+}
+.cell span{
+	margin-left:		20px;	
+}
+.cellinside{
+	display:		table-cell;
+	float:			left;	
+	margin-left:		20px;
+}
+
+.clear {
+	clear:			both;
+}
+.good {
+	color:			#52D648;
+}
+.bad{
+	color:			#EA2027;
+}
+#licenseDiv{
+	float:			left;
+	border:			1px solid #CCCCCC;
+	margin-left:	15px;
+	padding:		5px; 
+	background:		#E9ECEF;
+	font-size:		0.85em;
+	overflow:		auto; 
+	width:			85%;
+	max-height:		450px;
+}
+#footerNav {
+	float:			right;
+	width:			150px;
+	display:		inline-block;
+	height:			100%;
+}
+#footerNav a:link  {
+  text-decoration:  none;
+  font-weight:      bold;
+  color:			#666696;
+  } 
+#footerNav a:hover  {
+  text-decoration:  none;
+  font-weight:      bold;
+  color:			#E2BF5F;
+  } 
+#footerNav a:visited  {
+  text-decoration:  none;
+  font-weight:      bold;
+  color:			#666696;
+  } 
+  
+#chkDbSettingsBtn {
+	display:		inline-block;
+	padding:		1px 5px 1px 5px;
+	border:			1px solid #CCCCCC;
+	background:		#E9ECEF;
+	font-weight:    bold;
+	float:			right;
+	font-size:		0.8em;
+	float:			left;
+}
+#chkDbSettingsBtn a:link {
+  text-decoration:  none;
+  font-weight:      bold;
+  color:			#666696;
+}
+#chkDbSettingsBtn a:visited  {
+  text-decoration:  none;
+  font-weight:      bold;
+  color:			#666696;
+  } 
+#next {
+	display:		inline-block;
+	padding:		1px 5px 1px 5px;
+	border:			1px solid #CCCCCC;
+	background:		#E9ECEF;
+	font-weight:    bold;
+	float:			right;
+}
+
+#last{
+	display:		inline-block;
+	padding:		1px 5px 1px 5px;
+	margin-right: 	5px;
+	border:			1px solid #CCCCCC;
+	background:		#E9ECEF;
+	font-weight:    bold;
+}
+#last.disabled{
+	display:		none;
+}
+#next.disabled{
+	display:		none;
+}
+/* CONTENT STYLE */

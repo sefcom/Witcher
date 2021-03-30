@@ -1,0 +1,577 @@
+/*HEADINGS*/
+h1 {
+	font-size: 1.8em;
+	margin: 0;
+	padding: 0;
+	font-weight: 400;
+	letter-spacing: -1px;
+}
+h2 {
+	color: #00436C;
+	padding: 0;
+	font-weight: 500;
+	letter-spacing: -1px;
+	margin:0 0 0.3em;
+}
+h3 {
+	color: #004370;
+	margin: 0;
+	padding: 5px 10px;
+	clear: both;
+	letter-spacing: -1px;
+}
+h4 {
+	color: #00436C;
+	margin: 0;
+	padding: 5px 16px;
+	clear: both;
+	letter-spacing: -1px;
+}
+/* FIELDSETS */
+fieldset {
+	margin-left: 25px;
+	width: 98%;
+	border: 1px solid #727272;
+	padding:15px;
+}
+fieldset .fieldsetDiv{
+	width: 98%;
+	border: 1px solid #727272;
+}
+fieldset legend{
+	font-weight: bold;
+	color: #DF3A01;
+	font-size:12px;
+	letter-spacing:0.8px;
+}
+fieldset label {
+	font-size: 1.0em;
+	font-weight: bold;
+}
+fieldset span {
+	font-size: 0.85em;
+	padding-left: 5px;
+}
+/* CONTENT DIV */
+#content {
+	height:100%;
+	/* default Text Style */
+	font-family: sans-serif;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: normal;
+	font-size: small;
+	line-height: 100%;
+	word-spacing: normal;
+	letter-spacing: normal;
+	text-decoration: none;
+	text-transform: none;
+	text-align: left;
+	text-indent: 0ex;
+}
+
+/* Device Mgmt page 'Device Details' Table */
+#deviceSummaryDiv {
+	width:90%;
+	background-color:#EEEEEE;
+	padding:10px;
+	border:1px solid #C0C0C0;
+}
+#deviceSummaryTbl table {
+	border-collapse:collapse;
+}
+#deviceSummaryTbl table, td, th {
+	border: none;
+}
+#deviceSummaryTbl td {
+	padding: 3px;
+	background-color: #EEEEEE;
+}
+#deviceSummaryTbl .infoCell {
+	padding-left:10px;
+}
+#deviceActionsDiv { 
+
+}
+
+.tableSummary {position:relative;}
+div.tableSummary div.row {display:table; width:100%; border-collapse:collapse;}
+div.tableSummary div.row div.cell {display: table-cell;}
+div.tableSummary div.row div.cell { width:30%; border-left:0px; text-align:right; font-weight: bold; color:#000; padding-right:5px; padding-bottom:3px; padding-top:3px;}
+div.tableSummary div.row div.cell.last {border-right:0px; text-align:left; font-weight: normal; padding-left:5px; width:60%;}
+div.tableSummary div.row.head div.cell {border-top:1px solid #a1b04a; background:#0000ff; color:#ffffff;}
+div.tableSummary div.row.first div.cell {border-top:1px solid #a1b04a;}
+div.tableSummary div.row.even div.cell {}
+
+/* 
+* Basic Simple Table Style Styled Table see example on dashboard
+*/
+table.tableSimple {position:relative;	width: 100%; border-collapse: collapse;}
+table.tableSimple thead {
+	width:100%; 
+	
+	/* http://www.colorzilla.com/gradient-editor/  for gradient */
+	/* table format idea from here 
+	http://documentation.devexpress.com/#xaf/CustomDocument3153 */ 
+	background: #f5f2f7; /* Old browsers */
+	background: -moz-linear-gradient(top, #f5f2f7 3%, #e6ebee 80%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#f5f2f7), color-stop(80%,#e6ebee)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #f5f2f7 3%,#e6ebee 80%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #f5f2f7 3%,#e6ebee 80%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #f5f2f7 3%,#e6ebee 80%); /* IE10+ */
+	background: linear-gradient(top, #f5f2f7 3%,#e6ebee 80%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f5f2f7', endColorstr='#e6ebee',GradientType=0 ); /* IE6-9 */
+
+	color:#000;
+	font-weight: normal;
+	border: 1px solid #C2C6CC;		
+	font:14px arial,sans-serif;
+	font-size:12px;
+	padding: 3px 0px 3px 2px;
+
+}
+table.tableSimple thead th {font-weight:bold;}
+table.tableSimple tbody{border: 1px solid #DBE0E2; color: #000;} 
+table.tableSimple tr td{border: 1px solid #E3E7E8; background-color: #FCFCFC; font:12.5px arial,sans-serif; padding: 3px;} 
+table.tableSimple tbody tr:hover td {color: #339; background: #eff2ff; cursor:default;}	
+table.tableSimple tbody .selected{	color: #FF0505; background: #eff2ff;} 
+table.tableSimple tbody tr div p {border: 1px solid #E3E7E8; background-color: #FCFCFC; font:12.5px arial,sans-serif; padding: 3px; margin-bottom: 0px;}	
+table.tableSimple tbody tr div p:hover {color: #339; background: #eff2ff; cursor:default;}	
+
+.pagination {list-style:none; margin:0px; padding:0px;}  
+.pagination li{float:left; margin:3px;}  
+.pagination li a{   display:block; padding:3px 5px; color:#fff; background-color:#536281; text-decoration:none;}  
+.pagination li a.active {border:1px solid #000; color:#000; background-color:#fff;}  
+.pagination li a.inactive {background-color:#4F436C; color:#777; border:1px solid #ccc;}
+
+/* Specific Table Widths */	
+#content  #devicesTbl{
+	width: 100%;
+	margin-bottom:5px;
+}
+#content  #taskTbl{
+	width: 100%;
+	margin-bottom:5px;
+}
+#content  #vendorsTbl{
+	width: 30%;
+	margin-bottom:5px;
+}		
+#content  #customPropTbl{
+	width: 25%;
+	margin-bottom:5px;
+}		
+#content  #commandsTbl{
+	width: 60%;
+	margin-bottom:5px;
+}		
+#content  #categoryTbl{
+	width: 25%;
+	margin-bottom:5px;
+}		
+#content  #linepaddingDiv {
+	margin-top:15px;   
+	float:left;
+}	
+#resultsDiv {
+	margin-top:15px;   
+	float:left;
+	width:90%;
+}	
+
+
+#content #dashboardLeft {
+	float: left;
+	width: 40%;
+}	
+#content #dashboardTop {
+	float: left;
+	width: 90%;
+}
+#content #helpIcon {
+	cursor: pointer;
+}
+#content #dashboardright {
+	float: right;
+	width: 40%;
+}
+
+
+#content #dashboadErrorLog {
+	float: left;
+	width: 90%;	
+	margin-left: 50px;
+	height: auto;
+	margin-bottom: 20px;
+	padding-bottom: 15px;
+	font-weight: bold;
+	color: black;
+}
+#content #logDiv {
+	border: 1px inset #aaa;
+	width: auto;
+	padding: 2px;
+	font-size: x-small;
+	font-weight: normal;
+	height:auto; 	
+	width:100%;
+}	
+#content #logDiv td{ /* adding some padding to log output */
+	padding-top:2px;	
+	padding-bottom:2px;	
+}
+#content #dashboadAnotherTable {
+	float: left;
+	width: 90%;	
+	margin-left: 50px;
+	height: auto;
+	margin-bottom: 20px;
+	padding-bottom: 15px;
+}
+#cronTable {
+	background:#eee;
+	border: 1px solid #bbb;
+	width:60%;
+	padding-top:10px;
+}
+
+#content .mainformDiv { 
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+}
+#content .mainformDiv form {  
+	width: 98%;
+	padding-left:15px;
+}		
+#content .mainformDiv form label {  
+	padding-top: 3px;
+	padding-bottom: 1px;
+	display: block;
+	font-size:8pt;
+	width: 20em;
+}
+#content .mainformDiv button { 
+	margin-top: 5px;
+	font-size:8pt
+}
+/*http://stackoverflow.com/questions/2603700/how-to-align-3-divs-left-center-right-inside-another-div
+Below for alignment of divs
+*/ 	
+
+#content .mainformDiv fieldset{
+	margin:0 auto;
+	margin-top:15px;
+}	
+#content .mainformDiv #divFormTitle {
+	/* default background colour, for all layout engines that don't implement gradients */
+	background-color: #5C7C9B;
+	/* gecko based browsers */
+	background: -moz-linear-gradient(top, #7597B7, #5A84AA);
+	/* webkit based browsers */
+	background: -webkit-gradient(linear, left top, left bottom, from(#7597B7), to(#5A84AA));
+	color: #fff;
+	border-bottom: 2px solid #aaa;
+	padding-top: 3px;
+	margin-bottom: 2px;
+	text-indent:10px;
+	width:100%;
+}	
+#content .mainformDiv #left {
+	float:left;
+	width:200px;
+}		
+#content .mainformDiv #left #selectRadio{
+	vertical-align:top;
+}	
+#content .mainformDiv #right {
+	float:left;
+	width:200px;
+}		
+#content .mainformDiv #center {
+	margin:0;
+	width:200px;
+}		
+#content .mainformDiv #saveButtons {
+	clear:both;
+}				
+#content .mainformDiv #right #selectRadio{
+	vertical-align:top;
+}	
+#content .mainformDiv  #leftRightTitle{
+	font-weight: bold;
+	text-align:center;
+}		
+#content .mainformDiv  #leftRightContent{
+	text-align:center;
+	padding-bottom:10px;
+}	
+#content .mainformDiv #topDiv {
+	float:left;
+	width:100%;
+	margin-bottom:2px;
+}	
+#content .mainformDiv #bottomDiv {
+	float:left;
+	margin: auto 0;
+	width:100%;
+	margin-bottom:2px;
+	clear:both;
+}	
+/* compareConfig page layout */
+#content  .mainformDiv #comapareTreeLeft{
+	float:left;
+	width:45%;
+	padding-right:30px;
+}
+#content  .mainformDiv #comapareTreeLeft fieldset{
+	width:100%;
+}	
+
+/* devicemgmt page layout */
+#content .mainformDiv #contabDiv {
+	width:100%;
+	float:left;
+}
+#content .mainformDiv #contabDiv #minutes {
+	float:left;
+}
+#content .mainformDiv #contabDiv #hours {
+	float:left;
+	padding-left:10px;
+}	
+#content .mainformDiv #contabDiv #day {
+	float:left;
+	padding-left:10px;
+}	
+#content .mainformDiv #contabDiv #months {
+	float:left;
+	padding-left:10px;
+}	
+#content .mainformDiv #contabDiv #dayweek {
+	float:left;
+	padding-left:10px;
+}	
+#content .mainformDiv #contabDiv #dayofMonthDiv {
+	float:left;
+	padding-left:10px;
+}	
+#content .mainformDiv #contabDiv label {
+	width:100px;
+	padding-bottom:3px;
+}			
+
+/* settings styles */
+#settings {
+	float: left;
+	width: 70%;
+	height: auto;
+	margin-bottom: 20px;
+	padding-bottom: 15px;
+}
+#tableFieldset {
+	float: left;
+	width: 90%;
+	height: auto;
+	margin-bottom: 20px;
+	padding-bottom: 15px;
+}
+#dashboardFieldset {
+	float: left;
+	width: 50%;
+	height: auto;
+	margin-bottom: 20px;
+	padding-bottom: 15px;
+}
+
+#content #debugInfoDiv {
+	margin-top:15px;
+	width:80%;
+}
+
+#content #toolbar { 
+	width:95%;
+	display: inline-block;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	padding-right: 15px;
+}
+#content #toolbar #toolbarButtons{ 
+	float:left;
+} 	
+#content #toolbar button { 
+	font-size:8pt;
+	vertical-align: middle;
+} 
+#content #devicesTable {
+	clear:both;
+	padding-top:10px;
+} 	
+#content #devicesTable #deviceActionDiv {
+	height:40px;
+} 	
+#content #devicesTable #searchForm{ 
+	margin: 0 auto;
+	float:right;
+	margin-bottom:5px;
+} 
+#content #devicesTable #searchForm button { 
+	font-size:8pt;
+	vertical-align: middle;
+}	
+#content button.smlButton  { 
+	font-size:8pt;
+	vertical-align: middle;
+
+}
+#content #devicesTable #sortForm { 
+	margin: 0 auto;
+} 		
+#content #devicesTable #sortForm button { 
+	font-size:8pt;
+	vertical-align: middle;
+} 	 	
+#content #cleardiv { 
+/* div for creating some blank spaceing */
+	height:20px;
+}
+
+/* Pagnation Styling*/
+.paginate {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: .7em;
+	margin-bottom: 5px;
+}
+a.paginate {
+	-moz-border-radius: 3px; /* Firefox */
+	-webkit-border-radius: 3px; /* Safari and Chrome */
+	border-radius: 3px;  /* Opera 10.5+, future browsers, and now also Internet Explorer 6+ using IE-CSS3 */
+	/*behavior: url(ie-css3.htc); /* This lets IE know to call the script on all elements which get the 'box' class */
+	border: 1px solid #536281;
+	padding: 2px 6px 2px 6px;
+	text-decoration: none;
+	color: #536281;
+}
+a.paginate:hover {
+	-moz-border-radius: 3px; /* Firefox */
+	-webkit-border-radius: 3px; /* Safari and Chrome */
+	border-radius: 3px;  /* Opera 10.5+, future browsers, and now also Internet Explorer 6+ using IE-CSS3 */
+	/*behavior: url(ie-css3.htc); /* This lets IE know to call the script on all elements which get the 'box' class */
+	background-color: #D0E4F4;
+	color: #536281;
+	text-decoration: underline;
+}
+a.current {
+	-moz-border-radius: 3px; /* Firefox */
+	-webkit-border-radius: 3px; /* Safari and Chrome */
+	border-radius: 3px;  /* Opera 10.5+, future browsers, and now also Internet Explorer 6+ using IE-CSS3 */
+	/* behavior: url(ie-css3.htc); /* This lets IE know to call the script on all elements which get the 'box' class */
+	border: 1px solid #536281;
+	font: bold .7em Arial,Helvetica,sans-serif;
+	padding: 2px 6px 2px 6px;
+	cursor: default;
+	background:#D0E4F4;
+	color: #536281;
+	text-decoration: none;
+}
+span.inactive {
+	-moz-border-radius: 3px; /* Firefox */
+	-webkit-border-radius: 3px; /* Safari and Chrome */
+	border-radius: 3px;  /* Opera 10.5+, future browsers, and now also Internet Explorer 6+ using IE-CSS3 */
+	/* behavior: url(ie-css3.htc); /* This lets IE know to call the script on all elements which get the 'box' class */
+	border: 1px solid #536281;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: .7em;
+	padding: 2px 6px 2px 6px;
+	color: #536281;
+	cursor: default;
+}
+
+
+/* Compatibility Page */
+#browserRequirements{
+	width:800px;
+	padding-left:25px;
+}
+#browserRequirements ul {
+	list-style-image:none;
+	list-style-position: outside;
+	list-style-type: none;
+	margin: 0 px auto;
+	padding: 0px;
+	padding-left:10px;
+}
+#browserRequirements #_h{
+	font-size:1.2em;
+}
+#browserRequirements #_p{
+	font-size:1em;
+	letter-spacing:0.1px;
+}
+#browserRequirements #_li1{
+	background: transparent url('../images/background_browser.gif') no-repeat scroll left top;
+	cursor: pointer; float:left; width:120px; height:122px;	margin:0 10px 10px 0;
+}
+#browserRequirements #_li2{
+	background: transparent url('../images/background_browser.gif') no-repeat scroll left top;
+	cursor: pointer; float:left; width:120px; height:122px;	margin:0 10px 10px 0;
+}
+#browserRequirements #_li3{
+	background: transparent url('../images/background_browser.gif') no-repeat scroll left top;
+	cursor: pointer; float:left; width:120px; height:122px;	margin:0 10px 10px 0;
+}
+#browserRequirements #_li4{
+	background: transparent url('../images/background_browser.gif') no-repeat scroll left top;
+	cursor: pointer; float:left; width:120px; height:122px;	margin:0 10px 10px 0;
+}
+#browserRequirements #_li5{
+	background: transparent url('../images/background_browser.gif') no-repeat scroll left top;
+	cursor: pointer; float:left; width:120px; height:122px;	margin:0 10px 10px 0;
+}
+#browserRequirements  #_ico1{
+	margin:1px auto; height:100px; width:100px; background:transparent url('../images/browser_ie.gif') no-repeat scroll left top;
+}
+#browserRequirements  #_ico2{
+	margin:1px auto; height:100px; width:100px; background:transparent url('../images/browser_firefox.gif') no-repeat scroll left top;
+}
+#browserRequirements  #_ico3{
+	margin:1px auto; height:100px; width:100px; background:transparent url('../images/browser_chrome.gif') no-repeat scroll left top;
+}
+#browserRequirements  #_ico4{
+	margin:1px auto; height:100px; width:100px; background:transparent url('../images/browser_opera.gif') no-repeat scroll left top;
+}
+#browserRequirements  #_ico5{
+	margin:1px auto; height:100px; width:100px; background:transparent url('../images/browser_safari.gif') no-repeat scroll left top;
+}
+#browserRequirements  #_lit1{
+	color:#808080; font-size:0.8em; height:18px; line-height:17px; margin:1px auto; width:118px; text-align:center;
+}
+#browserRequirements  #_lit2{
+	color:#808080; font-size:0.8em; height:18px; line-height:17px; margin:1px auto; width:118px; text-align:center;
+}
+#browserRequirements  #_lit3{
+	color:#808080; font-size:0.8em; height:18px; line-height:17px; margin:1px auto; width:118px; text-align:center;
+}
+#browserRequirements  #_lit4{
+	color:#808080; font-size:0.8em; height:18px; line-height:17px; margin:1px auto; width:118px; text-align:center;
+}
+#browserRequirements  #_lit5{
+	color:#808080; font-size:0.8em; height:18px; line-height:17px; margin:1px auto; width:118px; text-align:center;
+}
+
+#taskDetails h2{
+	font-size:0.9em;
+	font-weight:bold;
+}
+#taskDetails strong{
+	font-size:0.9em;
+}
+#taskDetails span{
+	font-size:0.8em;
+}
+
+.datePickerCalendar {  
+    background-image:url(../images/fa-calendar_16_0_5c5c5c_none.png); 
+    background-repeat: no-repeat; 
+    background-position: 2px 3px;
+    text-indent:17px;
+}
