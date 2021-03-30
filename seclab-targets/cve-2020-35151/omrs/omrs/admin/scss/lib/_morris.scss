@@ -1,0 +1,8 @@
+/* -------------------------------------- */
+/* ############### Morris ############### */
+/* -------------------------------------- */
+
+.morris-hover.morris-default-style {
+  @include  border-radius();
+  border-width: 1px;
+}

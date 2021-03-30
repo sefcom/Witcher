@@ -1,0 +1,49 @@
+
+// Select2 Skins
+@mixin select2-outline-color($color) {
+  border-color: $color;
+  background-color: transparent;
+
+  .select2-selection__rendered { color: $color; }
+  .select2-selection__arrow b { border-top-color: $color; }
+}
+
+// Ion Rangeslider Skins
+@mixin irs-color-variant($color) {
+  .irs-bar,
+  .irs-bar-edge,
+  .irs-slider::before { background-color: $color; }
+
+  .irs-from,
+  .irs-to,
+  .irs-single {
+    background-color: $color;
+    &::after { border-top-color: $color; }
+  }
+}
+
+@mixin irs-modern-slider-variant($color) {
+  .irs-slider {
+    border-color: $color;
+    &::before { border-color: $color; }
+  }
+}
+
+@mixin irs-outline-variant($color) {
+  .irs-line,
+  .irs-slider {
+    border-color: $color;
+    &:hover,
+    &:focus {
+      &::before { background-color: darken($color, 5%); }
+    }
+  }
+}
+
+// jQuery Toggles
+@mixin toggle-variant($color) {
+  .toggle-on.active {
+    background-color: $color;
+    + .toggle-blob { border: 3px solid $color; }
+  }
+}

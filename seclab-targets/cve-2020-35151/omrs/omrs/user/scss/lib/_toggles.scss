@@ -1,0 +1,140 @@
+/* --------------------------------------- */
+/* ############### Toggles ############### */
+/* --------------------------------------- */
+
+.toggle-wrapper {
+  width: 60px;
+  display: inline-block;
+  margin-right: 5px;
+  position: relative;
+}
+
+.toggle-slide {
+  .toggle-on,
+  .toggle-off,
+  .toggle-slide .toggle-blob {
+    text-align: center;
+  }
+}
+
+.toggle-light {
+  .toggle-slide { box-shadow: none; }
+
+  .toggle-blob {
+    background-color: #fff;
+    background-image: none;
+    box-shadow: none;
+
+    &:hover,
+    &:focus {
+      background-color: #fff;
+      background-image: none;
+    }
+  }
+
+  .toggle-on,
+  .toggle-off {
+    font-size: 11px;
+    font-weight: bold;
+    text-shadow: none;
+    box-shadow: none;
+  }
+
+  .toggle-on {
+    background-color: #d0d4e7;
+    text-indent: -5px !important;
+
+    + .toggle-blob { border: 3px solid #d0d4e7; }
+
+    &.active {
+      background-color: $gray-800;
+      + .toggle-blob { border: 3px solid $gray-800; }
+    }
+  }
+
+  .toggle-off {
+    color: #fff;
+    background-color: #d0d4e7;
+    background-image: none;
+    text-indent: 5px !important;
+  }
+
+  // Color Variants
+  &.primary { @include toggle-variant($brand-primary);  }
+  &.success { @include toggle-variant($brand-success);  }
+  &.warning { @include toggle-variant($brand-warning);  }
+  &.danger  { @include toggle-variant($brand-danger);   }
+  &.info    { @include toggle-variant($brand-info);     }
+  &.indigo  { @include toggle-variant($indigo);         }
+  &.purple  { @include toggle-variant($purple);         }
+  &.pink    { @include toggle-variant($pink);           }
+  &.teal    { @include toggle-variant($teal);           }
+  &.orange  { @include toggle-variant($orange);         }
+}
+
+.toggle-modern {
+  .toggle-slide {
+    background: none;
+    text-shadow: none;
+    border-radius: $border-radius;
+    box-shadow: none;
+  }
+
+  .toggle-blob {
+    border-radius: $border-radius;
+    background-color: #fff;
+    background-image: none;
+    box-shadow: none;
+
+    &:hover,
+    &:focus {
+      background-color: #fff;
+      background-image: none;
+    }
+  }
+
+  .toggle-on,
+  .toggle-off {
+    text-shadow: none;
+    font-weight: bold;
+    box-shadow: none;
+  }
+
+  .toggle-on,
+  .toggle-on.active {
+    background-color: $gray-800;
+    background-image: none;
+  }
+
+  .toggle-on {
+    background-color: #d0d4e7;
+
+    + .toggle-blob { border: 3px solid #d0d4e7; }
+
+    &.active {
+      background-color: $gray-800;
+      + .toggle-blob { border: 3px solid $gray-800; }
+    }
+  }
+
+  .toggle-off,
+  .toggle-off.active {
+    color: #fff;
+    background-color: #d0d4e7;
+    background-image: none;
+    text-shadow: none;
+    text-indent: 8px !important;
+  }
+
+  // Color Variants
+  &.primary { @include toggle-variant($brand-primary);  }
+  &.success { @include toggle-variant($brand-success);  }
+  &.warning { @include toggle-variant($brand-warning);  }
+  &.danger  { @include toggle-variant($brand-danger);   }
+  &.info    { @include toggle-variant($brand-info);     }
+  &.indigo  { @include toggle-variant($indigo);         }
+  &.purple  { @include toggle-variant($purple);         }
+  &.teal    { @include toggle-variant($teal);           }
+  &.orange  { @include toggle-variant($orange);         }
+  &.pink    { @include toggle-variant($pink);           }
+}

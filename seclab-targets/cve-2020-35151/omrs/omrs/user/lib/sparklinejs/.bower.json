@@ -1,0 +1,14 @@
+{
+  "name": "sparklinejs",
+  "homepage": "https://github.com/grovertb/jquery.sparkline",
+  "version": "2.1.3",
+  "_release": "2.1.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.1.3",
+    "commit": "389a9a499cdcd29aa165d7b600c853bc4548c787"
+  },
+  "_source": "https://github.com/grovertb/jquery.sparkline.git",
+  "_target": "^2.1.3",
+  "_originalSource": "sparklinejs"
+}

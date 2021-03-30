@@ -1,0 +1,10 @@
+/* ----------------------------------------- */
+/* ############### Sparkline ############### */
+/* ----------------------------------------- */
+.jqstooltip {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  border: 0 !important;
+  @include border-radius(2px);
+}

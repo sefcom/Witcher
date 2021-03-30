@@ -1,0 +1,20 @@
+/* ------------------------------------------------- */
+/* ############### Perfect Scrollbar ############### */
+/* ------------------------------------------------- */
+
+.ps {
+  > .ps__scrollbar-y-rail {
+    width: 7px;
+    > .ps__scrollbar-y { width: 3px; }
+
+    &:hover,
+    &:active {
+      > .ps__scrollbar-y { width: 3px; }
+    }
+  }
+
+  &:hover {
+    > .ps__scrollbar-y-rail:hover { background-color: transparent; }
+    &.ps--in-scrolling.ps--y > .ps__scrollbar-y-rail > .ps__scrollbar-y { width: 7px; }
+  }
+}

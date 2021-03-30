@@ -1,0 +1,50 @@
+/* --------------------------------------------- */
+/* ############### Medium Editor ############### */
+/* --------------------------------------------- */
+
+.medium-editor-element {
+  p:last-child { margin-bottom: 0; }
+}
+
+.medium-editor-toolbar {
+  background-image: none;
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+
+  li {
+    button {
+      background-color: $app-primary;
+      background-image: none;
+      box-shadow: none;
+      border-right: 0;
+
+      &:hover,
+      &:focus {
+        background-color: darken($app-primary, 2%);
+        color: $brand-info;
+      }
+    }
+
+    .medium-editor-button-first {
+      border-top-left-radius: 3px;
+      border-bottom-left-radius: 3px;
+      border-left: 0;
+    }
+
+    .medium-editor-button-last {
+      border-top-right-radius: 3px;
+      border-bottom-right-radius: 3px;
+    }
+
+    .medium-editor-button-active {
+      background-image: none;
+      background-color: darken($app-primary, 2%);
+      color: $brand-info;
+    }
+  }
+}
+
+.medium-toolbar-arrow-under::after {
+  border-top-color: $app-primary;
+}

@@ -1,0 +1,18 @@
+/* ---------------------------------------- */
+/* ############### Rickshaw ############### */
+/* ---------------------------------------- */
+
+.rickshaw_graph {
+  svg:not(:root) { overflow: visible; }
+  svg {
+    overflow-y: visible;
+    overflow-x: hidden;
+    .y_grid {
+      .tick {
+        text { display: none; }
+      }
+    }
+  }
+
+  .y_ticks text { font-size: 11px; }
+}

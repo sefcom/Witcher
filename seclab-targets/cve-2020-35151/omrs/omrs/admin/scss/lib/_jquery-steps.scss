@@ -1,0 +1,192 @@
+/* -------------------------------------------- */
+/* ############### jQuery Steps ############### */
+/* -------------------------------------------- */
+
+/***** DEFAULT STYLE WIZARD *****/
+.wizard {
+  > .steps {
+    > ul {
+      margin-left: -0.5em;
+      margin-right: -0.5em;
+      display: flex;
+
+      li {
+        float: none;
+        display: block;
+        width: auto;
+
+        .title {
+          display: none;
+          margin-left: 10px;
+
+          @include media-breakpoint-up(md) {
+            display: block;
+          }
+        }
+      }
+    }
+
+    a,
+    a:hover,
+    a:active {
+      color: $gray-500;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      @include border-radius(0);
+
+      @include media-breakpoint-up(xl) {
+        justify-content: flex-start;
+      }
+
+      .number {
+        font-size: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 25px;
+        height: 25px;
+        border: 1px solid $gray-500;
+        @include border-radius(50px);
+      }
+    }
+
+    .disabled a {
+      &,&:hover,&:active { background-color: $gray-200; }
+    }
+
+    .current a {
+      &,&:hover,&:active {
+        background-color: $brand-info;
+        .number { border-color: #fff; }
+      }
+    }
+
+    .done a {
+      &,&:hover,&:active {
+        background-color: $teal;
+        .number { border-color: #fff; }
+      }
+    }
+  }
+
+  > .content {
+    background-color: $gray-200;
+    margin: 0.5em 0;
+    min-height: 150px;
+    @include border-radius(0);
+
+    > .body {
+      float: none;
+      position: static;
+      width: auto;
+      height: auto;
+      padding: 40px;
+
+      input.parsley-error {
+        border-color: $brand-danger;
+
+        + ul { list-style: none !important; }
+      }
+    }
+  }
+
+  > .actions {
+    padding-top: 0.5em;
+
+    > ul {
+      margin-left: -0.5em;
+      margin-right: -0.5em;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    a,
+    a:hover,
+    a:active {
+      background-color: $brand-info;
+      padding: 9px 20px;
+      line-height: 1.6;
+      @include border-radius(0);
+    }
+
+    .disabled {
+      a,
+      a:hover,
+      a:active { background-color: $gray-200; }
+    }
+  }
+
+  &.vertical {
+    > .steps {
+      padding-right: 1em;
+      width: 25%;
+
+      @media (min-width: 480px) { width: 17%; }
+      @include media-breakpoint-up(md) { width: 12%; }
+      @include media-breakpoint-up(xl) { width: 30%; }
+
+      ul {
+        flex-direction: column;
+        li {
+          + li { margin-top: 0.5em; }
+
+          @include media-breakpoint-up(md) {
+            .title { display: none; }
+          }
+
+          @include media-breakpoint-up(xl) {
+            .title { display: block; }
+          }
+        }
+      }
+    }
+
+    > .content {
+      margin: 0;
+      width: 75%;
+      min-height: 250px;
+      display: block;
+      float: none;
+
+      @media (min-width: 480px) { width: 83%; }
+      @include media-breakpoint-up(md) { width: 88%; }
+      @include media-breakpoint-up(xl) { width: 70%; }
+    }
+
+    > .actions {
+      float: none;
+
+      ul {
+        float: none;
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: -0.5em;
+
+        li:first-child {
+          margin-left: 25%;
+          @media (min-width: 480px) { margin-left: 17%; }
+          @include media-breakpoint-up(md) { margin-left: 12%; }
+          @include media-breakpoint-up(xl) { margin-left: 30%; }
+        }
+      }
+    }
+  }
+}
+
+/****** EQUAL COLUMN WIDTH STEP INDICATOR *****/
+.step-equal-width {
+  > .steps {
+    > ul {
+      display: flex;
+
+      > li {
+        flex: 1;
+        width: auto;
+        float: none;
+      }
+    }
+  }
+  > .content {}
+  > .actions {}
+}

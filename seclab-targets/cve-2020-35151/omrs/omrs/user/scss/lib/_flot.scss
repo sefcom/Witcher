@@ -1,0 +1,21 @@
+/* ------------------------------------ */
+/* ############### Flot ############### */
+/* ------------------------------------ */
+
+.tooltipflot {
+  background-color: #000;
+  font-size: 11px;
+  padding: 5px 10px;
+  color: rgba(#fff,.7);
+  @include border-radius(2px);
+}
+
+.legendColorBox > div {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.legendLabel {
+  font-size: 11px;
+  padding-left: 5px;
+}
