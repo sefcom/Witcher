@@ -1,6 +1,7 @@
 *.ipch
 .vscode
-
+fuzzer-*.out
+fuzzer-*.err
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

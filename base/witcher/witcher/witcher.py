@@ -327,6 +327,7 @@ class Witcher():
                         if not si["up"]:
                             print(f"DOING: pkill -P {p.pid}")
                             os.system(f"pkill -P {p.pid}")
+                            os.system(f"pkill -9 -f {p['port']}")
                             print("attempting to bring up again.")
                             outfile = open(si["logfile"], "a")
                             si["proc"] = subprocess.Popen(si["server_cmd"], env=si["env"], stdout=outfile, stderr=outfile, close_fds=True)
