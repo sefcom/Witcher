@@ -98,8 +98,9 @@ RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh
 RUN echo 'export NVM_DIR=$HOME/.nvm; . $NVM_DIR/nvm.sh; . $NVM_DIR/bash_completion' >> /home/wc/.bashrc
 ENV NVM_DIR /home/wc/.nvm
 RUN . $NVM_DIR/nvm.sh && nvm install node
-RUN sudo mkdir /node_modules && sudo chown wc:wc /node_modules && sudo apt-get install -y npm
-RUN . $NVM_DIR/nvm.sh && cd / && npm install puppeteer cheerio
+#RUN sudo mkdir /node_modules && sudo chown wc:wc /node_modules && sudo apt-get install -y npm
+RUN sudo apt-get install -y npm
+RUN . $NVM_DIR/nvm.sh && npm install puppeteer cheerio
 
 USER root
 RUN mkdir /app && chown www-data:wc /app
@@ -125,7 +126,10 @@ RUN echo "export TZ=$TZ" >> /home/wc/.bashrc
 RUN usermod -a -G www-data wc
 
 #"Installing" the Witcher's Dash that abends on a parsing error when STRICT=1 is set.
-COPY config/dash /bin/dash
+#COPY config/dash /bin/dash
+#COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /bin/dash
+
+COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
 
 COPY afl /afl
 ENV AFL_PATH=/afl
@@ -139,9 +143,9 @@ RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  cd /witche
 
 RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate && pip install ipython "
 COPY --chown=wc:wc wclibs /wclibs
-COPY --chown=wc:wc bins /bins
+#COPY --chown=wc:wc bins /bins
 
-COPY --chown=wc:wc httpreqr /httpreqr
+#COPY --chown=wc:wc httpreqr /httpreqr
 
 ENV CONTAINER_NAME="witcher"
 ENV WC_TEST_VER="EXWICHR"

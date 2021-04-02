@@ -59,7 +59,7 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/file.h>
-
+#include <stdbool.h>
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined (__OpenBSD__)
 #  include <sys/sysctl.h>
 #endif /* __APPLE__ || __FreeBSD__ || __OpenBSD__ */
@@ -1263,10 +1263,34 @@ static inline void classify_counts(u32* mem) {
 
 #endif /* ^__x86_64__ */
 
-
+struct test_process_info {
+    int initialized;
+    int afl_id;
+    int port;
+    int reqr_process_id;
+    int process_id;
+    char error_type[20]; /* SQL, Command */
+    char error_msg[100];
+    bool capture;
+};
 /* Get rid of shared memory (atexit handler). */
 
 static void remove_shm(void) {
+
+  if (getenv("AFL_META_INFO_ID")){
+        // clean up last shared memory area
+        int mem_key = atoi(getenv("AFL_META_INFO_ID"));
+        int witch_shm_id = shmget(mem_key , sizeof(struct test_process_info), 0666);
+
+        if (witch_shm_id  >= 0 ) {
+            struct test_process_info *afl_info = (struct test_process_info *) shmat(witch_shm_id, NULL, 0);  /* attach */
+            afl_info->afl_id = 0;
+            afl_info->capture = false;
+            fprintf(stderr, "\033[36m [Witcher] init completed afl_shm_id=%d : afl_ifo %d %d %d %d !!!\033[0m\n",
+                    shm_id, mem_key, witch_shm_id, afl_info->afl_id, afl_info->capture);
+        }
+        fprintf(stderr, "\n");
+  }
 
   shmctl(shm_id, IPC_RMID, NULL);
 
@@ -5282,7 +5306,7 @@ static u32 build_buf_from_var(u8* var_str[], u32 var_strlen[], u8* outbufvars[],
 
     tweaked[cur_len] = '\x00';
     cur_len++;
-    if (start) {
+    if (var_str[j] != NULL && start) {
       fprintf(tmpout, " Freeing Start \n");
       free(start);
     }

@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/resource.h>
+#include <stdbool.h>
 
 static s32 child_pid;                 /* PID of the tested program         */
 
@@ -125,11 +126,33 @@ static void classify_counts(u8* mem, const u8* map) {
 
 }
 
-
+struct test_process_info {
+    int initialized;
+    int afl_id;
+    int port;
+    int reqr_process_id;
+    int process_id;
+    char error_type[20]; /* SQL, Command */
+    char error_msg[100];
+    bool capture;
+};
 /* Get rid of shared memory (atexit handler). */
 
 static void remove_shm(void) {
+  if (getenv("AFL_META_INFO_ID")){
+        // clean up last shared memory area
+        int mem_key = atoi(getenv("AFL_META_INFO_ID"));
+        int witch_shm_id = shmget(mem_key , sizeof(struct test_process_info), 0666);
 
+        if (witch_shm_id  >= 0 ) {
+            struct test_process_info *afl_info = (struct test_process_info *) shmat(witch_shm_id, NULL, 0);  /* attach */
+            afl_info->afl_id = 0;
+            afl_info->capture = false;
+            fprintf(stderr, "\033[36m [Witcher] showmap init completed afl_shm_id=%d : afl_ifo %d %d %d %d !!!\033[0m\n",
+                    shm_id, mem_key, witch_shm_id, afl_info->afl_id, afl_info->capture);
+        }
+        fprintf(stderr, "\n");
+  }
   shmctl(shm_id, IPC_RMID, NULL);
 
 }
@@ -148,8 +171,7 @@ static void setup_shm(void) {
       int port_id = atoi(port);
       shm_id = shmget(port_id , MAP_SIZE, IPC_CREAT | 0666);
   } else {
-
-      shm_id = shmget(1337, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0666);
+      shm_id = shmget(shm_id, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0666);
   }
 
   if (shm_id < 0) PFATAL("shmget() failed");
@@ -163,13 +185,26 @@ static void setup_shm(void) {
   ck_free(shm_str);
 
   trace_bits = shmat(shm_id, NULL, 0);
-  trace_bits[0] = 2;
-  trace_bits[65535] = 3;
+//  trace_bits[0] = 2;
+//  trace_bits[65535] = 3;
+  if (getenv("AFL_META_INFO_ID")){
+      int mem_key = atoi(getenv("AFL_META_INFO_ID"));
+        int witch_shm_id = shmget(mem_key , sizeof(struct test_process_info), 0666);
+      if (witch_shm_id  >= 0 ) {
+            struct test_process_info *afl_info = (struct test_process_info *) shmat(witch_shm_id, NULL, 0);  /* attach */
+            printf("showmap: AFL_META_INFO_ID=%s, witcher_shm_id=%d, %s=%d, info=> afl_id=%d capture=%d \n", getenv("AFL_META_INFO_ID"),witch_shm_id,
+             SHM_ENV_VAR, shm_id, afl_info->afl_id, afl_info->capture);
+      } else {
+        printf("Could not access witcher shared memory!!!\n");
+        exit(33);
+      }
 
-  printf("showmap: shm %d, %x \n", shm_id, shm_id);
+  } else {
+      printf("showmap: AFL_META_INFO_ID not set , %s \n", SHM_ENV_VAR, shm_id);
+  }
   printf("showmap: trace_bits = %p\n", trace_bits);
   
-  printf("trace_bits[0] = %d, [65535]=%d\n", trace_bits[0], trace_bits[65535]);
+  //printf("trace_bits[0] = %d, [65535]=%d\n", trace_bits[0], trace_bits[65535]);
 
 
   if (!trace_bits) PFATAL("shmat() failed");

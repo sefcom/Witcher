@@ -84,6 +84,17 @@ struct rollback_entry {
     struct rollback_entry *next;
 };
 
+struct test_process_info {
+    int initialized;
+    int afl_id;
+    int port;
+    int reqr_process_id;
+    int process_id;
+    char error_type[20]; /* SQL, Command */
+    char error_msg[100];
+    bool capture;
+};
+
 struct rollback_entry *rollback_ll[3];
 
 void add_var_to_rollback(char* varname, int matchcnt, int bitmapLoc, int which){
@@ -552,66 +563,72 @@ int startsWith(const char *pre, const char *str)
     return lenstr < lenpre ? 0 : memcmp(pre, str, lenpre) == 0;
 }
 
-static ssize_t (*real_recvfrom)(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) = NULL;
+//static ssize_t (*real_recvfrom)(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) = NULL;
+//
+//ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
+//                        struct sockaddr *src_addr, socklen_t *addrlen) {
+//
+//  real_recvfrom= dlsym(RTLD_NEXT, "recvfrom");
+//  ssize_t results = real_recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
+//  printf("!!!!!!!!!!!!!!!!!!! Thank you for using the special RECVFROM !!!!!!!!!!!!!!!!!!!!\n");
+//  printf("\tBUF: %s", (char*) buf);
+//  char* strict = getenv("STRICT");
+//
+//  unsigned char *cptr = (unsigned char *)(buf);
+//
+//  if(strstr(buf, "You have an error i") != NULL || strstr(buf, "You have an error i") != NULL  ) {
+//    DIR* dir = opendir("/tmp/output");
+//    if (dir) {
+//        /* Directory exists. */
+//        closedir(dir);
+//        FILE *errorlog= fopen("/tmp/output/errors.log","a+");
+//        fprintf(errorlog,"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   RECV FROM  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
+//        int num_env_vars = sizeof(env_vars) / sizeof(char*);
+//        for (int i=0; i < num_env_vars; i++){
+//            fprintf(errorlog, "\t%-15s = \033[33m%s\033[0m  \n", env_vars[i], getenv(env_vars[i]));
+//        }
+//        if (getenv("POST_DATA")){
+//            fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","POST", getenv("POST_DATA"));
+//        }
+//
+//        fprintf(errorlog, "\nERROR:\n");
+//        for (int lp=0; lp < len; lp++){
+//            if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
+//              fprintf(errorlog,"%c",cptr[lp]);
+//            } else {
+//              if (cptr[lp] == 0x0){
+//                break;
+//              } else {
+//                fprintf(errorlog,"\\x%02x",cptr[lp]);
+//              }
+//
+//            }
+//
+//        }
+//        fprintf(errorlog,"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
+//        fflush(errorlog);
+//        fclose(errorlog);
+//
+//    }
+//
+//    if (strict){
+//        raise(SIGSEGV);
+//    } else {
+//        printf("ERROR ERROR ERROR FROM DATABASE\n");
+//    }
+//
+//
+//  }
+//
+//  return results;
+//
+//}
 
-ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
-                        struct sockaddr *src_addr, socklen_t *addrlen) {
-
-  real_recvfrom= dlsym(RTLD_NEXT, "recvfrom");
-  ssize_t results = real_recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
-  printf("!!!!!!!!!!!!!!!!!!! Thank you for using the special RECVFROM !!!!!!!!!!!!!!!!!!!!\n");
-  printf("\tBUF: %s", (char*) buf);
-  char* strict = getenv("STRICT");
-
-  unsigned char *cptr = (unsigned char *)(buf);
-
-  if(strstr(buf, "You have an error i") != NULL) {
-    DIR* dir = opendir("/tmp/output");
-    if (dir) {
-        /* Directory exists. */
-        closedir(dir);
-        FILE *errorlog= fopen("/tmp/output/errors.log","a+");
-        fprintf(errorlog,"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   RECV FROM  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
-        int num_env_vars = sizeof(env_vars) / sizeof(char*);
-        for (int i=0; i < num_env_vars; i++){
-            fprintf(errorlog, "\t%-15s = \033[33m%s\033[0m  \n", env_vars[i], getenv(env_vars[i]));
-        }
-        if (getenv("POST_DATA")){
-            fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","POST", getenv("POST_DATA"));
-        }
-
-        fprintf(errorlog, "\nERROR:\n");
-        for (int lp=0; lp < len; lp++){
-            if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
-              fprintf(errorlog,"%c",cptr[lp]);
-            } else {
-              if (cptr[lp] == 0x0){
-                break;
-              } else {
-                fprintf(errorlog,"\\x%02x",cptr[lp]);
-              }
-
-            }
-
-        }
-        fprintf(errorlog,"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-        fflush(errorlog);
-        fclose(errorlog);
-
-    }
-
-    if (strict){
-        raise(SIGSEGV);
-    } else {
-        printf("ERROR ERROR ERROR FROM DATABASE\n");
-    }
-
-
-  }
-
-  return results;
-
-}
+int jdbc_error_check(unsigned char *cptr, size_t len);
+void print_repr(FILE *fp, unsigned char *cptr, size_t len);
+bool pattern_in_bytes(unsigned char *target, int target_len, unsigned char *pattern, int pattern_len);
+void mysql_error_check (unsigned char *cptr, size_t len);
+void error_report(unsigned char *cptr, size_t len);
 
 static ssize_t (*real_recv) (int sockfd, void *buf, size_t len, int flags) = NULL;
 
@@ -621,179 +638,291 @@ ssize_t recv (int sockfd, void *buf, size_t len, int flags) {
   ssize_t results = real_recv(sockfd, buf, len, flags);
 
   unsigned char *cptr = (unsigned char *)(buf);
-  //printf("!!!!!!!!!!!!!!!!!!! Thank you for using the special RECV --->> !!!!!!!!!!!!!!!!!!!!\n");
-  char error_msg[] = "You have an error i\x00";
-  int error_msg_len = strlen(error_msg) +1;
 
-  //printf("%s\n", buf);
-
-  for (int i = 0; i < len; i ++) {
-        if ((i+error_msg_len) >= len){
-          break;
-        }
-        char cmp_str[error_msg_len];
-        memcpy(cmp_str, cptr+i, error_msg_len);
-        cmp_str[error_msg_len-1] = '\x00';
-        if (strcmp(error_msg, cmp_str) == 0){
-            printf("\nERROR:\n", cmp_str);
-            for (int lp=i; lp < len; lp++){
-                if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
-                  printf("%c",cptr[lp]);
-                } else {
-                  if (cptr[lp] == 0x0){
-                    break;
-                  } else {
-                    printf("\\x%02x",cptr[lp]);
-                  }
-
-                }
-            }
-            fprintf(stderr, "\nERROR:\n", cmp_str);
-            for (int lp=i; lp < len; lp++){
-                if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
-                  fprintf(stderr, "%c",cptr[lp]);
-                } else {
-                  if (cptr[lp] == 0x0){
-                    break;
-                  } else {
-                    fprintf(stderr, "\\x%02x",cptr[lp]);
-                  }
-
-                }
-            }
-            printf("\n");
-            fflush(stdout);
-            DIR* dir = opendir("/tmp/output");
-            if (dir) {
-                /* Directory exists. */
-                closedir(dir);
-                FILE *errorlog= fopen("/tmp/output/errors.log","a+");
-                fprintf(errorlog,"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   RECV   vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
-                if (getenv("WC_INSTRUMENTATION")){
-                    if (getenv("NO_WC_EXTRA")){
-                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "WiC");
-                    } else {
-                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "ExWiC");
-                    }
-                }
-                int num_env_vars = sizeof(env_vars) / sizeof(char*);
-                if (getenv("SCRIPT_FILENAME")){
-                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","SCRIPT_FILENAME", getenv("SCRIPT_FILENAME"));
-                }
-                for (int x=0; x < num_env_vars; x++){
-                    fprintf(errorlog, "\t%-15s = \033[33m%s\033[0m  \n", env_vars[x], getenv(env_vars[x]));
-                }
-                if (getenv("POST_DATA")){
-                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","POST", getenv("POST_DATA"));
-                }
-
-                fprintf(errorlog, "\nERROR:\n");
-                for (int lp=i; lp < len; lp++){
-                    if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
-                      fprintf(errorlog,"%c",cptr[lp]);
-                    } else {
-                      if (cptr[lp] == 0x0){
-                        break;
-                      } else {
-                        fprintf(errorlog,"\\x%02x",cptr[lp]);
-                      }
-
-                    }
-
-                }
-                fprintf(errorlog,"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-                fflush(errorlog);
-                fclose(errorlog);
-
-          }
-          dir = opendir("/results");
-            if (dir) {
-                /* Directory exists. */
-                closedir(dir);
-                FILE *errorlog= fopen("/results/gen_errors.log","a+");
-                fprintf(errorlog,"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   RECV   vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
-                int num_env_vars = sizeof(env_vars) / sizeof(char*);
-                if (getenv("WC_INSTRUMENTATION")){
-                    if (getenv("NO_WC_EXTRA")){
-                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "WiC");
-                    } else {
-                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "ExWiC");
-                    }
-                }
-
-                if (getenv("SCRIPT_FILENAME")){
-                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","SCRIPT_FILENAME", getenv("SCRIPT_FILENAME"));
-                }
-                for (int x=0; x < num_env_vars; x++){
-                    fprintf(errorlog, "\t%-15s = \033[33m%s\033[0m  \n", env_vars[x], getenv(env_vars[x]));
-                }
-                if (getenv("POST_DATA")){
-                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","POST", getenv("POST_DATA"));
-                }
-                if (getenv("SESSION_FILENAME")){
-                    char* sess_fn = getenv("SESSION_FILENAME");
-
-                    FILE* fptr = fopen(sess_fn, "r");
-                    if (fptr == NULL)
-                    {
-                        fprintf(errorlog, "Cannot open file %s \n", sess_fn);
-                    } else {
-                        fprintf(errorlog, "\nSession Data:\n");
-                        char c = fgetc(fptr);
-                        while (c != EOF)
-                        {
-                            if (c>= 0x20 && c < 0x7f) {
-                              fprintf(errorlog,"%c",c);
-                            } else {
-                                fprintf(errorlog,"\\x%02x",c);
-                            }
-                            c = fgetc(fptr);
-                        }
-
-                        fclose(fptr);
-                        fprintf(errorlog, "\n");
-                    }
-
-                    // Read contents from file
-
-
-
-                }
-                fprintf(errorlog, "\nERROR:\n");
-                for (int lp=i; lp < len; lp++){
-                    if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
-                      fprintf(errorlog,"%c",cptr[lp]);
-                    } else {
-                      if (cptr[lp] == 0x0){
-                        break;
-                      } else {
-                        fprintf(errorlog,"\\x%02x",cptr[lp]);
-                      }
-
-                    }
-
-                }
-                fprintf(errorlog,"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-                fflush(errorlog);
-                fclose(errorlog);
-
-          }
-          printf("\nBUF:%s\n", buf);
-          printf("RAISING SIGSEGV\n");
-          char* strict = getenv("STRICT");
-          printf("STRICT=%s\n",strict);
-          //raise(SIGSEGV);
-          if (strict){
-              raise(SIGSEGV);
-          } else {
-              printf("RECV ERROR FROM DATABASE FOUND!!!!! \n");
-          }
-
-          break;
-        }
-  }
+  jdbc_error_check(cptr, len);
+  mysql_error_check(cptr, len);
 
   return results;
+}
+
+bool pattern_in_bytes(unsigned char *target, int target_len, unsigned char *pattern, int pattern_len){
+  if (target_len <= pattern_len){
+      return false;
+  }
+  for (int i = 0; i < target_len-pattern_len; i ++) {
+      bool found = true;
+      for (int j = 0; j < pattern_len; j ++) {
+
+          if (pattern[j] == '.'){
+              i++;
+              continue;
+          } else if (pattern[j] == '~'){
+            if (target[i]>= 0x20 && target[i] < 0x7f) {
+                while (target[i]>= 0x20 && target[i] < 0x7f) {
+                  i++;
+                }
+                continue;
+                found = false;
+                break;
+            }
+          }
+
+          if (target[i] != pattern[j]){
+              found = false;
+              break;
+          }
+
+          i++;
+      }
+      if (found){
+          return true;
+      }
+
+  }
+
+  return false;
+}
+
+void print_repr(FILE *fp, unsigned char *cptr, size_t len){
+    for (int lp=0; lp < len; lp++){
+        if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
+            fprintf(fp, "%c",cptr[lp]);
+        } else {
+            fprintf(fp, "\\x%02x",cptr[lp]);
+        }
+    }
+}
+int jdbc_error_check(unsigned char *cptr, size_t len){
+    //\x02\x00\x00\x00,\x00\x00\x00\x17unexpected token: SMITH\x00\x00\x00\x0542581\xff\xff\xea3\x7f
+    // \x02\x00\x00\x00(\x00\x00\x00\x13malformed string: '    \x00\x00\x00\x0542584\xff\xff\xea
+    unsigned char *jdbc_msg1 = "\x02\x00\x00\x00.\x00\x00\x00.~\x00\x00\x00\x05~\xff\xff\xea"; // 18
+    unsigned char *jdbc_msg4 = "\xff\xff\xea"; // 3
+
+    if (pattern_in_bytes(cptr, len, jdbc_msg4, 3)){
+        if (pattern_in_bytes(cptr, len, jdbc_msg1, 18)){
+            error_report(cptr, len);
+            return;
+        }
+    }
+}
+
+void send_signal(int strictval){
+    int pid = 0;
+    struct test_process_info *afl_info = NULL;
+    printf("FOUND STRICT=%d\n", strictval);
+    if (getenv("AFL_META_INFO_ID")){
+        // clean up last shared memory area
+        int mem_key = atoi(getenv("AFL_META_INFO_ID"));
+        int shm_id = shmget(mem_key , sizeof(struct test_process_info), 0666);
+        fprintf(stderr, "\033[36m [Witcher] who dat %d %d !!!\033[0m\n", mem_key, shm_id);
+        if (shm_id  >= 0 ) {
+            afl_info = (struct test_process_info *) shmat(shm_id, NULL, 0);  /* attach */
+            if (afl_info && afl_info->reqr_process_id){
+
+                pid = afl_info->reqr_process_id;
+                fprintf(stderr, "pid=%d ", pid);
+            }
+        }
+        fprintf(stderr, "\n");
+    }
+    if (pid > 0){
+        strcpy(afl_info->error_type,"COMMAND");
+        fprintf(stderr, "\033[36m [Witcher] sending SEGSEGV to %d %d %d !!!\033[0m\n", afl_info->reqr_process_id, afl_info->process_id, getpid());
+        kill(pid, SIGSEGV);
+    } else{
+        if (strictval == 1 || strictval == 2){
+            printf("FOUND STRICT=%s, RAISING SIGSEGV\n", strictval);
+            raise(SIGSEGV);
+        }  else if (strictval == 3 || strictval == 4){
+            printf("FOUND STRICT=%s, RAISING SIGUSR1\n", strictval);
+            raise(SIGUSR1);
+        }
+    }
+}
+
+void error_report(unsigned char *cptr, size_t len){
+    char* strict = getenv("STRICT");
+    if (strict){
+        fprintf(stderr, "Error encountered, strict=%s\n", strict);
+        int strictval = atoi(strict);
+        send_signal(strictval);
+    } else {
+        printf("RECV ERROR FROM DATABASE FOUND!!!!! But not escalating... \n");
+    }
+    fprintf(stderr, "[*] Found error message  \n");
+    print_repr(stderr, cptr, len);
+    fprintf(stderr, "\n");
+}
+
+void mysql_error_check (unsigned char *cptr, size_t len) {
+
+  //printf("!!!!!!!!!!!!!!!!!!! Thank you for using the special RECV --->> !!!!!!!!!!!!!!!!!!!!\n");
+  unsigned char *mysql_msg = "You have an error i";
+  int error_msg_len = strlen(mysql_msg);
+  if (pattern_in_bytes(cptr, len, mysql_msg, error_msg_len)){
+    error_report(cptr, len);
+  }
+//
+//  if (len < error_msg_len){
+//      return;
+//  }
+//
+//  for (int i = 0; i < len; i ++) {
+//        if ((i+error_msg_len) >= len){
+//          break;
+//        }
+//        char cmp_str[error_msg_len];
+//        memcpy(cmp_str, cptr+i, error_msg_len);
+//        cmp_str[error_msg_len-1] = '\x00';
+//        if (strcmp(error_msg, cmp_str) == 0 && strlen(cmp_str) >= strlen(error_msg)){
+//
+//            fprintf(stderr, "\nERROR:\n", cmp_str);
+//            for (int lp=i; lp < len; lp++){
+//                if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
+//                  fprintf(stderr, "%c",cptr[lp]);
+//                } else {
+//                  if (cptr[lp] == 0x0){
+//                    break;
+//                  } else {
+//                    fprintf(stderr, "\\x%02x",cptr[lp]);
+//                  }
+//
+//                }
+//            }
+//            printf("\n");
+//            fflush(stdout);
+//            DIR* dir = opendir("/tmp/output");
+//            if (dir) {
+//                /* Directory exists. */
+//                closedir(dir);
+//                FILE *errorlog= fopen("/tmp/output/errors.log","a+");
+//                fprintf(errorlog,"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   RECV   vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
+//                if (getenv("WC_INSTRUMENTATION")){
+//                    if (getenv("NO_WC_EXTRA")){
+//                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "WiC");
+//                    } else {
+//                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "ExWiC");
+//                    }
+//                }
+//                int num_env_vars = sizeof(env_vars) / sizeof(char*);
+//                if (getenv("SCRIPT_FILENAME")){
+//                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","SCRIPT_FILENAME", getenv("SCRIPT_FILENAME"));
+//                }
+//                for (int x=0; x < num_env_vars; x++){
+//                    fprintf(errorlog, "\t%-15s = \033[33m%s\033[0m  \n", env_vars[x], getenv(env_vars[x]));
+//                }
+//                if (getenv("POST_DATA")){
+//                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","POST", getenv("POST_DATA"));
+//                }
+//
+//                fprintf(errorlog, "\nERROR:\n");
+//                for (int lp=i; lp < len; lp++){
+//                    if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
+//                      fprintf(errorlog,"%c",cptr[lp]);
+//                    } else {
+//                      if (cptr[lp] == 0x0){
+//                        break;
+//                      } else {
+//                        fprintf(errorlog,"\\x%02x",cptr[lp]);
+//                      }
+//
+//                    }
+//
+//                }
+//                fprintf(errorlog,"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
+//                fflush(errorlog);
+//                fclose(errorlog);
+//
+//          }
+//          dir = opendir("/results");
+//          if (dir) {
+//                /* Directory exists. */
+//                closedir(dir);
+//                FILE *errorlog= fopen("/results/gen_errors.log","a+");
+//                fprintf(errorlog,"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   RECV   vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
+//                int num_env_vars = sizeof(env_vars) / sizeof(char*);
+//                if (getenv("WC_INSTRUMENTATION")){
+//                    if (getenv("NO_WC_EXTRA")){
+//                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "WiC");
+//                    } else {
+//                        fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","Instrumentation", "ExWiC");
+//                    }
+//                }
+//
+//                if (getenv("SCRIPT_FILENAME")){
+//                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","SCRIPT_FILENAME", getenv("SCRIPT_FILENAME"));
+//                }
+//                for (int x=0; x < num_env_vars; x++){
+//                    fprintf(errorlog, "\t%-15s = \033[33m%s\033[0m  \n", env_vars[x], getenv(env_vars[x]));
+//                }
+//                if (getenv("POST_DATA")){
+//                    fprintf(errorlog,"\t%-15s = \033[33m%s\033[0m  \n","POST", getenv("POST_DATA"));
+//                }
+//                if (getenv("SESSION_FILENAME")){
+//                    char* sess_fn = getenv("SESSION_FILENAME");
+//
+//                    FILE* fptr = fopen(sess_fn, "r");
+//                    if (fptr == NULL)
+//                    {
+//                        fprintf(errorlog, "Cannot open file %s \n", sess_fn);
+//                    } else {
+//                        fprintf(errorlog, "\nSession Data:\n");
+//                        char c = fgetc(fptr);
+//                        while (c != EOF)
+//                        {
+//                            if (c>= 0x20 && c < 0x7f) {
+//                              fprintf(errorlog,"%c",c);
+//                            } else {
+//                                fprintf(errorlog,"\\x%02x",c);
+//                            }
+//                            c = fgetc(fptr);
+//                        }
+//
+//                        fclose(fptr);
+//                        fprintf(errorlog, "\n");
+//                    }
+//
+//                    // Read contents from file
+//
+//
+//
+//                }
+//                fprintf(errorlog, "\nERROR:\n");
+//                for (int lp=i; lp < len; lp++){
+//                    if (cptr[lp]>= 0x20 && cptr[lp] < 0x7f) {
+//                      fprintf(errorlog,"%c",cptr[lp]);
+//                    } else {
+//                      if (cptr[lp] == 0x0){
+//                        break;
+//                      } else {
+//                        fprintf(errorlog,"\\x%02x",cptr[lp]);
+//                      }
+//
+//                    }
+//
+//                }
+//                fprintf(errorlog,"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
+//                fflush(errorlog);
+//                fclose(errorlog);
+//
+//          }
+//          printf("\nBUF: match=%d %d %d '%s' \n", strcmp(error_msg, cmp_str), strlen(cmp_str), strlen(error_msg), cptr+i);
+//          print_repr(stdout, cptr, i+50);
+//          printf("RAISING SIGSEGV\n");
+//          char* strict = getenv("STRICT");
+//          printf("STRICT=%s\n",strict);
+//          //raise(SIGSEGV);
+//          if (strict){
+//              raise(SIGSEGV);
+//          } else {
+//              printf("RECV ERROR FROM DATABASE FOUND!!!!! \n");
+//          }
+//
+//          break;
+//        }
+//  }
+
+
 
 }
 
@@ -896,6 +1025,7 @@ void var_report(char *var1, int bitmapLoc){
 
     }
 }
+
 void do_rollback(char* varname, int var_type){
     struct rollback_entry *re_search = rollback_ll[var_type];
 
@@ -1153,7 +1283,7 @@ void webcam_trace_log_op2(int lineno, int opcode, char *var1, char *var2)
 void webcam_trace_finish()
 {
     start_tracing = false;
-    printf("[WC-AFL] webcam_trace_finish .. done with %d\n", getpid());
+    //printf("[WC-AFL] webcam_trace_finish .. done with %d\n", getpid());
     if (getenv("WEBCAM_PRINT_OP")){
         char logfn[50];
         sprintf(logfn, "/tmp/trace-%s.dat", getenv("WEBCAM_PRINT_OP"));

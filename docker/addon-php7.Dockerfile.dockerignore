@@ -1,0 +1,8 @@
+# Needs to go here to prevent the .git directories from being used.
+**/.git
+**/__pycache__
+/dotnet
+/java
+/php5
+/python
+php7/tests/*

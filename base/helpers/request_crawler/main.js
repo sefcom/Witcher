@@ -187,7 +187,7 @@ if (process.argv.length > 3) {
     //session_id = get_a_session();
     let doInit = (process.argv.length <= 4);
 
-    let appData = new iser.AppData(doInit, BASE_APPDIR);
+    let appData = new iser.AppData(doInit, BASE_APPDIR, BASE_SITE);
 
     if (fs.existsSync(files_fn)){
         let paths_to_test = fs.readFileSync(files_fn,'utf8');

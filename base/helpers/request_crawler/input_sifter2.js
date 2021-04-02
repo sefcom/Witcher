@@ -5,8 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const process = require('process');
-const fuzzySet = require('fuzzyset.js');
-const {JSHandle} = require('puppeteer/lib/api');
+const fuzzySet = require('fuzzyset');
+//const {JSHandle} = require('puppeteer/lib');
 const FoundRequest = require('./FoundRequest');
 
 const GREEN="\x1b[38;5;2m";
@@ -15,11 +15,16 @@ const ENDCOLOR="\x1b[0m";
 const MAX_NUM_ROUNDS = 3;
 
 // var requestsFound = {}; // { <method+url>: {url:"", method:"", postData:"", attempts:0 } }
-
+function sleepg(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 class AppData{
 
-    constructor(initializeWithBase, base_appdir) {
+    constructor(initializeWithBase, base_appdir, base_site) {
         this.requestsFound = {};
+
+        this.site_url = new URL(base_site);
+
         this.inputSet = new Set();
         this.currentURLRound = 1;
         this.collectedURL = 0;
@@ -30,8 +35,16 @@ class AppData{
         this.ignoreValues = new Set();
         this.urlUniqueIfValueUnique = new Set();
         this.minFuzzyScore = .80;
+
+
+        this.site_ip = this.site_url.host
+        //this.site_ip = base_site.
+
         if (!this.loadDataFromJSON()){
+            this.addRequest(FoundRequest.requestParamFactory(`${this.site_url.href}/admin`, "GET", "",{},"initial",this.site_url.href))
+            this.addRequest(FoundRequest.requestParamFactory(`${this.site_url.href}`, "GET", "",{},"initial",this.site_url.href))
             if (initializeWithBase){
+
                 //console.log("Adding / to requests found");
                 //this.addRequest(BASE_SITE,"GET","","initial","");
             }
@@ -69,6 +82,7 @@ class AppData{
         return false;
 
     }
+
     setIgnoreValues(exclusions){
         if (isDefined(exclusions)){
             this.ignoreValues = new Set(exclusions);
@@ -76,6 +90,7 @@ class AppData{
             this.ignoreValues = new Set();
         }
     }
+
     setUrlUniqueIfValueUnique(inclusions){
         if (isDefined(inclusions)){
             this.urlUniqueIfValueUnique = new Set(inclusions);
@@ -83,11 +98,13 @@ class AppData{
             this.urlUniqueIfValueUnique = new Set();
         }
     }
+
     resetRequestsAttempts(key){
         console.log(`Trying to reset for ${key}`);
         this.requestsFound[key]["attempts"] = this.currentURLRound - 1;
         console.log(`RESET attempts to ${this.requestsFound[key]["attempts"]} for ${key}`)
     }
+
     getRequestInfo(){
         let outstr = "";
         for (let value of Object.values(this.requestsFound)){
@@ -125,9 +142,18 @@ class AppData{
         }
         let paramValueMatchCnt=0;
         // excluded
-
+        //0.3533549273542278&_=1617038119579
+        //0.8389814703576484&_=1617038119586
+        //0.5336236531483045
+        let timeVarRegex = /0\.[0-9]{12,20}/; // e.g., 0.3533549273542278
         // All keys must be the same for a match
         for (let [skey,svalues] of Object.entries(soughtParams)){
+            // add as a match when a variable matches the format for timestamp nanoseconds
+            // this might be too lax, should maybe find match for both
+            if (timeVarRegex.exec(skey)){
+                paramValueMatchCnt++;
+                continue;
+            }
             if (skey in testParams){
                 if (this.ignoreValues.has(skey)){
                     paramValueMatchCnt++;
@@ -151,6 +177,7 @@ class AppData{
             //     return false;
             }
         }
+        //console.log(`Equiv found ${paramValueMatchCnt} of ${fullMatchEquiv} ${(paramValueMatchCnt >= fullMatchEquiv)}`);
         return (paramValueMatchCnt >= fullMatchEquiv);
 
     }
@@ -174,6 +201,7 @@ class AppData{
 
         return true;
     }
+
     /**
      * Search the requestData to determine whether a sufficient match exists between urls.
      * An equivalent querystring matches for 100% of the keys and 75% of the values.
@@ -195,14 +223,19 @@ class AppData{
         let soughtPathname = soughtRequest.getPathname();
 
         let keyMatch = 0;
+
         for (let savedReq of Object.values(this.requestsFound)){
             let prevURL = savedReq.getURL();
             let prevPathname = savedReq.getPathname();
-            if (prevURL.href === soughtURL.href && savedReq.postData === soughtRequest.postData()){
+
+            if (prevURL.href === soughtURL.href && savedReq.postData === soughtRequest.postData() && savedReq.hash === soughtURL.hash){
                 return true;
             }
-            if (prevPathname === soughtPathname){
+
+            if (prevPathname === soughtPathname && (!soughtURL.hash || savedReq.hash === soughtURL.hash)){
+
                 let testParamsArr = savedReq.getAllParams();
+
                 if (this.equivParameters(soughtParamsArr, testParamsArr , fullMatchEquiv)){
                     return true;
                 } else if ((nbrParams-1) < fullMatchEquiv){
@@ -211,9 +244,14 @@ class AppData{
                         keyMatch++;
                     }
                 }
+            } else {
+                // if (savedReq.hash !== soughtURL.hash){
+                //     console.log(`Pathnames => ${prevPathname} == ${soughtPathname} hashes=> ${savedReq.hash}\n${soughtURL.hash}`)
+                // } else {
+                //     console.log(`Pathnames => ${prevPathname} == ${soughtPathname}`)
+                // }
             }
         }
-
         /*since the */
         return (nbrParams <= 3 && keyMatch >= this.maxKeyMatches);
     }
@@ -223,31 +261,33 @@ class AppData{
         if (lowerus.startsWith("javascript")) {
             return "";
         }
-        //console.log("\x1b[38;5;3mTESTING", urlstr, "\x1b[0m");
+        //console.log("\x1b[38;5;3mTESTING", urlstr, "\x1b[0m", ` for parent ${parenturl.origin}`);
 
-        if (lowerus.search(/.php($|\?)/) > -1 || lowerus.search(/.html($|\?)/) > -1 || lowerus.search("#") > -1 ) {
-            if (lowerus.startsWith(parenturl.origin)) {
-                //console.log("\x1b[38;5;3mValidated ", urlstr, "\x1b[0m");
-                return urlstr;
-            } else if (lowerus.startsWith("http")) {
-                return "";
-            }
+        //if (lowerus.search(/.php($|\?)/) > -1 || lowerus.search(/.html($|\?)/) > -1 || lowerus.search("#") > -1 ) {
 
-            if (lowerus.startsWith("/")) { // absolute path
-                //console.log("\x1b[38;5;3mValidated from /", parenturl.origin + urlstr, "\x1b[0m");
-                return parenturl.origin + urlstr;
-            } else { // relative path
-
-                try {
-                    console.log("\x1b[38;5;3mLast choice trying to add origin and pathname to lowerus ", parenturl.origin + path.dirname(parenturl.pathname) + urlstr, "\x1b[0m");
-                } catch (Exception) {
-                    console.log("\x1b[38;5;3mInvalid path WITH Last choice trying to add origin and pathname to lowerus parenturl=", parenturl, "urlstr=", urlstr, "\x1b[0m");
-                    return "";
-                }
-                return parenturl.origin + path.dirname(parenturl.pathname) + urlstr;
-            }
+        if (lowerus.startsWith(parenturl.origin)) {
+            //console.log("\x1b[38;5;3mValidated ", urlstr, "\x1b[0m");
+            return urlstr;
+        } else if (lowerus.startsWith("http")) {
+            //console.log("\x1b[38;5;3mFAILED TO validate ", urlstr, "\x1b[0m");
+            return "";
         }
-        return "";
+
+        if (lowerus.startsWith("/")) { // absolute path
+            console.log("\x1b[38;5;3mValidated from /", parenturl.origin + urlstr, "\x1b[0m");
+            return parenturl.origin + urlstr;
+        } else { // relative path
+            let lastPathOut = ""
+            try {
+                //console.log("\x1b[38;5;3mLast choice trying to add origin and pathname to lowerus ", parenturl.origin + path.dirname(parenturl.pathname) + urlstr, "\x1b[0m");
+                lastPathOut = parenturl.origin + path.dirname(parenturl.pathname) + urlstr;
+            } catch (Exception) {
+                //console.log("\x1b[38;5;3mInvalid path WITH Last choice trying to add origin and pathname to lowerus parenturl=", parenturl, "urlstr=", urlstr, "\x1b[0m");
+                return ""
+            }
+            return parenturl.origin + path.dirname(parenturl.pathname) + urlstr;
+        }
+
     }
 
     addValidURLS(links, parenturl, origin){
@@ -256,7 +296,7 @@ class AppData{
             let validURLStr = this.getValidURL(link, parenturl);
 
             if (validURLStr.length > 0){
-                let foundRequest = FoundRequest.requestParamFactory(validURLStr, "GET");
+                let foundRequest = FoundRequest.requestParamFactory(validURLStr, "GET", "",{},origin,this.site_url.href);
 
                 if (!this.containsEquivURL(foundRequest)){
                     foundRequest.from = origin;
@@ -327,8 +367,9 @@ class AppData{
         //     processed:0
         // };
         //console.log(requestInfo);
+        let reqkey = fRequest.getRequestKey();
 
-        if (fRequest.getRequestKey() in this.requestsFound) {
+        if (reqkey in this.requestsFound) {
             return false;
         } else {
             fRequest.setId(this.nextRequestId());
@@ -383,9 +424,7 @@ class AppData{
                     req["key"] = key;
                     this.currentRequest = req;
                     return req;
-
                 }
-
             }
 
             this.currentURLRound++;
@@ -397,6 +436,14 @@ class AppData{
 
     save() {
         //await exerciseTarget(page, new URL(key));
+        let randomKeys = Object.keys(this.requestsFound);
+        for (const key of randomKeys) {
+            let req = this.requestsFound[key];
+            if (req["_method"] === "POST"){
+                req["response_status"] = 200;
+            }
+        }
+
         let jdata = JSON.stringify({requestsFound: this.requestsFound, inputSet: Array.from(this.inputSet)});
         fs.writeFileSync(path.join(this.base_appdir, "request_data.json"), jdata);
     }
@@ -413,16 +460,37 @@ process.on('uncaughtException', function(err) {
 
 /**
  * Attempts to parse the text, if there's a syntax error then returns false
- * @param text
+ * @param response
+ * @param responseText
  * @returns {boolean}
  */
-function isOnlyJSON(text){
+function isInteractivePage(response, responseText){
+
     try {
-        JSON.parse(text);
+        JSON.parse(responseText);
+        return false;
     } catch (SyntaxException){
+        //check out other types
+    }
+
+    if (response.headers().hasOwnProperty("content-type")){
+
+        let contentType = response.headers()['content-type'];
+
+        if (contentType === "application/javascript" || contentType === "text/css" || contentType.startsWith("image/") || contentType === "application/json"){
+            console.log("Content type ${contentType} is considered non-interactive (e.g., JavaScript, CSS, json, or image/* )")
+            return false;
+        }
+    }
+
+    console.log(responseText.slice(0,500))
+    if (responseText.search(/<body[ >]/) > -1 || responseText.search(/<form[ >]/) > -1){
+        return true;
+    } else {
+        console.log("\n\nNO HTML tag FOUND anywhere\n\n")
         return false;
     }
-    return true;
+
 }
 function logdata(msg){
     console.log("\x1b[38;5;6m[DATA] ", msg, "\x1b[0m")
@@ -431,17 +499,14 @@ function isDefined(val) {
     return !(typeof val === 'undefined' || val === null);
 }
 
-
-
-/*
- *
- *
+/**
  *
  *
  *
  *
  */
 class RequestExplorer {
+
     constructor(appData, workernum, base_appdir, currentRequest ) {
         this.appData= appData;
         this.base_appdir = base_appdir;
@@ -455,12 +520,20 @@ class RequestExplorer {
             this.method = currentRequest.method();
             this.postData = currentRequest.postData()
             this.cookieData = currentRequest.cookieData();
-            this.appData.requestsFound[this.currentRequestKey]["processed"]++;
+
+
+            if (this.appData.requestsFound.hasOwnProperty(this.currentRequestKey))
+                this.appData.requestsFound[this.currentRequestKey]["processed"]++;
+            else{
+                // this.appData.requestsFound[this.currentRequestKey] = currentRequest;
+                // this.appData.requestsFound[this.currentRequestKey]["processed"] = 1;
+                console.log(`\x1b[31mWE SHOULD ME ADDING currentRequest to requestsFound ${this.currentRequestKey}\x1b[0m`);
+            }
         } else {
             this.currentRequestKey = "GET";
             this.url = "";
             this.method = "GET";
-            this.data = "";
+            this.postData = "";
             this.cookieData = "";
         }
         this.requestsAdded = 0;
@@ -472,8 +545,11 @@ class RequestExplorer {
         this.maxLevel = 10;
         this.browser;
         this.page;
+        this.gremlins_error = false;
+        this.lamehord_done = false
         this.getConfigData();
     }
+
     getConfigData(){
         let json_fn = path.join(this.base_appdir,"witcher_config.json");
         if (fs.existsSync(json_fn)){
@@ -521,7 +597,7 @@ class RequestExplorer {
         let nodeaction = await this.getAttribute(node, "action");
         let method = await this.getAttribute(node, "method");
 
-        let foundRequest = FoundRequest.requestParamFactory(nodeaction, method);
+        let foundRequest = FoundRequest.requestParamFactory(nodeaction, method, "",{},"PageForms",this.appData.site_url.href);
 
         const inputtags = await node.$$('input');
         let formdata = await this.searchTags(inputtags);
@@ -541,20 +617,26 @@ class RequestExplorer {
         if (foundRequest.isSaveable() ){ // && this.appData.containsMaxNbrSameKeys(tempurl) === false
 
             if (this.appData.containsEquivURL(foundRequest) ) {
-
                 // do nothing yet
                 //console.log("[WC] Could have been added, ",requestInfo["url"], requestInfo["method"], requestInfo["postData"]);
             } else {
-                if (foundRequest.urlstr().startsWith("http://localhost")){
+                if (foundRequest.urlstr().startsWith(`${this.appData.site_url.origin}`)){
+
                     foundRequest.from = "PageForms";
+                    foundRequest.cleanURLParamRepeats()
+                    foundRequest.cleanPostDataRepeats()
                     let wasAdded = this.appData.addRequest(foundRequest);
                     if (wasAdded){
                         requestsAdded++;
+                        if (foundRequest.postData()){
+                            console.log(`\x1b[38;5;2m[WC] ADDED ${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
+                        } else {
+                            console.log(`\x1b[38;5;2m[WC] ADDED ${foundRequest.toString()} \n ${ENDCOLOR}`);
+                        }
 
-                        console.log(`\x1b[38;5;2m[WC] ADDED ${foundRequest.toString()}${ENDCOLOR}\n\t${foundRequest.postData()}`);
                     }
                 } else {
-                    console.log(`\x1b[38;5;3m[WC] IGNORED b/c not correct P+O -- ${foundRequest.toString()} -- ${ENDCOLOR}`);
+                    console.log(`\x1b[38;5;3m[WC] IGNORED b/c not correct ${foundRequest.toString()} does not start with ${this.appData.site_url.origin} -- ${ENDCOLOR}`);
                 }
 
             }
@@ -592,7 +674,7 @@ class RequestExplorer {
 
             const forms = await frame.$$('form');
             for (let i=0; i < forms.length; i++) {
-                //console.log("[WC] ACTION=", await this.getAttribute(forms[i], "action"));
+                console.log("[WC] first form ACTION=", await this.getAttribute(forms[i], "action"), await this.getAttribute(forms[i], "method"));
                 requestsAdded += await this.searchForInputs(forms[i]);
                 await forms[i].evaluate(form => form.submit());
                 //await page.$eval('form-selector', form => form.submit());
@@ -607,10 +689,11 @@ class RequestExplorer {
         }
         const forms = await page.$$('form');
         for (let i=0; i < forms.length; i++) {
+            console.log("[WC] second form ACTION=", await this.getAttribute(forms[i], "action"), await this.getAttribute(forms[i], "method"));
             requestsAdded += await this.searchForInputs(forms[i]);
         }
-        const bodynode = await page.$('html');
-        requestsAdded += await this.searchForInputs(bodynode);
+        //const bodynode = await page.$('html');
+        //requestsAdded += await this.searchForInputs(bodynode);
         return requestsAdded;
     }
 
@@ -646,8 +729,8 @@ class RequestExplorer {
             //                         START Injected Exercise Code
             // ##############################################################################
             await this.page.evaluate(()=>{
-                //const CLICK_ELE_SELECTOR = "div,li,span,a,input,p,button";
-                const CLICK_ELE_SELECTOR = "button";
+                const CLICK_ELE_SELECTOR = "div,li,span,a,input,p,button";
+                //const CLICK_ELE_SELECTOR = "button";
                 var usedText = new Set();
                 const STARTPAGE = window.location.href;
                 const MAX_LEVEL = 10;
@@ -748,6 +831,7 @@ class RequestExplorer {
                             if (ele.textContent != null) {
                                 searchText += ele.textContent;
                             }
+                            console.log(`ele id=${ele.id} name=${ele.name}`)
                             if (usedText.has(ele.textContent) ){
                                 return;
                             }
@@ -767,27 +851,31 @@ class RequestExplorer {
                             try {
 
                                 function triggerMouseEvent (node, eventType) {
-                                    if (node.textContent.indexOf("Order History") === -1 && node.textContent.indexOf("account_circle") === -1 && node.textContent.indexOf("check_circle_outline") === -1 ){
-                                        return;
-                                    }
+                                    console.log("usedText=", usedText, "node=", node);
+                                    // if
+                                    // if (node.textContent.indexOf("Order History") === -1 && node.textContent.indexOf("account_circle") === -1 && node.textContent.indexOf("check_circle_outline") === -1 ){
+                                    //     return;
+                                    // }
                                     if (level > 1){
                                         console.log(`[WC] ${indent(level)} L${level} triggering on ${node.textContent}`)
                                     }
-                                    if (usedText.has(node.textContent) ){
-                                        return;
-                                    }
+                                    console.log("usedText=", usedText, "node=", node);
+                                    // if (usedText.has(node.textContent) ){
+                                    //     return;
+                                    // }
                                     usedText.add(node.textContent);
                                     let clickEvent = document.createEvent ('MouseEvents');
                                     clickEvent.initEvent (eventType, true, true);
                                     node.dispatchEvent (clickEvent);
+                                    console.log(`[WC] DONE-TRIGGERED ${indent(level)} L${level} triggering on ${clickEvent} ${node} ${node.id} ${node.name}`)
                                 }
                                 for (let ev of mouseEvents){
-
+                                    console.log("mouse event = ", ev);
                                     let temp = window.location.href;
                                     triggerMouseEvent (ele, ev);
-                                    //await sleep(5000);
+                                    await sleep(50);
                                     if (temp !== window.location.href){
-                                        //console.log("[WC] RESET EM, ", temp, window.location.href);
+                                        console.log("[WC] RESET EM, ", temp, window.location.href);
                                         // this sends it back out to puppeteer
                                         console.log(`[WC-URL]${window.location.href}`);
                                         await window.location.replace(temp);
@@ -799,7 +887,7 @@ class RequestExplorer {
                                     let curDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
                                     if (Object.keys(curDOM).length !== Object.keys(startingDOM).length && Object.keys(curDOM).length > 0){
                                         var changedDOM = getChangedDOM(startingDOM, curDOM);
-                                        //console.log(`[WC] ${indent(level)} ${level} starting len = ${Object.keys(elements).length} cur len = ${Object.keys(curDOM).length} changed len=${Object.keys(changedDOM).length}`);
+                                        console.log(`[WC] ${indent(level)} ${level} starting len = ${Object.keys(elements).length} cur len = ${Object.keys(curDOM).length} changed len=${Object.keys(changedDOM).length}`);
                                         /*for (let cd of Object.keys(changedDOM)){
                                             console.log(`[WC] ${indent(level+1)} changedDOM #${cd} ${changedDOM[cd].textContent}`);
                                         }*/
@@ -813,7 +901,7 @@ class RequestExplorer {
                                         // can break by assuming that DOM change means event was heard.
                                         break;
                                     } else {
-                                        //console.log(`[WC] ${indent(level)} ${level} ${Object.keys(startingDOM).length} ${Object.keys(curDOM).length}`)
+                                        console.log(`[WC] ${indent(level)} ${level} ${Object.keys(startingDOM).length} ${Object.keys(curDOM).length}`)
                                     }
 
                                 }
@@ -842,7 +930,10 @@ class RequestExplorer {
                     }
 
                 }
+                async function repeativeHorde(){
+                    for (let f of document.getElementsByTagName("form")){ f.submit();}
 
+                }
                 async function lameHorde(){
                     console.log("Searching and clicking.");
                     window.alert = function(message) {/*console.log(`Intercepted alert with '${message}' `)*/};
@@ -863,8 +954,10 @@ class RequestExplorer {
                     });
                     console.log("[WC] clicky  DOM elements count = ", clickableElements.length);
 
-                    await clickSpam(clickableElements);
+                    //await clickSpam(clickableElements);
+                    await clickSpam(all_elements);
                     //
+                    console.log(`[WC] lamehorde is done.`);
 
                 }
                 function randr(a) {
@@ -875,16 +968,23 @@ class RequestExplorer {
                         return ((t ^ t >>> 14) >>> 0) / 4294967296;
                     }
                 }
-                async function coolHorde(){
-                    function resetPage(){
-                        if (window.location.href !== STARTPAGE){
-                            window.location.replace(STARTPAGE);
-                        }
-                        //console.log("[WC] Ran reset check", window.location.href, STARTPAGE);
+                async function checkHordeLoad(){
+                    if (typeof window.gremlins === 'undefined') {
+                        console.log("cannot find gremlins, attempting to load on the fly");
+                        (function (d, script) {
+                            script = d.createElement('script');
+                            script.type = 'text/javascript';
+                            script.async = true;
+                            script.onload = function () {
+                                // remote script has loaded
+                            };
+                            script.src = 'https://trickel.com/gremlins.min.js';
+                            d.getElementsByTagName('head')[0].appendChild(script);
+                        }(document));
                     }
-                    let resetter = setInterval(resetPage, 200);
-
-                    let ff = gremlins.species.formFiller();
+                }
+                async function coolHorde(){
+                    let ff = window.gremlins.species.formFiller();
                     var noChance = function(seed){}
                     noChance.prototype.bool = function(options) {return true;};
                     noChance.prototype.character = function(options) {
@@ -921,20 +1021,19 @@ class RequestExplorer {
                         .distribution([0.2, .8, 0.1, 0.1,0.1])
                     );
 
-
-
                     console.log("[WC] UNLEASHING Horde!!!");
                     await horde.unleash({nb:10000});
 
-                    //clearInterval(resetter);
+                    clearInterval(repeativeHorde);
                 }
 
+                console.log("[WC] setting timeout for lamehorde")
                 setTimeout(lameHorde, 2000);
-
+                setTimeout(function(){setInterval(repeativeHorde, 150)}, 3000);
+                console.log("[WC] setting timeout for coolhorde")
+                setTimeout(checkHordeLoad, 19000);
                 setTimeout(coolHorde, 20000);
-                //setTimeout(lameHorde, 20000);
 
-                // setTimeout(coolHorde, 15000);
                 function hc(){
                     console.log(`[WC] Detected HASH CHANGE, replacing ${window.location.href} with ${STARTPAGE}`);
                     window.location.replace(STARTPAGE);
@@ -947,21 +1046,27 @@ class RequestExplorer {
             // ##############################################################################
         }
     }
-    async startCodeExercisors(){
 
-    }
     async exerciseTarget(page){
         this.requestsAdded = 0;
         let errorThrown = false;
         let clearURL = false;
 
         if (this.url === ""){
-            clearURL = true;
-            console.log("URL blank, setting to login target page.");
-            var urlstr = await page.url();
-            let foundRequest = FoundRequest.requestParamFactory(urlstr, "GET")
+
+            var urlstr = `/login.php`
+            if (this.loginData !== undefined && 'form_url' in this.loginData){
+                clearURL = true;
+                urlstr = await page.url();
+                console.log("page.url = ", urlstr );
+            } else {
+                console.log("pre chosen url string = ", urlstr);
+            }
+
+            let foundRequest = FoundRequest.requestParamFactory(urlstr, "GET", "",{}, "LoginPage", this.appData.site_url.href)
 
             this.url = foundRequest.getURL();
+
             this.currentRequestKey = foundRequest.getRequestKey();
             this.method = foundRequest.method();
 
@@ -980,7 +1085,6 @@ class RequestExplorer {
             }
             //console.log("CREATING NEW PAGE for new pagedness");
             //this.page = await this.browser.newPage();
-
         }
 
         let url = this.url;
@@ -990,72 +1094,120 @@ class RequestExplorer {
             shortname = path.basename(url.pathname);
         }
         let options = {timeout: 10000, waituntil: "networkidle0"};
+        //let options = {timeout: 10000, waituntil: "domcontentloaded"};
         let madeConnection = false;
 
         for (let i=0;i<3;i++){
             try {
                 let response = "";
                 this.isLoading = true;
-                await page.setCacheEnabled(false);
+
                 if (clearURL){
                     response = await page.reload(options);
+                    let turl = await page.url();
+                    console.log("Reloading page ", turl);
                 } else {
+                    let request_page =url.origin + url.pathname
+                    console.log("GOING TO requested page =", request_page , "hash =", url.hash);
+                    //response =
+                    //let p1 = page.waitForResponse(url.origin + url.pathname);
+                    //let p1 = page.waitForResponse(request => {console.log(`INSIDE request_page= ${request_page} ==> ${request.url()}`);return request.url().startsWith(url.origin);}, {timeout:10000});
                     response = await page.goto(url.href, options);
+
+                    //response = await p1
+                    //console.log("DONE WAITING FOR RESPONSE!!!!! ", url)
+                    //console.log(test);
+                    //response = await page.waitForResponse(() => true, {timeout:10000});
+                    // //response = await page.waitForResponse(request => {console.log(`INSIDE requst.url() = ${request.url()}`);return request.url() === url.href;}, {timeout:10000})
                 }
+                // TODO:  a bug seems to exist when a hash is used in the url, the response will be returned as null from goto
+                // This is attempt 1 to resolve, by skipping response actions when resoponse is null
+                // This problem appears to be tied to setIncerpetRequest(true)
+                // https://github.com/puppeteer/puppeteer/issues/5492
+
+
 
                 //response = await page.goto(url.href, options);
                 if(isDefined(response)) {
-                    this.isLoading = false;
-                } else {
-                    response = await page.reload(options);
-                    console.log("RESPONSE IS not DEFINED:: ", page.url(), response);
-                    this.isLoading = false;
-
-                    if (!isDefined(response)){
-                        response = await page.waitForResponse(() => true);
-                        //continue;
+                    console.log("[WC] status = ", response.status(), response.statusText(), response.url());
+                    // only update status if current value is not 200
+                    if (this.appData.requestsFound[this.currentRequestKey].hasOwnProperty("response_status")) {
+                        if (this.appData.requestsFound[this.currentRequestKey]["response_status"] !== 200){
+                            this.appData.requestsFound[this.currentRequestKey]["response_status"] = response.status();
+                        }
+                    } else {
+                        this.appData.requestsFound[this.currentRequestKey]["response_status"] = response.status();
                     }
-                    //continue;
-                }
-                console.log("[WC] status = ", response.status(), response.statusText(), response.url());
-                if (response.status() >= 400){
-                    continue;
-                }
-                //console.log(response);
 
-                if(response.status() !== 200){
-                    //console.log("[WC] ERROR status = ", response.status(), response.statusText(), response.url())
+                    if (response.headers().hasOwnProperty("content-type")){
+                        this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = response.headers()["content-type"];
+                    } else {
+                        if (!this.appData.requestsFound[this.currentRequestKey].hasOwnProperty("response_content-type")){
+                            this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = response.headers()["content-type"];
+                        }
+                    }
+                    if (response.status() >= 400){
+                        console.log(`[WC] Received response error (${response.status()}) for ${page.url()} `);
+                        return;
+                    }
+                    //console.log(response);
+
+                    console.log(await response.headers());
+
+                    if(response.status() !== 200){
+                        //console.log("[WC] ERROR status = ", response.status(), response.statusText(), response.url())
+                    }
+                    let responseText = await response.text();
+                    if (!isInteractivePage(response, responseText)){
+                        console.log(`[WC] ${page.url()} is not an interactive page, skipping`);
+                        return;
+                    }
+                    if (responseText.length < 20) {
+                        console.log(`[WC] ${page.url()} is too short of a page at ${responseText.length}, skipping`);
+                        return;
+                    }
+                    if (responseText.upper().search(/<TITLE> INDEX OF /) > -1){
+                        console.log("Index page, should disaable for fuzzing")
+                        this.appData.requestsFound[this.currentRequestKey]["response_status"] = 999;
+                        this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = "application/dirlist";
+                    }
                 }
-                let responseText = await response.text();
 
-                if (isOnlyJSON(responseText) || responseText.length < 20) {
-                    console.log("FFFFFFFFFYYYYYYYYYYYYIIIIIIIIIIII: this one is only text, skipping");
-                    return;
+                if (fs.existsSync("/app/gremlins.min.js")) {
+                    const gremscript = fs.readFileSync("/app/gremlins.min.js", 'utf8');
+                    console.log(`\nread in gremscript ${gremscript.length}\n`);
+                    await page.evaluate(gremscript);
+                } else {
+                    console.log(`loading gremscript from remote location`);
+                    await page.addScriptTag({ url: 'https://trickel.com/gremlins.min.js' });
                 }
 
-                //await page.addScriptTag({ url: 'https://rawgithub.com/marmelab/gremlins.js/master/gremlins.min.js' });
-                //await page.addScriptTag({url: `http://172.17.0.3/gremlins.min.js`});
-                await page.evaluate(fs.readFileSync("/p/webcam/docker/gremlins.min.js", 'utf8'));
+                this.isLoading = false;
 
-                await page.screenshot({path: '/p/webcam/screenshot-pre.png', type:"png"});
+                await page.screenshot({path: '/p/tmp/screenshot-pre.png', type:"png"});
 
                 console.log("Waited for goto and response and div");
                 this.requestsAdded += await this.addURLsFromPage(this.page, url);
                 this.requestsAdded += await this.addFormDataFromPage(this.page, url);
                 //console.log(this.appData.requestsFound[this.currentRequestKey]["processed"]% 2 === 0);
 
-                JSHandle.prototype.getEventListeners = function () {
-                    return this._client.send('DOMDebugger.getEventListeners', { objectId: this._remoteObject.objectId });
-                };
+                // JSHandle.prototype.getEventListeners = function () {
+                //     return this._client.send('DOMDebugger.getEventListeners', { objectId: this._remoteObject.objectId });
+                // };
+
                 const elementHandles = await page.$$('div,li,span,a,input,p,button');
                 for (let ele of elementHandles){
-                    const listeners = await ele.getEventListeners();
-                    for (let l of listeners.listeners){
-                        if (l.type === "click" || l.type === "mousedown" || l.type === "mouseup"){
-                            await ele.evaluate(node => node["hasClicker"]="true");
-                            break;
-                        }
-                    }
+                    await ele.evaluate(node => node["hasClicker"]="true");
+                    // const listeners = await ele.getEventListeners();
+                    // console.log("LISTENERS = ", listeners);
+                    // for (let l of listeners.listeners){
+                    //
+                    //     console.log("ATTEMPTING SOME SORT OF SOMETHINMG", l);
+                    //     if (l.type === "click" || l.type === "mousedown" || l.type === "mouseup"){
+                    //         await ele.evaluate(node => node["hasClicker"]="true");
+                    //         break;
+                    //     }
+                    // }
                 }
 
                 await page.evaluate( () => {
@@ -1102,7 +1254,7 @@ class RequestExplorer {
                 if (this.workernum === 0 && cnt % 3 === 1){
                     //page.screenshot({path: `/p/webcam/screenshot-${this.workernum}-${cnt}.png`, type:"png"}).catch(function(error){console.log("no save")});
                 }
-                page.screenshot({path: `/p/webcam/screenshot-${this.workernum}-${cnt}.png`, type:"png"}).catch(function(error){console.log("no save")});
+                //page.screenshot({path: `/p/tmp/screenshot-${this.workernum}-${cnt}.png`, type:"png"}).catch(function(error){console.log("no save")});
                 //console.log("After content scan =>",cnt );
 
                 if (this.hasGremlinResults()) {
@@ -1143,7 +1295,7 @@ class RequestExplorer {
         var data = loginData["post_data"];
         var method = loginData["method"];
         if (this.url === ""){
-            let foundRequest = FoundRequest.requestParamFactory(loginData["form_url"], method, data);
+            let foundRequest = FoundRequest.requestParamFactory(loginData["form_url"], method, data, {}, "LoginPage", this.appData.site_url.href);
             foundRequest.from = "LoginPage";
             let addResult = this.appData.addRequest(foundRequest);
             if (addResult){
@@ -1152,7 +1304,7 @@ class RequestExplorer {
         }
 
         var self = this;
-        function updateInterceptedReq(req){
+        function interceptLoginRequest(req){
             // let pdata = {
             //     'method': method,
             //     'postData': data,
@@ -1161,65 +1313,75 @@ class RequestExplorer {
             //         "Content-Type": "application/x-www-form-urlencoded"
             //     }
             // };
-            if (req.url().startsWith("http://localhost")){
-                let basename = path.basename(req.url());
-                if (basename.indexOf("?") > -1) {
-                    basename = basename.slice(0,basename.indexOf("?"));
-                }
-                // skip if it has a period for nodejs apps
-                if (basename.indexOf(".") > -1){
-                    // do nothing
-                } else {
-                    let foundRequest = FoundRequest.requestObjectFactory(req);
-                    foundRequest.from = "LoginInterceptedRequest";
-                    self.requestsAdded += self.appData.addInterestingRequest(foundRequest );
-                }
-            }
+            // if (req.url().startsWith(`${self.appData.site_url.href}`)){
+            //     let basename = path.basename(req.url());
+            //     if (basename.indexOf("?") > -1) {
+            //         basename = basename.slice(0,basename.indexOf("?"));
+            //     }
+            //     // skip if it has a period for nodejs apps
+            //     if (basename.indexOf(".") > -1){
+            //         // do nothing
+            //     } else {
+            //         let foundRequest = FoundRequest.requestObjectFactory(req);
+            //         foundRequest.from = "LoginInterceptedRequest";
+            //         self.requestsAdded += self.appData.addInterestingRequest(foundRequest );
+            //     }
+            // }
             req.continue();
         }
-        page.on('request', updateInterceptedReq);
-        console.log("REQUESTING URL");
+        page.on('request', interceptLoginRequest);
+
+        console.log("[Login] REQUESTING URL ", gotourl);
 
         const response = await page.goto(gotourl, {waitUntil:"load"});
 
-        console.log(`URL REQUESTED ${page.url()}`);
+        console.log(`[Login] URL GOTO'ed `);
 
         try {
-            await page.keyboard.press("Escape");
-            await page.keyboard.press("Escape");
-            await page.focus(loginData["usernameSelector"]);
-            await page.keyboard.type(loginData["usernameValue"], {delay:100});
-            await page.focus(loginData["passwordSelector"]);
-            await page.keyboard.type( loginData["passwordValue"], {delay:100});
+            if (loginData["usernameSelector"]){
 
-            const element = await page.$(loginData["passwordSelector"]);
-            const text = await (await element.getProperty('value')).jsonValue();
-            console.log("PW TEXT VALUE IS = ", text,  loginData["passwordValue"]);
+                await page.keyboard.press("Escape");
+                await page.keyboard.press("Escape");
+                if (loginData["loginStartSelector"]){
+                    let p = await page.$(loginData["loginStartSelector"])
+                    await p.click();
+                    await(sleepg(100));
+                }
 
-            await page.screenshot({path: '/p/webcam/screenshot-pre-login.png', type:"png"});
+                await page.focus(loginData["usernameSelector"]);
+                await page.keyboard.type(loginData["usernameValue"], {delay:100});
+                await page.focus(loginData["passwordSelector"]);
+                await page.keyboard.type( loginData["passwordValue"], {delay:100});
+                const element = await page.$(loginData["passwordSelector"]);
+                const text = await (await element.getProperty('value')).jsonValue();
+                console.log("PW TEXT VALUE IS = ", text,  loginData["passwordValue"]);
+                await page.screenshot({path: '/p/tmp/screenshot-pre-login.png', type:"png"});
 
-            let submitType = loginData["submitType"].toLowerCase();
-            let navwait =  page.waitForNavigation({waitUntil:"load"});
-            if (submitType === "submit"){
-                const inputElement = await page.$('input[type=submit]');
-                await inputElement.click();
-            } else if (submitType === "enter"){
-                console.log("\nPRESSING ENTERE\n");
-                await page.keyboard.type("\n");
-            } else if (submitType === "click") {
-                //await page.keyboard.type("");
-                console.log("submitting form");
-                const formElement = await page.$(loginData["form_selector"]);
-                const inputElement = await formElement.$(loginData["form_submit_selector"]);
-                await page.evaluate("$('#loginButton').disabled = false;$('#loginButton').click()");
-//                inputElement.disabled = false;
-                //await inputElement.click();
+                let submitType = loginData["submitType"].toLowerCase();
+                let navwait =  page.waitForNavigation({waitUntil:"load"});
+                if (submitType === "submit"){
+                    const inputElement = await page.$('input[type=submit]');
+                    await inputElement.click();
+                } else if (submitType === "enter"){
+                    console.log("\nPRESSING ENTERE\n");
+                    await Promise.all([page.keyboard.type("\n"), page.waitForNavigation({timeout: 5000, waitUntil:'networkidle2'})])
+
+                } else if (submitType === "click") {
+                    //await page.keyboard.type("");
+                    console.log("submitting form");
+                    const formElement = await page.$(loginData["form_selector"]);
+                    const inputElement = await formElement.$(loginData["form_submit_selector"]);
+                    inputElement.disabled = false
+                    console.log("input element = ", inputElement),
+                    await Promise.all([page.evaluate("$('#loginButton').disabled = false;$('#loginButton').click()"),
+                        await inputElement.click(),
+                        page.waitForNavigation({timeout: 5000, waitUntil:'networkidle2'})]);
+
+                }
+            } else {
+                 console.log(`No login b/c usernameSelector config value is empty`);
             }
 
-            console.log("PAGE URL = ", await page.url());
-            await navwait;
-//            console.log(await page.content());
-            await page.screenshot({path: '/p/webcam/screenshot-pre-login2.png', type:"png"});
 
 
         } catch (err){
@@ -1247,8 +1409,9 @@ class RequestExplorer {
             console.log("\nERROR ERROR ERROR ERROR  LOGIN FAILED TO COMPLETE, didn't find expected message ERROR ERROR ERROR ");
             process.exit(38);
         }
-        page.removeListener('request', updateInterceptedReq);
+        page.removeListener('request', interceptLoginRequest);
         let cookies = await page.cookies();
+        console.log(cookies);
         return cookies
     }
 
@@ -1265,7 +1428,7 @@ class RequestExplorer {
                 var cvarr = cv.split("=");
                 var cv_name = `${cvarr[0].trim()}`;
                 var cv_value = `${cvarr[1].trim()}`;
-                cookies_in.push({"name": cv_name, "value": cv_value, url: 'http://localhost/'});
+                cookies_in.push({"name": cv_name, "value": cv_value, url: `${this.appData.site_url.origin}`});
 
             }
         });
@@ -1341,14 +1504,14 @@ class RequestExplorer {
         async function targetChanged(target){
 
             try {
-                //const newPage = await target.page();
-                //var newurl = newPage.target().url();
+                const newPage = await target.page();
+                var newurl = newPage.target().url();
 
-                if (target.url() !== self.url.href && target.url().startsWith("http://localhost")) {
+                if (target.url() !== self.url.href && target.url().startsWith(`${self.appData.site_url.origin}`)) {
 
-                    //console.log(`TARGETED CHANGED from ${self.url.href} to ${target.url()} `);
+                    console.log(`TARGETED CHANGED from ${self.url.href} to ${target.url()} `);
                     //console.log(target);
-                    let foundRequest = FoundRequest.requestParamFactory(target.url(), "GET","","");
+                    let foundRequest = FoundRequest.requestParamFactory(target.url(),"GET", "",{},"targetChanged", self.appData.site_url.href);
                     foundRequest.from = "targetChanged";
                     self.requestsAdded += self.appData.addInterestingRequest(foundRequest);
 
@@ -1358,9 +1521,15 @@ class RequestExplorer {
                     //     self.appData.addQueryParam(key, value);
                     //     //console.log("PARAM NAME :::> ", key, value);
                     // });
-                } else {
-                    //console.log(`TARGETED CHANGED to SAME ${self.url.href}`);
-                    //
+                } else {  // target is foreign or same url
+                    console.log(`TARGETED CHANGED to SAME ${self.url.href}`);
+                    var tempurl = new URL(newurl);
+                    console.log("target changed -----------------------> ", tempurl.pathname);
+                    tempurl.searchParams.forEach(function (value, key, parent) {
+                        //self.appData.addQueryParam(key, value);
+                        console.log("PARAM NAME :::> ", key, value);
+                    });
+
                     // self.page = await self.browser.newPage();
                     // await self.page.goto(newurl,{waitUntil:"load"});
                     // await self.addCodeExercisersToPage(self.hasGremlinResults());
@@ -1376,6 +1545,7 @@ class RequestExplorer {
             }
 
         }
+
         function pageError (error) {
             let msg = error.message;
             if (msg.length> 50){
@@ -1386,20 +1556,29 @@ class RequestExplorer {
                     console.log(msg, ` seen for the ${self.shownMessages[msg]} time`);
                 }
                 self.shownMessages[msg] += 1;
-
+            } else if (error.message.indexOf("TypeError: Cannot read property 'species' of undefined") > -1) {
+                console.log("\x1b[38;5;136mGREMLINS JS Error:\n\t", error.message, "\x1b[0m");
+                self.gremlins_error = true;
             } else {
                 self.shownMessages[msg] = 1;
                 console.log("\x1b[38;5;136mBrowser JS Error:\n\t", error.message, "\x1b[0m");
             }
+
         }
+
         function consoleLog (message) {
 
             if (message.text().indexOf("[WC]") > -1) {
-                console.log(message.text());
+                if (message.text().indexOf("lamehorde is done") > -1){
+                    console.log("\x1b[38;5;136mLamehorde completion detected\x1b[0m");
+                    self.lamehord_done = true;
+                } else {
+                    console.log(message.text());
+                }
             } else if (message.text().search("[WC-URL]") > - 1){
                 let urlstr = message.text().slice("[WC-URL]".length);
                 //console.log("urlstr=", urlstr);
-                self.appData.addValidURLS([urlstr], "http://localhost/","ConsleRecvd");
+                self.appData.addValidURLS([urlstr], `${self.appData.site_url.href}`,"ConsleRecvd");
             } else if (message.text().search("CW DOCUMENT") === -1 && message.text() !== "JSHandle@node") {
                 if (message.text().indexOf("gremlin") > -1){
                     self.gremTracker(message.text());
@@ -1414,19 +1593,53 @@ class RequestExplorer {
                 }
             }
         }
+
+        /**
+         * Two phases, in the first, we record and save any relevant request information on local requests.
+         * In the second, we attempt to determine if the request should be aborted.
+         * @param req
+         */
         function processRequest(req){
             // interception does not fire for /#/XXXX changes
+
+            // Save Request info if we can
+            if (req.method() !== "GET" || req.postData() || req.resourceType() === "xhr"){
+                console.log("NONGET: ", req.url(), "method=",req.method(), "headers=",req.headers(), "restype=", req.resourceType(), "data=", req.postData());
+            }
+
             if (self.url.href === req.url()) {
+                //not sure why reforming request data for continue here.
+
                 var pdata = {
                     'method': self.method,
-                    'postData': self.data,
+                    'postData': self.postData,
                     headers: {
                         ...req.headers(),
                         "Content-Type": "application/x-www-form-urlencoded"
                     }
                 };
-                // console.log("processRequest", req);
+
+                let foundRequest = FoundRequest.requestObjectFactory(req, self.appData.site_url.href);
+                foundRequest.from="InterceptedRequestSelf";
+
+                for (let [pkey, pvalue] of Object.entries(foundRequest.getAllParams())){
+                    if (typeof pvalue === "object"){
+                        pvalue = pvalue.values().next().value;
+                    }
+                    self.appData.addQueryParam(pkey, pvalue);
+                }
+
+                if (self.appData.addInterestingRequest(foundRequest) > 0){
+                    self.requestsAdded++;
+                    console.log("[WC] req.url() = ", req.url());
+                }
+
+                console.log("processRequest caught to add method and data ");
+                console.log("\t", self.method, pdata.method)
+                console.log("\t", self.postData, pdata.postData)
+
                 req.continue(pdata);
+
             } else {
 
                 let tempurl = new URL(req.url());
@@ -1436,36 +1649,28 @@ class RequestExplorer {
                 tempurl.searchParams.forEach(function (value, key, parent) {
                     self.appData.addQueryParam(key, value);
                 });
+                if (req.url().startsWith(self.appData.site_url.origin)){
+                    console.log("Intercepted in processRequest ", req.url(), req.method());
+                    let basename = path.basename(tempurl.pathname);
+                    if (req.url().indexOf("rest") > -1 && (req.method() === "POST" || req.method() === "PUT")){
+                        console.log(basename, req.method(), req.headers(), req.resourceType());
+                    }
 
-                if (req.url().startsWith("http://localhost")){
-                    let basename = path.basename(req.url());
-                    if (basename.indexOf("?") > -1) {
-                        basename = basename.slice(0,basename.indexOf("?"));
+                    let foundRequest = FoundRequest.requestObjectFactory(req, self.appData.site_url.href);
+                    foundRequest.from="InterceptedRequest";
+
+                    for (let [pkey, pvalue] of Object.entries(foundRequest.getAllParams())){
+                        if (typeof pvalue === "object"){
+                            pvalue = pvalue.values().next().value;
+                        }
+                        self.appData.addQueryParam(pkey, pvalue);
+                    }
+
+                    if (self.appData.addInterestingRequest(foundRequest) > 0){
+                        self.requestsAdded++;
+                        console.log("[WC] ADDED intercepted request req.url() = ", req.url());
                     }
                     // skip if it has a period for nodejs apps
-                    if (basename.indexOf(".") > -1){
-                        // do nothing
-                    } else {
-                        if (req.url().indexOf("rest") > -1 && (req.method() === "POST" || req.method() === "PUT")){
-                            console.log(basename, req.method(), req.headers(), req.resourceType());
-                        }
-
-                        let foundRequest = FoundRequest.requestObjectFactory(req);
-                        foundRequest.from="InterceptedRequest";
-
-                        for (let [pkey, pvalue] of Object.entries(foundRequest.getAllParams())){
-                            if (typeof pvalue === "object"){
-                                pvalue = pvalue.values().next().value;
-                            }
-                            self.appData.addQueryParam(pkey, pvalue);
-                        }
-
-                        if (self.appData.addInterestingRequest(foundRequest) > 0){
-                            self.requestsAdded++;
-                            console.log("[WC] req.url() = ", req.url());
-                        };
-
-                    }
 
                     // let result = self.appData.addRequest(req.url(), req.method(), req.postData(), "interceptedRequest");
                     // if (result){
@@ -1473,6 +1678,15 @@ class RequestExplorer {
                     // } else {
                     //     //console.log(`INTERCEPTED and ABORTED repeat URL ${req.url()}`);
                     // }
+                } else {
+                    if (req.url().indexOf("gremlins") > -1){
+                        console.log("[WC] CONTINUING with getting some gremlins in here.");
+                        req.continue();
+                    } else {
+                        console.log(`Aborting request for ${req.url().substr(0,200)}`)
+                        req.abort();
+                    }
+                    return;
                 }
                 //console.log("PROCESSED ", req.url(), req.isNavigationRequest());
                 if (false && req.frame() === self.page.mainFrame()){
@@ -1482,44 +1696,54 @@ class RequestExplorer {
                         if (req.url().indexOf("gremlins") > -1){
                             console.log("[WC] CONTINUING with getting some gremlins in here.");
                             req.continue();
+                            return;
                         }
                         if (self.isLoading){
-                            console.log(`[WC] \tRequest granted ${req.resourceType()} ${req.url()} `);
+                            console.log(`[WC] \tRequest granted while still in loading phase ${req.resourceType()} ${req.url()} `);
                             req.continue();
                         } else {
-                            console.log(`[WC] \tRequest denied`);
-                            req.abort('aborted');
+                            console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()}`);
+                            req.respond(req.redirectChain().length
+                              ? { body: '' } // prevent 301/302 redirect
+                              : { status: 204 } // prevent navigation by js
+                            )
+                            //req.abort();
                         }
 
                     } else {
 
-                        var pdata = {
-                            headers: {
-                                ...req.headers(),
-                                "Content-Type": "application/x-www-form-urlencoded"
-                            }
-                        };
-                        if (!("Authorization" in pdata.headers)){
-                            pdata.headers["Authorization"] = self.bearer;
-                        }
-                        let cookiestr = "";
-                        for (let cookie of self.cookies){
-                            cookiestr += `${cookie.name}=${cookie.value}; `
-                        }
-                        pdata.headers["Cookie"] = cookiestr;
-                        //console.log("processRequest    --- >", req.url());
+                        // NON-mainFrame or not a navigation reque, shouldn't change page navigation
 
-                        req.continue(pdata);
-                        // if (req.isNavigationRequest()){
-                        //     //console.log("CONTINUE WITH ", req.frame().name(), req.url());
-                        //     req.continue();
-                        // } else {
-                        //     req.continue();
+                        // var pdata = {
+                        //     headers: {
+                        //         ...req.headers(),
+                        //         "Content-Type": "application/x-www-form-urlencoded"
+                        //     }
+                        // };
+                        // if (!("Authorization" in pdata.headers)){
+                        //     pdata.headers["Authorization"] = self.bearer;
                         // }
+                        // let cookiestr = "";
+                        // for (let cookie of self.cookies){
+                        //     cookiestr += `${cookie.name}=${cookie.value}; `
+                        // }
+                        // pdata.headers["Cookie"] = cookiestr;
+                        console.log("\nprocessRequest REFORMED continue --- > nav req = ", req.isNavigationRequest(),
+                            "is main frame = ", req.frame() === self.page.mainFrame(),
+                            "is loading = ", self.isLoading,
+                            "url = ", req.url(), "\n");
+                        if (req.frame() === self.page.mainFrame()){
+                            if (self.isLoading){
+                                req.continue();
+                            } else {
+                                req.abort();
+                            }
+                        } else {
+                            req.continue()
+                        }
 
                     }
                 }
-
 
             }
         }
@@ -1527,8 +1751,10 @@ class RequestExplorer {
         console.log("WE ARE STARTING THE BROWSER!!!!! ", this.url.href);
         try {
             try{
-                this.browser = await puppeteer.launch({headless:false, args:["--disable-features=site-per-process"] }); //
+                this.browser = await puppeteer.launch({headless:true, args:["--disable-features=site-per-process", "--window-size=1920,1040"], "defaultViewport": null }); //
+                console.log("OPENED BROWSER!");
             } catch (xerror) {
+                console.log("UNABLE TO OPEN X DISPLAY");
                 if (xerror.message.indexOf("Unable to open X display") > -1){
                     this.browser = await puppeteer.launch({headless:true, args:["--disable-features=site-per-process"] });
                 } else {
@@ -1536,27 +1762,7 @@ class RequestExplorer {
                     throw(xerror);
                 }
             }
-
-            this.page = await this.browser.newPage();
-
-            try {
-                await this.page.evaluate(() => console.log(`url is ${location.href}`));
-
-                await this.page.setRequestInterception(true);
-                let loginCookies = await this.do_login(this.page);
-
-                await this.addCookiesToPage(loginCookies, this.cookieData, this.page).catch(function (error) {
-                    console.log("COOKIE ERROR:!!!", error)
-                });
-
-                this.page.on('request', processRequest);
-
-                this.page.on('console', consoleLog);
-                this.page.on('pageerror', pageError);
-
-                this.browser.on('targetchanged', targetChanged);
-
-                let pagetimeout = setTimeout(function(){
+            let pagetimeout = setTimeout(function(){
                     console.log("I think we are STUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
                     try{
                         self.browser.close();
@@ -1566,11 +1772,44 @@ class RequestExplorer {
 
                 }, this.timeoutLoops*this.timeoutValue*1000 + 60000);
 
+            let gremlinsErrorTest = setInterval(function(){
+                if (self.gremlins_error && self.lamehord_done){
+                    console.log("Ohh no, they killed Gizmo!, and the lamhord completed.  Aborting!!!");
+                    try{
+                        self.browser.close();
+                    } catch (err){
+                        console.log("\tProblem closing browser after timeout\n");
+                    }
+                    self.gremlins_error = false;
+                }
+            }, 10*1000);
+
+            this.page = await this.browser.newPage();
+
+            try {
+                await this.page.evaluate(() => console.log(`url is ${location.href}`));
+
+                await this.page.setRequestInterception(true);
+
+                if (this.loginData !== undefined && 'form_url' in this.loginData){
+                    let loginCookies = await this.do_login(this.page);
+                    await this.addCookiesToPage(loginCookies, this.cookieData, this.page).catch(function (error) {
+                        console.log("COOKIE ERROR:!!!", error)
+                    });
+
+                }
+
+                this.page.on('request', processRequest);
+
+                this.page.on('console', consoleLog);
+                this.page.on('pageerror', pageError);
+
+                this.browser.on('targetchanged', targetChanged);
+
                 await this.page.setCacheEnabled(false);
+                await this.page.setDefaultNavigationTimeout(0);
 
                 await this.exerciseTarget(this.page);
-
-                clearTimeout(pagetimeout);
 
                 this.reportResults();
 
@@ -1578,6 +1817,9 @@ class RequestExplorer {
                 console.log(`Error: cannot start browser `);
                 console.log(e.stack);
             } finally {
+                clearTimeout(pagetimeout);
+                clearInterval(gremlinsErrorTest);
+                console.log(`current request = ${this.appData.requestsFound[this.currentRequestKey]}`)
                 await this.browser.close();
             }
 

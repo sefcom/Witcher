@@ -1,7 +1,7 @@
-httpreqr: main.cc
-	g++ -o $@ $^ $(shell pkg-config --libs --cflags libcurl)
+httpreqr.64: main.cc
+	g++ -o  $@ $^ -I/usr/include/x86_64-linux-gnu -lcurl
 
 .PHONY: clean
 clean:
-	rm -f httpreqr
+	rm -f httpreqr.64
 

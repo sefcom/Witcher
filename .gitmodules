@@ -7,3 +7,6 @@
 [submodule "ruby/rubysrc271"]
 	path = ruby/rubysrc271
 	url = git@github.com:sefcom/Witcher-ruby
+[submodule "base/Widash"]
+	path = base/Widash
+	url = git@github.com:sefcom/Widash.git

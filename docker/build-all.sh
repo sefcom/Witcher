@@ -19,6 +19,7 @@ for b in "${builds[@]}"; do
     fi
     context="${DIR}/../${b}"
     printf "\033[34mBuilding ::> ${docker_img_name} using Dockerfile ${dockerfile_path} and context ${context}\033[0m\n"
+    echo 'docker build -t '${docker_img_name}' -f "'${dockerfile_path}'" "'${context}'"'
     if docker build -t ${docker_img_name} -f "${dockerfile_path}" "${context}"; then
         printf "\033[32mSucessfully built ${docker_img_name} using Dockerfile ${dockerfile_path} and context ${context}\033[0m\n"
     else
