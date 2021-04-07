@@ -1,0 +1,48 @@
+<?
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";	
+	$path_inf_lan1 = XNODE_getpathbytarget("", "inf", "uid", $LAN1, 0);
+	$upnp_count = get("x", $path_inf_lan1."/upnp/count");
+	if ($upnp_count > 0)	$upnp_enable = 1;
+	else			$upnp_enable = 0;
+	$mc_enable = get("x","/device/multicast/igmpproxy");
+
+	$wan_ping_enable = get("x","/security/firewall/pingallow");
+	$enable = get("x","/security/firewall/httpallow");
+	$port = get("x","/security/firewall/httpremoteport");
+	$ip_range = get("x","/security/firewall/httpremoteip");
+	$schedule_name = get("x","/security/firewall/entry/schedule");
+	$pptp_pass_through = get("x","/nat/passthrough/pptp");
+	$l2tp_pass_through = get("x","/nat/passthrough/l2tp");
+	$ipsec_pass_through = get("x","/nat/passthrough/ipsec");
+
+	
+
+	$friendly_name = get("x","/runtime/upnpdev/root:1/friendlyname"); 
+	$manufacturer = get("x","/runtime/upnpdev/root:1/manufacturer");
+	$model_name = get("x","/runtime/upnpdev/root:1/modelname");
+	$model_url = get("x","/runtime/upnpdev/root:1/modelurl");
+
+
+
+	echo "<misc_config>";
+	echo 	"<wan_port_ping_response_enable>".$wan_ping_enable."</wan_port_ping_response_enable>";
+	echo	"<remote_http_management>";
+	echo		"<enable>".$enable."</enable>";
+	echo		"<port>".$port."</port>";
+	echo		"<ip_range>".$ip_range."</ip_range>";
+	echo		"<schedule_name>".$schedule_name."</schedule_name>";
+	echo	"</remote_http_management>";
+	echo 	"<multicast_stream_enable>".$mc_enable."</multicast_stream_enable>";
+	echo	"<pptp_pass_through>".$pptp_pass_through."</pptp_pass_through>";
+	echo	"<ipsec_pass_through>".$ipsec_pass_through."</ipsec_pass_through>";
+	echo	"<l2tp_pass_through>".$l2tp_pass_through."</l2tp_pass_through>";
+	echo 	"<upnp>";
+	echo 		"<enable>".$upnp_enable."</enable>";
+	echo		"<friendly_name>".$friendly_name."</friendly_name>";
+	echo		"<manufacturer>".$manufacturer."</manufacturer>";
+	echo		"<model_name>".$model_name."</model_name>";
+	echo		"<model_url>".$model_url."</model_url>";
+	echo 	"</upnp>";
+	echo "</misc_config>";
+?>

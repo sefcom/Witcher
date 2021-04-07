@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=Spo&#353;tovani skrbnik :<br>Uporabnik "
+EMAIL_USER_ADD_MAIN2=" je pravkar vstopil v va&#353;e doma&#269;e omre&#382;je. &#268;e &#382;elite bolj podrobne informacije, se prijavite v aplikacijo mydlink ali portal mydlink <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> in preverite stanje uporabnika "
+EMAIL_USER_ADD_MAIN3=".<br>Storitev mydlink
+EMAIL_WIRELESS_DENY_MAIN1=Spo&#353;tovani skrbnik :<br>Nepoobla&#353;&#269;en uporabnik "
+EMAIL_WIRELESS_DENY_MAIN2=" poslu&#353;a dostopiti do va&#353;ega doma&#269;ega omre&#382;ja! &#268;e &#382;elite bolj podrobne informacije, se prijavite v aplikacijo mydlink, da napravo takoj blokirate.<br>Storitev mydlink
+EMAIL_FW_NEW_MAIN1=Spo&#353;tovani skrbnik :<br>Na voljo je nova vdelana programska oprema za va&#353; hi&#353;ni usmerjevalnik. &#268;e &#382;elite nadgraditi vdelano programsko opremo, najprej pove&#382;ite prenosni ra&#269;unalnik z hi&#353;nim omre&#382;jem in se prijavite v usmerjevalnik na  http://dlinkrouter ali http://192.168.0.1  <br>
+EMAIL_FW_NEW_MAIN2=Ko se prijavite, kliknite \"Ro&#269;na namestitev\", da dostopite do strani \"Vzdr&#382;evanje\". Potem kliknite \"Preveri\" v razdelku \"Nadgradnja vdelane programske opreme\", da prenesete vdelano programsko opremo.<br>Potem, ko prenesete vdelano programsko opremo, je nalo&#382;ite na usmerjevalnik, da zaklju&#269;ite postopek nadgraditve.<br>Storitev mydlink
+EMAIL_TEST_MAIN=Spo&#353;tovani uporabnik aplikacije mydlink,<br>Tole je preizkusna po&#353;ta iz aplikacije &#8220;mydlink lite&#8221;. &#268;e ste prejeli to po&#353;to, to pomeni, da lahko uporabljate zna&#269;ilnost &#8220;Obvestilo o dogodkih&#8221; v aplikaciji mydlink. <br>skupina mydlink

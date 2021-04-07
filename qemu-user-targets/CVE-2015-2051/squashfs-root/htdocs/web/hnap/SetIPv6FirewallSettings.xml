@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetIPv6FirewallSettings>
+			<IPv6_FirewallStatus></IPv6_FirewallStatus>
+			<IPv6FirewallRuleLists>
+				<IPv6FirewallRule>
+					<Name></Name>
+					<Status></Status>
+					<Schedule></Schedule>					
+					<SrcInterface></SrcInterface>
+					<SrcIPv6AddressRangeStart></SrcIPv6AddressRangeStart>
+					<SrcIPv6AddressRangeEnd></SrcIPv6AddressRangeEnd>
+					<DestInterface></DestInterface>
+					<DestIPv6AddressRangeStart></DestIPv6AddressRangeStart>
+					<DestIPv6AddressRangeEnd></DestIPv6AddressRangeEnd>
+					<Protocol></Protocol>
+					<PortRangeStart></PortRangeStart>
+					<PortRangeEnd></PortRangeEnd>
+				</IPv6FirewallRule>
+			</IPv6FirewallRuleLists>
+		</SetIPv6FirewallSettings>
+	</soap:Body>
+</soap:Envelope>

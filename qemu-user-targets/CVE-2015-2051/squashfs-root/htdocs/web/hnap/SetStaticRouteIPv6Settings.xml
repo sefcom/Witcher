@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetStaticRouteIPv6Settings>
+			<StaticRouteIPv6List>
+				<SRIPv6Info>
+				<Status></Status>
+				<Name></Name>
+				<DestNetwork></DestNetwork>
+				<PrefixLen></PrefixLen>
+				<Gateway></Gateway>
+				<Metric></Metric>
+				<Interface></Interface>
+				</SRIPv6Info>
+			</StaticRouteIPv6List>
+		</SetStaticRouteIPv6Settings>
+	</soap:Body>
+</soap:Envelope>

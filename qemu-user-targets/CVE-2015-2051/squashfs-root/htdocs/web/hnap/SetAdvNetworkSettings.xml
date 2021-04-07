@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetAdvNetworkSettings xmlns="http://purenetworks.com/HNAP1/" > 
+			<UPNP></UPNP> 
+			<MulticastIPv4></MulticastIPv4> 
+			<MulticastIPv6></MulticastIPv6> 
+			<WANPortSpeed></WANPortSpeed> 
+		</SetAdvNetworkSettings>
+	</soap:Body>
+</soap:Envelope>

@@ -1,0 +1,37 @@
+<?
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";	
+	$path_inf_lan1 = XNODE_getpathbytarget("", "inf", "uid", $LAN1, 0);
+	$path_inet_lan1 = XNODE_getpathbytarget("/inet", "entry", "uid", query($path_inf_lan1."/inet"), 0);
+	$path_run_phyinf_lan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", query($path_inf_lan1."/phyinf"), 0);
+	$path_run_inf_lan1 = XNODE_getpathbytarget("/runtime", "inf", "uid", $LAN1, 0);
+
+	$lan_ip = get("x", $path_run_inf_lan1."/inet/ipv4/ipaddr");
+	$lan_mask = ipv4int2mask(get("x", $path_run_inf_lan1."/inet/ipv4/mask"));
+	$dns4 = get("x", $path_inf_lan1."/dns4");
+	if ( $dns4 != "")	$dns_relay_enable = 1;
+	else			$dns_relay_enable = 0;
+	$lan_tx_packet = get("x", $path_run_phyinf_lan1."/stats/tx/packets");
+	$lan_rx_packet = get("x", $path_run_phyinf_lan1."/stats/rx/packets");
+
+	$lan_collision_packets = get("x", $path_run_phyinf_lan1."/stats/tx/collisions");
+	$lan_tx_bytes = get("x", $path_run_phyinf_lan1."/stats/tx/bytes");
+	$lan_rx_bytes = get("x", $path_run_phyinf_lan1."/stats/rx/bytes");
+	
+	$timestamp = get("x","/runtime/device/uptime");
+	
+	
+	echo "<lan_stats>";
+	echo 	"<lan_ip>".$lan_ip."</lan_ip>";
+	echo 	"<lan_netmask>".$lan_mask."</lan_netmask>";
+	echo 	"<lan_default_gateway>".$lan_default_gateway."</lan_default_gateway>"; //jana
+	echo	"<dns_relay_enable>".$dns_relay_enable."</dns_relay_enable>";
+	echo 	"<lan_tx_packets>".$lan_tx_packet."</lan_tx_packets>";
+	echo 	"<lan_rx_packets>".$lan_rx_packet."</lan_rx_packets>";
+	echo	"<lan_lost_packets>".$lan_lost_packets."</lan_lost_packets>";
+	echo	"<lan_collision_packets>".$lan_collision_packets."</lan_collision_packets>";
+	echo	"<lan_tx_bytes>".$lan_tx_bytes."</lan_tx_bytes>";
+	echo	"<lan_rx_bytes>".$lan_rx_bytes."</lan_rx_bytes>";
+	echo	"<timestamp>".$timestamp."</timestamp>";
+	echo "</lan_stats>";
+?>

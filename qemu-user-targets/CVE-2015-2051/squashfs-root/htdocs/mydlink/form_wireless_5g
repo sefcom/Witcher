@@ -1,0 +1,16 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/webinc/config.php";
+$WLAN=$WLAN2;
+include "/htdocs/mydlink/form_wireless.php";
+
+//WPS state must sync to another wifi interface.
+$phy1  = XNODE_getpathbytarget("", "phyinf", "uid", $WLAN2, 0);
+if($phy1 != "") {$wifi1 = XNODE_getpathbytarget("/wifi", "entry", "uid", query($phy1."/wifi"), 0);}
+if($wifi1 != "") {$wps_enable = query($wifi1."/wps/enable");}
+
+$phy2  = XNODE_getpathbytarget("", "phyinf", "uid", $WLAN1, 0);
+if($phy2 != "") {$wifi2 = XNODE_getpathbytarget("/wifi", "entry", "uid", query($phy2."/wifi"), 0);}
+if($wifi2 != "" && $wps_enable != "") {set($wifi2."/wps/enable", $wps_enable);}
+?>

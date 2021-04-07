@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetIPv6LinkLocalOnlySettings xmlns="http://purenetworks.com/HNAP1/">
+			<IPv6_ConnectionType></IPv6_ConnectionType>
+			<IPv6_LanUniqueLocalAddressStatus></IPv6_LanUniqueLocalAddressStatus>
+			<IPv6_LanUniqueLocalAddressDefaultPrefix></IPv6_LanUniqueLocalAddressDefaultPrefix>
+			<IPv6_LanUniqueLocalAddressPrefix></IPv6_LanUniqueLocalAddressPrefix>
+		</SetIPv6LinkLocalOnlySettings>
+	</soap:Body>
+</soap:Envelope>

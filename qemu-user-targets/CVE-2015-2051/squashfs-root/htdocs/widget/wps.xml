@@ -1,0 +1,18 @@
+<?
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";
+	$path_phyinf_wlan1 = XNODE_getpathbytarget("", "phyinf", "uid", $WLAN1, 0);
+	$path_wifi_wlan1 = XNODE_getpathbytarget("/wifi", "entry", "uid", query($path_phyinf_wlan1."/wifi"), 0);
+
+	$wps_enable = get("x", $path_wifi_wlan1."/wps/enable");
+	$wps_configured = get("x", $path_wifi_wlan1."/wps/configured");
+	$wps_pin = get("x", $path_wifi_wlan1."/wps/pin");
+			
+			
+	echo "<wps>";
+	echo 	"<enable>".$wps_enable."</enable>";
+	echo 	"<configured>".$wps_configured."</configured>";
+	echo	"<pin>".$wps_pin."</pin>";
+	echo "</wps>"; 
+
+?>

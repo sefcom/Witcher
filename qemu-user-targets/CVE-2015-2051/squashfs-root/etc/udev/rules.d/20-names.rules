@@ -1,0 +1,2 @@
+# udev rules
+ACTION=="add",	KERNEL=="mtdblock*",	NAME="mtdblock/%n"

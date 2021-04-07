@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=Po&#353;tovani administratoru :<br>Korisnik "
+EMAIL_USER_ADD_MAIN2=" upravo je pristupio va&#353;oj mre&#382;i. Ako &#382;elite saznati vi&#353;e, prijavite se na mydlink aplikaciju ili na mydlink portal <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> kako biste provjerili status korisnika "
+EMAIL_USER_ADD_MAIN3=".<br>mydlink servis
+EMAIL_WIRELESS_DENY_MAIN1=Po&#353;tovani administratoru :<br>Neovla&#353;teni korisnik "
+EMAIL_WIRELESS_DENY_MAIN2=" poku&#353;ava pristupiti va&#353;oj ku&#263;noj mre&#382;i! Ako &#382;elite saznati vi&#353;e, prijavite se na mydlink aplikaciju kako biste odmah blokirali ure&#273;aj.<br>mydlink servis
+EMAIL_FW_NEW_MAIN1=Po&#353;tovani administratoru :<br>Za va&#353; ku&#263;ni usmjernik dostupan je novi firmver. Ako &#382;elite nadograditi firmver, prvo pove&#382;ite prijenosno r&#269;aunalo s ku&#263;nom mre&#382;om, a zatim prijavite usmjernik putem stranice http://dlinkrouter ili http://192.168.0.1.<br>
+EMAIL_FW_NEW_MAIN2=Nakon prijave kliknite \"Ru&#269;no postavljanje\" kako bise pristupili stranici \"Odr&#382;avanje\" . Potom u odjeljku \"Nadogradnja firmvera\" pritisnite \"Provjeri\" kako biste preuzeli firmver.<br>Nakon preuzimanja u&#269;itajte firmver u usmjernik kako biste dovr&#353;ili psotupak nadogradnje.<br>mydlink servis
+EMAIL_TEST_MAIN=Po&#353;tovani korisni&#269;e aplikacije mydlink,<br>Ovo je testna poruka aplikacije "mydlink lite". Ako ste primili ovu poruku, zna&#269;i da mo&#382;ete koristiti zna&#269;ajku "Obavje&#353;tavanja o doga&#273;ajima" u aplikaciji mydlink. <br>mydlink tim

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetFirewallSettings xmlns="http://purenetworks.com/HNAP1/" >
+			<SPIIPv4></SPIIPv4>
+			<AntiSpoof></AntiSpoof>
+			<ALGPPTP></ALGPPTP>
+			<ALGIPSec></ALGIPSec>
+			<ALGRTSP></ALGRTSP>
+			<ALGSIP></ALGSIP>
+		</SetFirewallSettings>
+	</soap:Body>
+</soap:Envelope>

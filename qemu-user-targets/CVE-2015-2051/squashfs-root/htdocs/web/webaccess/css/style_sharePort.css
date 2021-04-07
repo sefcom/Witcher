@@ -1,0 +1,124 @@
+body {
+	margin: 0;
+	padding: 0;
+	font-size: 11pt;
+	font-family: Arial, Helvetica, sens-serif;
+	line-height:1.4;
+	color: #333333;
+	background: #fff url(../webfile_images/header.gif) left top repeat-x;
+}
+#wrapper {
+	position: relative;
+	width: 900px;
+	margin: 0 auto;
+}
+#logo {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	margin: 0;
+	width: 105px;
+}
+
+#Lheader {
+	position: relative;
+	width: 900px;
+	height: 95px;
+}
+
+#content {
+	position: relative;
+	left: 0px;
+	width: 900px;
+}
+#footer {
+	text-align: center;
+	padding: 20px;
+	margin: 30px 0px 0px 0px;
+	background: #fff url(../webfile_images/footer.png) left top no-repeat;
+	color: #7d7d7d;
+	font-size: 9pt;
+
+}
+#versionTable {
+	position: relative;
+	top: 43px;
+	left: 160px;
+	width: 750px;
+	font-size: 10pt;
+}
+#versionTable .td {
+	min-width: 100px;
+}
+.styled-text {
+	border: 1px solid #4598aa;
+	height: 30px;
+	margin: 0 0 0 0px;
+	padding: 0 0 0 10px;
+}
+/*/////////////////////Login///////////////////////*/
+#logIn {
+	position: relative;
+	top: -10px;
+	left: 280px;
+	width: 337px;
+   	height: 218px;
+	background: #fff url(../webfile_images/logInTable.png) left top no-repeat;
+	text-align: center;
+}
+#logInTable {
+	position: relative;
+	top: 30px;
+	left: 0px;
+	width: 330px;
+	text-align:center;
+	line-height:40px;
+}
+#logInTable th {
+	width: 150px;
+	font-size: 11pt;
+	text-align: right;
+	width:100px;
+	padding: 0 3px 0 0;
+}
+#logInTable td {
+	width: 150px;
+	font-size: 11pt;
+	text-align: left;
+	min-width:160px;
+}
+#logIn_btn {
+	position: relative;
+	top: 55px;
+}
+.styled_button_s {
+	position: relative;
+	top: 0px;
+	color: #FFF;
+	/*display: block;*/
+	display: inline-block;
+	text-decoration:none;
+	border:solid 1px #4598aa;
+	background:#4598aa;
+	text-align:center;
+	padding:10px 15px;
+	min-width: 120px;
+	font-size: 14px;
+	cursor:pointer;
+
+}
+.styled_button_s:hover{
+	background:#4496a8 url(../webfile_images/button_bg.png) left top repeat-x;
+}
+#link {
+	position: relative;
+	text-align: center;
+	font-size: 10pt;
+}
+#title {
+	position: relative;
+	top:0px;
+	text-align: center;
+	color:#565656;
+	font-size: 24pt;
+}

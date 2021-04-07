@@ -1,0 +1,12 @@
+EMAIL_USER_ADD_SUBJECT=Event Notice from mydlink Service - New User    
+EMAIL_USER_ADD_SUBJECT1=is Online    
+EMAIL_USER_ADD_MAIN1=Dear Administrator :<br>User "
+EMAIL_USER_ADD_MAIN2=" just enters into your home network. If you want to learn more detailed information, please login mydlink App or mydlink portal <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> to check the status of user "
+EMAIL_USER_ADD_MAIN3=".<br>mydlink Service
+EMAIL_WIRELESS_DENY_SUBJECT=Event Notice from mydlink Service - Wireless Intrusion Detected!
+EMAIL_WIRELESS_DENY_MAIN1=Dear Administrator :<br>An unwelcomed user "
+EMAIL_WIRELESS_DENY_MAIN2=" attempts to access your home network! If you want to learn more detailed information, please login mydlink App to block the device immediately.<br>mydlink Service
+EMAIL_FW_NEW_SUBJECT=Event Notice from mydlink Service - A New Firmware is Available!
+EMAIL_FW_NEW_MAIN1=Dear Administrator :<br>There is a new firmware available for your home router. If you want to upgrade FW, please make sure that your laptop is connected to your home network first and login router via http://dlinkrouter or http://192.168.0.1.<br>
+EMAIL_FW_NEW_MAIN2=Once you log in, click \"manual setup\" to access \"Maintenance\" page. Then press \"check\" in the section of \"Firmware Upgrade\" to download the firmware.<br>After downloading the firmware, please upload it into router to finish the upgrade procedure.<br>mydlink Service
+EMAIL_TEST_MAIN=Dear mydlink App User,<br>This is a test mail from App "mydlink lite". If you receive this mail, it means that you can use "Event Notification" feature in mydlink App. <br>mydlink team

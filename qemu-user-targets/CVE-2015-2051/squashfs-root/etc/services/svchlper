@@ -1,0 +1,25 @@
+#!/bin/sh
+# svchlper service [service name] [start|stop]
+#echo "[$0] $1 $2 $3 ..." > /dev/console
+[ "$1" != "service" ] && exit 109
+[ ! -f /etc/services/$2.php ] && exit 108
+case "$3" in
+start)
+	[ -f /var/servd/$2_stop.sh ] && sh /var/servd/$2_stop.sh > /dev/console
+	xmldbc -P /etc/services/$2.php -V START=/var/servd/$2_start.sh -V STOP=/var/servd/$2_stop.sh
+	sh /var/servd/$2_start.sh > /dev/console
+	RET=$?
+	[ "$RET" != "0" ] && rm -f /var/servd/$2_stop.sh
+	exit $RET
+	;;
+stop)
+	if [ -f /var/servd/$2_stop.sh ]; then
+		sh /var/servd/$2_stop.sh > /dev/console
+		RET=$?
+		rm -f /var/servd/$2_stop.sh
+		exit $RET
+	fi
+	exit 0
+	;;
+esac
+exit 109

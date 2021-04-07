@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+<SetNetworkSettings xmlns="http://purenetworks.com/HNAP1/">
+	<IPAddress></IPAddress>
+	<SubnetMask></SubnetMask>
+	<PresentationURL></PresentationURL>
+	<DeviceName></DeviceName>
+	<LocalDomainName></LocalDomainName>
+	<IPRangeStart></IPRangeStart>
+	<IPRangeEnd></IPRangeEnd>
+	<LeaseTime></LeaseTime>
+	<Broadcast></Broadcast>
+	<DNSRelay></DNSRelay>
+</SetNetworkSettings>
+</soap:Body>
+</soap:Envelope>

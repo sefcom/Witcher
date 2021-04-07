@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+<SetVlanSettings xmlns="http://purenetworks.com/HNAP1/" >
+	<devmode></devmode>
+	<wantype></wantype>
+	<active></active>
+	<interid_pppoe></interid_pppoe>
+	<voipid_pppoe></voipid_pppoe>
+	<iptvid_pppoe></iptvid_pppoe>
+	<interid_dhcp></interid_dhcp>
+	<voipid_dhcp></voipid_dhcp>
+	<iptvid_dhcp></iptvid_dhcp>
+	<lanport>
+		<lan1_pppoe></lan1_pppoe>
+		<lan2_pppoe></lan2_pppoe>
+		<lan3_pppoe></lan3_pppoe>
+		<lan4_pppoe></lan4_pppoe>
+		<lan1_dhcp></lan1_dhcp>
+		<lan2_dhcp></lan2_dhcp>
+		<lan3_dhcp></lan3_dhcp>
+		<lan4_dhcp></lan4_dhcp>
+		<lan1></lan1>
+		<lan2></lan2>
+		<lan3></lan3>
+		<lan4></lan4>
+	</lanport>
+	<wlanport>
+		<wlan01_pppoe></wlan01_pppoe>
+		<wlan02_pppoe></wlan02_pppoe>
+		<wlan01_dhcp></wlan01_dhcp>
+		<wlan02_dhcp></wlan02_dhcp>
+		<wlan01></wlan01>
+		<wlan02></wlan02>
+	</wlanport>
+</SetVlanSettings>
+</soap:Body>
+</soap:Envelope>

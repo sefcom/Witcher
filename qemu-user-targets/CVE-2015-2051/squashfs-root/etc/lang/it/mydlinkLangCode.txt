@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=Gentile amministratore,<br>l'utente "
+EMAIL_USER_ADD_MAIN2=" ha appena effettuato l'accesso alla sua rete domestica. Per ulteriori informazioni, pu&#242; effettuare l'accesso all'applicazione o al portale mydlink <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> per controllare lo stato dell'utente "
+EMAIL_USER_ADD_MAIN3=".<br>Il servizio di assistenza di mydlink
+EMAIL_WIRELESS_DENY_MAIN1=Gentile amministratore,<br>un utente indesiderato "
+EMAIL_WIRELESS_DENY_MAIN2=" tenta di accedere alla rete domestica. Per ulteriori informazioni, pu&#242; effettuare l'accesso all'applicazione mydlink e bloccare immediatamente il dispositivo.<br>Il servizio di assistenza di mydlink
+EMAIL_FW_NEW_MAIN1=Gentile amministratore,<br>&#200; disponibile nuovo firmware per il router domestico. Se desidera aggiornare il firmware, verifichi prima che il laptop sia connesso alla rete domestica, quindi effettui l'accesso al router tramite  http://dlinkrouter o http://192.168.0.1.<br>
+EMAIL_FW_NEW_MAIN2=Una volta effettuato l'accesso, faccia clic su \"Configurazione manuale\" per accedere alla pagina \"Manutenzione\". Selezioni quindi \"Controlla\" nella sezione \"Aggiornamento firmware\" per scaricare il firmware.<br>Dopo aver scaricato il firmware, lo ricarichi nel router per completare la procedura di aggiornamento.<br>Il servizio di assistenza di mydlink
+EMAIL_TEST_MAIN=Gentile utente dell'applicazione mydlink,<br>Questo &#232; un messaggio di prova inviato dall'applicazione "mydlink lite". La ricezione di questo messaggio indica che &#232; possibile utilizzare la funzione "Notifica eventi" nell'applicazione mydlink. <br>Il team di mydlink

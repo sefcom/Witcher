@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+<SetInternetProfileAlpha>
+	<InternetProfileLists>
+		<InternetProfile>
+			<DeleteProfile></DeleteProfile>
+			<ActiveProfile></ActiveProfile>
+			<ProfileName></ProfileName>
+			<ProfileType></ProfileType>
+			<HostName></HostName>
+			<MAC></MAC>
+			<IPAddress></IPAddress>
+			<SubnetMask></SubnetMask>
+			<Gateway></Gateway>
+			<DNS>
+				<Primary></Primary>
+				<Secondary></Secondary>
+			</DNS>
+			<MTU></MTU>
+			<UserName></UserName>
+			<Password></Password>
+			<AddressMode></AddressMode>
+			<ServiceName></ServiceName>
+			<ReconnectMode></ReconnectMode>
+			<MaxIdleTime></MaxIdleTime>
+			<SecurityType></SecurityType>
+			<PasswordLength></PasswordLength>
+			<DialupNumber></DialupNumber>
+			<APN></APN>
+			<Country></Country>
+			<ISP></ISP>
+			<AuthProtocol></AuthProtocol>
+			<SIMCardStatus></SIMCardStatus>
+		</InternetProfile>
+	</InternetProfileLists>
+</SetInternetProfileAlpha>
+</soap:Body>
+</soap:Envelope>

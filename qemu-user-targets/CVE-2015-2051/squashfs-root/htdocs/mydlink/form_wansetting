@@ -1,0 +1,309 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/webinc/config.php";
+
+$settingsChanged	=$_POST["settingsChanged"];
+$WANType			=$_POST["config.wan_ip_mode"];
+$HostName			=$_POST["config.wan_dhcp_gw_name"];
+$MACClone			=$_POST["mac_clone"];
+$DNS1				=$_POST["config.wan_primary_dns"];
+$DNS2				=$_POST["config.wan_secondary_dns"];
+$MTU				=$_POST["config.wan_mtu"];
+$WANIPAddr			=$_POST["config.wan_ip_address"];
+$WANSubnetMask		=$_POST["config.wan_subnet_mask"];
+$WANGW				=$_POST["config.wan_gateway"];
+
+$PPPOEDynType		=$_POST["config.pppoe_use_dynamic_address"];
+$PPPOENetSniper		=$_POST["config.pppoe_neetsniper"];
+$PPPOEXKJS			=$_POST["config.pppoe_xkjs"];
+$PPPOEXKJSMode		=$_POST["config.xkjs_mode"];
+$PPPOEUser			=$_POST["config.pppoe_username"];
+$PPPOEPassword		=$_POST["config.pppoe_password"];
+$PPPOESvcName		=$_POST["config.pppoe_service_name"];
+$PPPOEIPAddr		=$_POST["config.pppoe_ip_address"];
+$PPPOEDNSType		=$_POST["pppoe_use_dynamic_dns_radio"];
+$PPPOEMAXIdleTime	=$_POST["config.pppoe_max_idle_time"];
+$PPPSchedule		=$_POST["ppp_schedule_control_0"];
+$PPPOEConnType		=$_POST["pppoe_reconnect_mode_radio"];
+
+$PPTPCarrierType	=$_POST["wan_pptp_use_dynamic_carrier_radio"];
+$PPTPServer			=$_POST["config.wan_pptp_server"];
+$PPTPUser			=$_POST["config.wan_pptp_username"];
+$PPTPPassword		=$_POST["config.wan_pptp_password"];
+$PPTPMAXIdleTime	=$_POST["config.wan_pptp_max_dile_time"];
+$PPTPConnType		=$_POST["pptp_reconnect_mode_radio"];
+
+$L2TPCarrierType	=$_POST["wan_l2tp_use_dynamic_carrier_radio"];
+$L2TPServer			=$_POST["config.wan_l2tp_server"];
+$L2TPUser			=$_POST["config.wan_l2tp_username"];
+$L2TPPassword		=$_POST["config.wan_l2tp_password"];
+$L2TPMAXIdleTime	=$_POST["config.wan_l2tp_max_dile_time"];
+$L2TPConnType		=$_POST["l2tp_reconnect_mode_radio"];
+
+$ret="fail";
+if($settingsChanged==1){
+	$WAN1P = XNODE_getpathbytarget("", "inf", "uid", $WAN1, 0);
+	$WAN2P = XNODE_getpathbytarget("", "inf", "uid", $WAN2, 0);
+	if ($WAN1P!="" && $WAN2P!=""){
+		if($WANType==0 || $WANType==1){
+			/*Static or DHCP*/
+
+			if($WANType==1){
+				if($HostName!=""){set("/device/hostname", $HostName);}
+			}
+
+			set($WAN1P."/active", 1);
+			set($WAN2P."/active", 0);
+
+			$WAN1PHYINFP	= XNODE_getpathbytarget("", "phyinf", "uid", query($WAN1P."/phyinf"), 0);
+			$WAN1INETP		= XNODE_getpathbytarget("/inet", "entry", "uid", query($WAN1P."/inet"), 0);
+			if($WAN1PHYINFP!=""){
+				if($MACClone!=""){
+					$MAC = substr($MACClone,  0, 2).":".substr($MACClone,  2, 2).":".substr($MACClone,  4, 2).":".
+						   substr($MACClone,  6, 2).":".substr($MACClone,  8, 2).":".substr($MACClone, 10, 2);
+					set($WAN1PHYINFP."/macaddr", $MAC); 
+				}
+			}
+			if($WAN1INETP!=""){
+				set($WAN1INETP."/addrtype", "ipv4");
+				if($WANType==0){		set($WAN1INETP."/ipv4/static", 1);	}
+				else if($WANType==1){	set($WAN1INETP."/ipv4/static", 0);	}
+
+				if($MTU!="")		{	set($WAN1INETP."/ipv4/mtu", $MTU);	}
+				else				{	set($WAN1INETP."/ipv4/mtu", 1500);	}
+
+				if($DNS1!="" && $DNS2!=""){
+					set($WAN1INETP."/ipv4/dns/entry:1",	$DNS1);
+					set($WAN1INETP."/ipv4/dns/entry:2",	$DNS2);
+					set($WAN1INETP."/ipv4/dns/count",	"2");
+				}else if($DNS1!=""){
+					set($WAN1INETP."/ipv4/dns/entry:1",	$DNS1);
+					set($WAN1INETP."/ipv4/dns/count",	"1");
+				}else{
+					set($WAN1INETP."/ipv4/dns/entry:1",	"");
+					set($WAN1INETP."/ipv4/dns/entry:2",	"");
+					set($WAN1INETP."/ipv4/dns/count",	"0");
+				}
+				if($WANType==0){
+					set($WAN1INETP."/ipv4/ipaddr",	$WANIPAddr);
+					set($WAN1INETP."/ipv4/mask", 	ipv4mask2int($WANSubnetMask));
+					set($WAN1INETP."/ipv4/gateway",	$WANGW);
+				}
+			}
+			$ret="ok";
+		}else if($WANType==2){
+			/*PPPoE*/
+
+			set($WAN1P."/active", 1);
+			set($WAN2P."/active", 0);
+
+			$WAN1PHYINFP	= XNODE_getpathbytarget("", "phyinf", "uid", query($WAN1P."/phyinf"), 0);
+			$WAN1INETP		= XNODE_getpathbytarget("/inet", "entry", "uid", query($WAN1P."/inet"), 0);
+			if($WAN1PHYINFP!=""){
+				if($MACClone!=""){
+					$MAC = substr($MACClone,  0, 2).":".substr($MACClone,  2, 2).":".substr($MACClone,  4, 2).":".
+					       substr($MACClone,  6, 2).":".substr($MACClone,  8, 2).":".substr($MACClone, 10, 2);
+					set($WAN1PHYINFP."/macaddr", $MAC); 
+				}
+			}
+			if($WAN1INETP!=""){
+				set($WAN1INETP."/addrtype",		"ppp4");
+				set($WAN1INETP."/ppp4/over",	"eth");
+
+				if($MTU!=""){set($WAN1INETP."/ppp4/mtu", $MTU);}
+				else		{set($WAN1INETP."/ppp4/mtu", 1492);}
+
+				if($PPPOEDNSType=="false"){
+					if($DNS1!="" && $DNS2!=""){
+						set($WAN1INETP."/ppp4/dns/entry:1",	$DNS1);
+						set($WAN1INETP."/ppp4/dns/entry:2",	$DNS2);
+						set($WAN1INETP."/ppp4/dns/count",	"2");
+					}else if($DNS1!=""){
+						set($WAN1INETP."/ppp4/dns/entry:1",	$DNS1);
+						set($WAN1INETP."/ppp4/dns/count",	"1");
+					}else{
+						set($WAN1INETP."/ppp4/dns/entry:1",	"");
+						set($WAN1INETP."/ppp4/dns/entry:2",	"");
+						set($WAN1INETP."/ppp4/dns/count",	"0");
+					}
+				}
+
+				if($PPPOEDynType=="false"){
+					set($WAN1INETP."/ppp4/static",	"1");
+					set($WAN1INETP."/ppp4/ipaddr",	$PPPOEIPAddr);
+				}else{
+					set($WAN1INETP."/ppp4/static",	"0");
+					set($WAN1INETP."/ppp4/ipaddr",	"");
+				}
+				set($WAN1INETP."/ppp4/username",			$PPPOEUser);
+				set($WAN1INETP."/ppp4/password",			$PPPOEPassword);
+				set($WAN1INETP."/ppp4/pppoe/servicename",	$PPPOESvcName);
+
+				if($PPPOEConnType=="0"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"auto");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	"0");
+				}else if($PPPOEConnType=="1"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"ondemand");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	$PPPOEMAXIdleTime);
+				}else if($PPPOEConnType=="2"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"manual");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	"0");
+				}
+			}
+			$ret="ok";
+		}else if($WANType==3){
+			/*PPTP*/
+
+			set($WAN1P."/active",		1);
+			set($WAN1P."/lowerlayer",	"WAN-2");
+			set($WAN1P."/defaultroute",	100);
+			set($WAN2P."/active",		1);
+			set($WAN2P."/upperlayer",	"WAN-1");
+			set($WAN2P."/defaultroute",	"");
+			set($WAN2P."/nat",	"");
+
+			$WAN1PHYINFP	= XNODE_getpathbytarget("", "phyinf", "uid", query($WAN1P."/phyinf"), 0);
+			$WAN2PHYINFP	= XNODE_getpathbytarget("", "phyinf", "uid", query($WAN2P."/phyinf"), 0);	
+			$WAN1INETP		= XNODE_getpathbytarget("/inet", "entry", "uid", query($WAN1P."/inet"), 0);
+			$WAN2INETP		= XNODE_getpathbytarget("/inet", "entry", "uid", query($WAN2P."/inet"), 0);
+
+			if($WAN1INETP!="" && $WAN2INETP!=""){
+				set($WAN1INETP."/addrtype",		"ppp4");
+				set($WAN1INETP."/ppp4/over",	"pptp");
+				
+				if($MTU!=""){set($WAN1INETP."/ppp4/mtu", $MTU);}
+				else		{set($WAN1INETP."/ppp4/mtu", 1400);}
+
+				set($WAN1INETP."/ppp4/static",		"0");
+				set($WAN1INETP."/ppp4/username",	$PPTPUser);
+				set($WAN1INETP."/ppp4/password",	$PPTPPassword);
+				set($WAN1INETP."/ppp4/pptp/server",	$PPTPServer);
+				if($PPTPConnType=="0"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"auto");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	"0");
+				}else if($PPTPConnType=="1"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"ondemand");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	$PPTPMAXIdleTime);
+				}else if($PPTPConnType=="2"){
+					set($WAN1INETP."/ppp4/dialup/mode",		 	"manual");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	"0");
+				}
+				
+				/* Only dynamic mode is supported in current cgi. */
+				set($WAN2INETP."/addrtype",		"ipv4");
+				set($WAN2INETP."/ipv4/static",	0);
+				set($WAN2INETP."/ipv4/ipaddr",	"");
+				set($WAN2INETP."/ipv4/mask",	"");
+				set($WAN2INETP."/ipv4/gateway",	"");
+
+				/* Static mode is not supported in current cgi. */
+				/*
+				if($WANIPAddr!=""){
+			 		set($WAN2INETP."/ipv4/static",	1);
+					set($WAN2INETP."/ipv4/ipaddr",	$WANIPAddr);
+					set($WAN2INETP."/ipv4/mask",	ipv4mask2int($WANSubnetMask));
+					set($WAN2INETP."/ipv4/gateway",	$WANGW);
+				}else{
+					set($WAN2INETP."/ipv4/static",	0);
+					set($WAN2INETP."/ipv4/ipaddr",	"");
+					set($WAN2INETP."/ipv4/mask",	"");
+					set($WAN2INETP."/ipv4/gateway",	"");
+				}
+				if($DNS1!="" && $DNS2!=""){
+					set($WAN2INETP."/ipv4/dns/entry:1",	$DNS1);
+					set($WAN2INETP."/ipv4/dns/entry:2",	$DNS2);
+					set($WAN2INETP."/ipv4/dns/count",	"2");
+				}else if($DNS1!=""){
+					set($WAN2INETP."/ipv4/dns/entry:1",	$DNS1);
+					set($WAN2INETP."/ipv4/dns/count",	"1");
+				}else{
+					set($WAN2INETP."/ipv4/dns/entry:1",	"");
+					set($WAN2INETP."/ipv4/dns/entry:2",	"");
+					set($WAN2INETP."/ipv4/dns/count",	"0");
+				}
+				 */
+				$ret="ok";
+			}
+		}else if($WANType==4){
+			/*L2TP*/
+
+			set($WAN1P."/active",		 1);
+			set($WAN1P."/lowerlayer",	"WAN-2");
+			set($WAN1P."/defaultroute",	100);
+			set($WAN2P."/active",		1);
+			set($WAN2P."/upperlayer",	"WAN-1");
+			set($WAN2P."/defaultroute",	"");
+			set($WAN2P."/nat",	"");
+
+			$WAN1PHYINFP	= XNODE_getpathbytarget("", "phyinf", "uid", query($WAN1P."/phyinf"), 0);
+			$WAN2PHYINFP	= XNODE_getpathbytarget("", "phyinf", "uid", query($WAN2P."/phyinf"), 0);	
+			$WAN1INETP		= XNODE_getpathbytarget("/inet", "entry", "uid", query($WAN1P."/inet"), 0);
+			$WAN2INETP		= XNODE_getpathbytarget("/inet", "entry", "uid", query($WAN2P."/inet"), 0);
+
+			if($WAN1INETP!="" && $WAN2INETP!=""){
+				set($WAN1INETP."/addrtype",		"ppp4");
+				set($WAN1INETP."/ppp4/over",	"l2tp");
+
+				if($MTU!=""){set($WAN1INETP."/ppp4/mtu", $MTU);}
+				else		{set($WAN1INETP."/ppp4/mtu", 1400);}
+
+				set($WAN1INETP."/ppp4/static",		"0");
+				set($WAN1INETP."/ppp4/username",	$L2TPUser);
+				set($WAN1INETP."/ppp4/password",	$L2TPPassword);
+				set($WAN1INETP."/ppp4/l2tp/server",	$L2TPServer);
+				if($L2TPConnType=="0"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"auto");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	"0");
+				}else if($L2TPConnType=="1"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"ondemand");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	$L2TPMAXIdleTime);
+				}else if($L2TPConnType=="2"){
+					set($WAN1INETP."/ppp4/dialup/mode",			"manual");
+					set($WAN1INETP."/ppp4/dialup/idletimeout",	"0");
+				}
+
+				/* Only dynamic mode is supported in current cgi. */
+				set($WAN2INETP."/addrtype",		"ipv4");
+				set($WAN2INETP."/ipv4/static",	0);
+				set($WAN2INETP."/ipv4/ipaddr",	"");
+				set($WAN2INETP."/ipv4/mask",	"");
+				set($WAN2INETP."/ipv4/gateway",	"");
+
+				/* Static mode is not supported in current cgi. */
+				/*
+				if($WANIPAddr!=""){
+			 		set($WAN2INETP."/ipv4/static",	1);
+					set($WAN2INETP."/ipv4/ipaddr",	$WANIPAddr);
+					set($WAN2INETP."/ipv4/mask",	ipv4mask2int($WANSubnetMask));
+					set($WAN2INETP."/ipv4/gateway",	$WANGW);
+				}else{
+					set($WAN2INETP."/ipv4/static",	0);
+					set($WAN2INETP."/ipv4/ipaddr",	"");
+					set($WAN2INETP."/ipv4/mask",	"");
+					set($WAN2INETP."/ipv4/gateway",	"");
+				}
+				if($DNS1!="" && $DNS2!=""){
+					set($WAN2INETP."/ipv4/dns/entry:1",	$DNS1);
+					set($WAN2INETP."/ipv4/dns/entry:2",	$DNS2);
+					set($WAN2INETP."/ipv4/dns/count",	"2");
+				}else if($DNS1!=""){
+					set($WAN2INETP."/ipv4/dns/entry:1",	$DNS1);
+					set($WAN2INETP."/ipv4/dns/count",	"1");
+				}else{
+					set($WAN2INETP."/ipv4/dns/entry:1",	"");
+					set($WAN2INETP."/ipv4/dns/entry:2",	"");
+					set($WAN2INETP."/ipv4/dns/count",	"0");
+				}
+				 */
+				$ret="ok";
+			}
+		}else if($WANType==9){
+			/*DHCP+*/
+			$ret="fail";
+		}
+	}
+}
+?>
+<?=$ret?>
+

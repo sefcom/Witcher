@@ -1,0 +1,25 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/webinc/config.php";
+
+$settingsChanged	=$_POST["settingsChanged"];
+$Remote_Admin		=$_POST["config.web_server_allow_wan_http"];
+$Remote_Admin_Port	=$_POST["config.web_server_wan_port_http"];
+
+$ret="fail";
+if($settingsChanged==1){
+	$WAN1P = XNODE_getpathbytarget("", "inf", "uid", $WAN1, 0);
+	if($WAN1P!=""){
+		if($Remote_Admin=="true"){
+			set($WAN1P."/web", $Remote_Admin_Port);
+			$ret="ok";
+		}else if ($Remote_Admin=="false"){
+			set($WAN1P."/web", "");
+			$ret="ok";
+		}
+	}
+}
+?>
+<?=$ret?>
+

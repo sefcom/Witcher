@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=Hyv&#228; j&#228;rjestelm&#228;nvalvoja:<br>K&#228;ytt&#228;j&#228; "
+EMAIL_USER_ADD_MAIN2="  on juuri liittym&#228;ss&#228; kotiverkkoosi. Jos haluat lis&#228;tietoja, kirjaudu sis&#228;&#228;n mydlink-ohjelmaan tai mydlink-portaaliin <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> ja tarkista k&#228;ytt&#228;j&#228;n "
+EMAIL_USER_ADD_MAIN3=".<br>mydlink-palvelu
+EMAIL_WIRELESS_DENY_MAIN1=Hyv&#228; j&#228;rjestelm&#228;nvalvoja:<br>Kutsumaton k&#228;ytt&#228;j&#228; "
+EMAIL_WIRELESS_DENY_MAIN2=" pyrkii liittym&#228;&#228;n kotiverkkoosi! Jos haluat lis&#228;tietoja, kirjaudu sis&#228;&#228;n mydlink-ohjelmaan, jolloin voit torjua laitteen v&#228;litt&#246;m&#228;sti.<br>mydlink-palvelu
+EMAIL_FW_NEW_MAIN1=Hyv&#228; j&#228;rjestelm&#228;nvalvoja :<br>Kotireititint&#228;si varten on saatavilla uusi laiteohjelmisto. Jos haluat p&#228;ivitt&#228;&#228; laiteohjelmiston, varmista, ett&#228; kannettavasi on kytketty kaapelilla kotiverkkoon ensiksi ja kirjaudu sis&#228;&#228;n reitittimeen osoitteessa http://dlinkrouter tai http://192.168.0.1.<br>
+EMAIL_FW_NEW_MAIN2=Kun olet kirjautunut sis&#228;&#228;n, valitse \"manuaaliset asetukset\", jolloin esille tulee \"Huolto\"-sivu. Valitse sitten \"tarkista\" osassa \"Laiteohjelmiston p&#228;ivitys\" ja lataa laiteohjelmisto.<br>Ladattuasi laiteohjelmiston p&#228;&#228;t&#228; p&#228;ivitys l&#228;hett&#228;m&#228;ll&#228; se reitittimeen.<br>mydlink-palvelu
+EMAIL_TEST_MAIN=Hyv&#228; mydlink-ohjelman k&#228;ytt&#228;j&#228;,<br>T&#228;m&#228; testis&#228;hk&#246;postiviesti "mydlink lite"-ohjelmasta. Jos vastaanotat t&#228;m&#228;n s&#228;hk&#246;postin, voit k&#228;ytt&#228;&#228; mydlink-ohjelman "Tapahtumailmoitus"-toimintoa. <br>mydlink-tiimi

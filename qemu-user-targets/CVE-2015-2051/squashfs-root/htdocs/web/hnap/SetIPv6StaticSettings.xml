@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetIPv6StaticSettings xmlns="http://purenetworks.com/HNAP1/">
+			<IPv6_ConnectionType></IPv6_ConnectionType>
+			<IPv6_UseLinkLocalAddress></IPv6_UseLinkLocalAddress>
+			<IPv6_Address></IPv6_Address>
+			<IPv6_SubnetPrefixLength></IPv6_SubnetPrefixLength>
+			<IPv6_DefaultGateway></IPv6_DefaultGateway>
+			<IPv6_PrimaryDNS></IPv6_PrimaryDNS>
+			<IPv6_SecondaryDNS></IPv6_SecondaryDNS>
+			<IPv6_LanAddress></IPv6_LanAddress>
+			<IPv6_LanIPv6AddressAutoAssignment></IPv6_LanIPv6AddressAutoAssignment>
+			<IPv6_LanAutoConfigurationType></IPv6_LanAutoConfigurationType>
+			<IPv6_LanRouterAdvertisementLifeTime></IPv6_LanRouterAdvertisementLifeTime>
+			<IPv6_LanIPv6AddressRangeStart></IPv6_LanIPv6AddressRangeStart>
+			<IPv6_LanIPv6AddressRangeEnd></IPv6_LanIPv6AddressRangeEnd>
+			<IPv6_LanDhcpLifeTime></IPv6_LanDhcpLifeTime>
+		</SetIPv6StaticSettings>
+	</soap:Body>
+</soap:Envelope>

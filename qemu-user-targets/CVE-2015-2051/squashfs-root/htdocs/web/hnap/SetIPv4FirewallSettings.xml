@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetIPv4FirewallSettings>
+			<IPv4_FirewallStatus></IPv4_FirewallStatus>
+			<IPv4FirewallRuleLists>
+				<IPv4FirewallRule>
+					<Name></Name>
+					<Status></Status>
+					<Schedule></Schedule>					
+					<SrcInterface></SrcInterface>
+					<SrcIPv4AddressRangeStart></SrcIPv4AddressRangeStart>
+					<SrcIPv4AddressRangeEnd></SrcIPv4AddressRangeEnd>
+					<DestInterface></DestInterface>
+					<DestIPv4AddressRangeStart></DestIPv4AddressRangeStart>
+					<DestIPv4AddressRangeEnd></DestIPv4AddressRangeEnd>
+					<Protocol></Protocol>
+					<PortRangeStart></PortRangeStart>
+					<PortRangeEnd></PortRangeEnd>
+				</IPv4FirewallRule>
+			</IPv4FirewallRuleLists>
+		</SetIPv4FirewallSettings>
+	</soap:Body>
+</soap:Envelope>

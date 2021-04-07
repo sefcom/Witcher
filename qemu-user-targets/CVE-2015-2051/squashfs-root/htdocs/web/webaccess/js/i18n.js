@@ -1,0 +1,1 @@
+/htdocs/web/js/i18n.js

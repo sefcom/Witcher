@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ $1 = "debug" ]; then DEBUG=yes; shift; fi
+CMD="xmldbc -P $1"
+shift
+while [ -n "$1" ]; do CMD=$CMD" -V \"$1\""; shift; done
+echo $CMD|sh > /var/run/phpsh-$$.sh
+if [ -n "$DEBUG" ]; then
+	echo "PHPSH: [$CMD]" > /dev/console
+	cat /var/run/phpsh-$$.sh > /dev/console
+fi
+sh /var/run/phpsh-$$.sh
+rm -f /var/run/phpsh-$$.sh
+exit 0

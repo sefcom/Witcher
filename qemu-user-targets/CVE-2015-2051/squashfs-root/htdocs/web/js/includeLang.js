@@ -1,0 +1,1 @@
+function detectLanguage(){if(localStorage.getItem("language")===null){InitLANG("en-us")}else{InitLANG(localStorage.language)}}detectLanguage();

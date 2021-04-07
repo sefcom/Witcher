@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetWanSettings xmlns="http://purenetworks.com/HNAP1/">
+			<Type></Type>
+			<Username></Username>
+			<Password></Password>
+			<MaxIdleTime></MaxIdleTime>
+			<HostName></HostName>
+			<VPNIPAddress></VPNIPAddress>
+			<VPNSubnetMask></VPNSubnetMask>
+			<VPNGateway></VPNGateway>
+			<ServiceName></ServiceName>
+			<AutoReconnect></AutoReconnect>
+			<IPAddress></IPAddress>
+			<SubnetMask></SubnetMask>
+			<Gateway></Gateway>
+			<ConfigDNS>
+				<Primary></Primary>
+				<Secondary></Secondary>
+			</ConfigDNS>
+			<MacAddress></MacAddress>
+			<MTU></MTU>
+			<DsLite_Configuration></DsLite_Configuration>
+			<DsLite_AFTR_IPv6Address></DsLite_AFTR_IPv6Address>
+			<DsLite_B4IPv4Address></DsLite_B4IPv4Address>
+			<Wizard></Wizard>
+			<RussiaPPP>
+				<Type></Type>
+				<IPAddress></IPAddress>
+				<SubnetMask></SubnetMask>
+				<Gateway></Gateway>
+				<DNS>
+					<Primary></Primary>
+					<Secondary></Secondary>
+				</DNS>
+			</RussiaPPP>
+		</SetWanSettings>
+	</soap:Body>
+</soap:Envelope>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetStaticRouteIPv4Settings>
+			<StaticRouteIPv4Data>
+				<SRIPv4Info>
+				<Enabled></Enabled>
+				<Name></Name>
+				<IPAddress></IPAddress>
+				<NetMask></NetMask>
+				<Gateway></Gateway>
+				<Metric></Metric>
+				<Interface></Interface>
+				</SRIPv4Info>
+			</StaticRouteIPv4Data>
+		</SetStaticRouteIPv4Settings>
+	</soap:Body>
+</soap:Envelope>

@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=Beste beheerder :<br>Gebruiker "
+EMAIL_USER_ADD_MAIN2=" komt net binnen in uw thuisnetwerk. Voor meer gedetailleerde informatie, meldt u zich aan op mydlink App of mydlink portal <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> om de status te controleren van gebruiker "
+EMAIL_USER_ADD_MAIN3=".<br>mydlink Service
+EMAIL_WIRELESS_DENY_MAIN1=Beste beheerder :<br>Een onbevoegde gebruiker "
+EMAIL_WIRELESS_DENY_MAIN2=" tracht toegang te krijgen tot uw thuisnetwerk! Voor meer gedetailleerde informatie meldt u zich aan op mydlink App om het toestel onmiddellijk te blokkeren.<br>mydlink Service
+EMAIL_FW_NEW_MAIN1=Beste beheerder: <br>Er is een nieuwe firmware beschikbaar voor uw thuisrouter. Indien u FW wilt upgraden, dient u er eerst voor te zorgen dat uw laptop is aangesloten op uw thuisnetwerk en loginrouter via http://dlinkrouter of http://192.168.0.1<br>
+EMAIL_FW_NEW_MAIN2=Zodra u zich aanmeldt, klikt u op \"handmatige instelling\" om toegang te krijgen tot de pagina \"Onderhoud\". Druk dan op \"controleren\" in het gedeelte \"Firmware-upgrade\" om de firmware te downloaden.<br>Na het downloaden van de firmware dient u deze op te laden naar de router om de updateprocedure te voltooien. <br>mydlink Service
+EMAIL_TEST_MAIN=Beste mydlink App gebruiker,<br>Dit is een testmail van de App &#8220;mydlink lite&#8221;. Indien u deze e-mail ontvangt, betekent dit dat u de functie &#8220;Gebeurtenissenmelding&#8221; in mydlink App kunt gebruiken. <br>mydlink team

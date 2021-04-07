@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+<SetDeviceSettings2 xmlns="http://purenetworks.com/HNAP1/">
+	<TimeZone></TimeZone>
+	<Locale></Locale>
+	<Username></Username>
+	<SSL></SSL>
+	<AutoAdjustDST></AutoAdjustDST>
+</SetDeviceSettings2>
+</soap:Body>
+</soap:Envelope>

@@ -1,0 +1,2 @@
+ACTION=="add", KERNEL=="sd*", SUBSYSTEM=="block", RUN+="/etc/scripts/silex_usbmount.sh add %k"
+ACTION=="remove", KERNEL=="sd*", RUN+="/etc/scripts/silex_usbmount.sh remove %k"

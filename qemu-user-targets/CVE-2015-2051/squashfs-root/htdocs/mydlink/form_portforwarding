@@ -1,0 +1,86 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/phplib/inf.php";
+include "/htdocs/webinc/config.php";
+
+function get_pfwd_protocol_string($mode)
+{
+	if($mode == 6) return "TCP";
+	else if($mode == 17) return "UDP";
+	else if($mode == 257) return "Other";
+	
+	return "TCP+UDP";
+}
+
+$uid_prefix = "VSVR-";
+$pfwdfp = "/nat/entry/virtualserver";
+$settingsChanged = $_POST["settingsChanged"];
+$ret="fail";
+if($settingsChanged == 1)
+{
+	$i = 0;
+	$entry_id_num = 1;
+	$tmp_file = "/tmp/form_portforwarding.php";
+	$mask = INF_getcurrmask($LAN1);
+	$max = query($pfwdfp."/max");
+	$pfwd_cnt = query($pfwdfp."/entry#");
+    while ($pfwd_cnt > 0)
+    {
+         del($pfwdfp."/entry");
+         $pfwd_cnt--;
+    }
+	
+	while($i < $max)
+	{
+		fwrite("w+", $tmp_file, "<?\n");
+		fwrite("a", $tmp_file, "$enable = $_POST[\"enabled_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$used = $_POST[\"used_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$name = $_POST[\"name_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$public_port = $_POST[\"public_port_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$public_port_to = $_POST[\"public_port_to_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$sched_name = $_POST[\"sched_name_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$ip = $_POST[\"ip_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$private_port = $_POST[\"private_port_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$hidden_private_port_to = $_POST[\"hidden_private_port_to_".$i."\"];\n");
+		fwrite("a", $tmp_file, "$protocol = $_POST[\"protocol_".$i."\"];\n");
+		fwrite("a", $tmp_file, "?>\n");
+		dophp("load",$tmp_file);
+		
+		$uid 	  	  = $uid_prefix.$entry_id_num;
+		$entry_p 	  = $pfwdfp."/entry:".$entry_id_num;
+		if($ip != "")
+		{
+			$protocol_str = get_pfwd_protocol_string($protocol);
+			$hostid = ipv4hostid($ip,$mask);
+			set($entry_p."/enable",$enable);
+			set($entry_p."/uid",$uid);
+			if($sched_name == "Always") set($entry_p."/schedule","");
+			else
+			{
+				$schp = XNODE_getpathbytarget("/schedule", "entry", "description", $sched_name, 0);
+				if($schp != "") set($entry_p."/schedule",query($schp."/uid"));
+				else			set($entry_p."/schedule","");
+			}
+			set($entry_p."/inbfilter","");
+			set($entry_p."/description",$name);
+			set($entry_p."/protocol",$protocol_str);
+			set($entry_p."/protocolnum",$protocol);
+			set($entry_p."/internal/inf",$LAN1);
+			set($entry_p."/internal/hostid",$hostid);
+			set($entry_p."/internal/start",$private_port);
+			set($entry_p."/tport_str","");
+			set($entry_p."/uport_str","");
+			set($entry_p."/external/start",$public_port);
+			set($entry_p."/external/end",$public_port_to);
+			$entry_id_num++;
+		}
+		$i++;
+	}
+	set($pfwdfp."/count",$entry_id_num-1);
+	unlink($tmp_file);
+	$ret="ok";
+}
+
+?>
+<?=$ret?>

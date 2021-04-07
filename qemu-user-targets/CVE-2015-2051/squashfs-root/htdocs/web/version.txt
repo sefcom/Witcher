@@ -1,0 +1,11 @@
+<?
+if($AUTHORIZED_GROUP < 0)
+{
+	echo "HTTP/1.1 200 OK\n\n";
+	echo '<html><body><div>Authetication Fail!</div></body></html>';
+}
+else
+{
+	include "/htdocs/web/version.php";
+}
+?>

@@ -1,0 +1,85 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/mydlink/libservice.php";
+
+function get_mac_filter_policy($mode)
+{
+	if($mode == 0) return "DISABLE";
+	else if($mode == 1) return "ACCEPT";
+	else if($mode == 2) return "DROP";
+	
+	return "DISABLE";
+}
+
+$uid_prefix = "MACF-";
+$macfp = "/acl/macctrl";
+$settingsChanged = $_POST["settingsChanged"];
+$macFltMode 	 = $_POST["macFltMode"];
+$ret="fail";
+if($settingsChanged == 1)
+{
+	$mac_filter_policy = get_mac_filter_policy($macFltMode);
+	$max = query($macfp."/max");
+	$i = 0;
+	$count = 0;
+	$entry_id_num = 1;
+	$tmp_file = "/tmp/form_macfilter.php";
+	$mac_cnt = query($macfp."/entry#");
+    
+    fwrite("w+", $tmp_file, "<?\n");
+	fwrite("a", $tmp_file, "$last = $_POST[\"entry_enable_".$max."\"];\n");
+	fwrite("a", $tmp_file, "?>\n");
+	dophp("load",$tmp_file);
+	unlink($tmp_file);
+	
+	if($last == "")
+	{	
+		while ($mac_cnt > 0)
+    	{
+         del($macfp."/entry");
+         $mac_cnt--;
+    	}
+    	
+		while($i < $max)
+		{
+			fwrite("w+", $tmp_file, "<?\n");
+			fwrite("a", $tmp_file, "$enable = $_POST[\"entry_enable_".$i."\"];\n");
+			fwrite("a", $tmp_file, "$mac = $_POST[\"mac_".$i."\"];\n");
+			fwrite("a", $tmp_file, "$mac_hostname = $_POST[\"mac_hostname_".$i."\"];\n");
+			fwrite("a", $tmp_file, "$mac_addr = $_POST[\"mac_addr_".$i."\"];\n");
+			fwrite("a", $tmp_file, "$sched_name = $_POST[\"sched_name_".$i."\"];\n");
+			fwrite("a", $tmp_file, "?>\n");
+			dophp("load",$tmp_file);
+			
+			$uid 	  	  = $uid_prefix.$entry_id_num;
+			$entry_p 	  = $macfp."/entry:".$entry_id_num;
+			$entry_mac = get_valid_mac($mac);
+			if($mac != "" && $entry_mac != "")
+			{
+				set($entry_p."/uid",$uid);
+				set($entry_p."/enable",$enable);
+				set($entry_p."/mac",toupper($entry_mac));
+				if($sched_name == "Always") set($entry_p."/schedule","");
+				else
+				{
+					$schp = XNODE_getpathbytarget("/schedule", "entry", "description", $sched_name, 0);
+					if($schp != "") set($entry_p."/schedule",query($schp."/uid"));
+					else			set($entry_p."/schedule","");
+				}
+				$entry_id_num++;
+			}
+			$i++;
+		}
+		$count = $entry_id_num-1;
+		if($count > 0)  {set($macfp."/policy",$mac_filter_policy);}
+		else			{set($macfp."/policy","DISABLE");}
+		set($macfp."/count",$count);
+		unlink($tmp_file);
+		$ret="ok";
+		runservice("MACCTRL restart");								
+	}
+}
+
+?>
+<?=$ret?>

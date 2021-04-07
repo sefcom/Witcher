@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+<SetMultipleSSID xmlns="http://purenetworks.com/HNAP1/">
+	<RadioID></RadioID>
+	<MSSIDIndex></MSSIDIndex>
+	<SetWLanRadioSettings xmlns="http://purenetworks.com/HNAP1/">
+		<Mode></Mode>
+		<ChannelWidth></ChannelWidth>
+		<SSIDBroadcast></SSIDBroadcast>
+		<QoS></QoS>
+		<Channel></Channel>
+		<SecondaryChannel></SecondaryChannel>
+		<SSID></SSID>
+		<Enabled></Enabled>
+		<RadioID></RadioID>
+	</SetWLanRadioSettings>
+	<SetWLanRadioSecurity xmlns="http://purenetworks.com/HNAP1/">
+		<RadioID></RadioID>
+		<Enabled></Enabled>
+		<RadiusSecret2></RadiusSecret2>
+		<Encryption></Encryption>
+		<Type></Type>
+		<RadiusIP1></RadiusIP1>
+		<RadiusPort1></RadiusPort1>
+		<RadiusSecret1></RadiusSecret1>
+		<RadiusIP2></RadiusIP2>
+		<RadiusPort2></RadiusPort2>
+		<RadiusSecret2></RadiusSecret2>
+		<KeyRenewal></KeyRenewal>
+		<Key></Key>
+	</SetWLanRadioSecurity>
+</SetMultipleSSID>
+</soap:Body>
+</soap:Envelope>

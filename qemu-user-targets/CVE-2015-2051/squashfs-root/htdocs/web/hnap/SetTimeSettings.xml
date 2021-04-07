@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetTimeSettings xmlns="http://purenetworks.com/HNAP1/">
+			<CurrentDate></CurrentDate>
+			<CurrentTime></CurrentTime>			
+			<NTP></NTP>
+			<NTPServer></NTPServer> 
+			<TimeZone></TimeZone> 
+			<DaylightSaving></DaylightSaving>
+			<DSTStartMonth></DSTStartMonth>
+			<DSTStartWeek></DSTStartWeek>
+			<DSTStartDayOfWeek></DSTStartDayOfWeek>
+			<DSTStartTime></DSTStartTime> 
+			<DSTEndMonth></DSTEndMonth>
+			<DSTEndWeek></DSTEndWeek>
+			<DSTEndDayOfWeek></DSTEndDayOfWeek> 
+			<DSTEndTime></DSTEndTime>
+		</SetTimeSettings>
+	</soap:Body>
+</soap:Envelope>

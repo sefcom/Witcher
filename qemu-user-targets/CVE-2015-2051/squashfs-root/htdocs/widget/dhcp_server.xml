@@ -1,0 +1,31 @@
+<?
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";
+	$path_inf_lan1 = XNODE_getpathbytarget("", "inf", "uid", $LAN1, 0);
+	$dhcpd_enable = get("x", $path_inf_lan1."/dhcps4");
+	if ($dhcpd_enable != "")	$dhcpd_enable = 1;
+	else				$dhcpd_enable = 0;
+	$dhcpd_start_ip = "192.168.0.100";
+	$dhcpd_end_ip = "192.168.0.200";
+	$dhcpd_lease_time = get("x","/lan/dhcp/server/pool:1/leasetime")/60;
+	$dhcpd_domain_name = get("x","/lan/dhcp/server/pool:1/domain");
+
+
+	$dhcpd_primary_dns = get("x","/dnsrelay/server/primarydns");       
+	$dhcpd_secondary_dns = get("x","/dnsrelay/server/secondarydns");   
+  	$dhcpd_reservation = get("x","/lan/dhcp/server/pool:1/staticdhcp/enable");  // always on
+  	
+
+	echo "<dhcp_server>";
+	echo 	"<dhcpd_enable>".$dhcpd_enable."</dhcpd_enable>";
+	echo	"<dhcpd_start_ip>".$dhcpd_start_ip."</dhcpd_start_ip>";
+	echo	"<dhcpd_end_ip>".$dhcpd_end_ip."</dhcpd_end_ip>";
+	echo	"<dhcpd_lease_time>".$dhcpd_lease_time."</dhcpd_lease_time>";
+	echo	"<dhcpd_domain_name>".$dhcpd_domain_name."</dhcpd_domain_name>";
+	echo	"<dhcpd_primary_dns>".$dhcpd_primary_dns."</dhcpd_primary_dns>";
+	echo	"<dhcpd_secondary_dns>".$dhcpd_secondary_dns."</dhcpd_secondary_dns>";
+	echo	"<dhcpd_reservation>".$dhcpd_reservation."</dhcpd_reservation>";
+	
+	
+	echo "</dhcp_server>";
+?>

@@ -1,0 +1,252 @@
+<?
+	$path_phyinf_wlan1 = XNODE_getpathbytarget("", "phyinf", "uid", $WLAN, 0);
+	$path_wifi_wlan1 = XNODE_getpathbytarget("/wifi", "entry", "uid", query($path_phyinf_wlan1."/wifi"), 0);
+	$path_run_phyinf_wlan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", $WLAN, 0);
+
+	$wlan_enable = get("x", $path_phyinf_wlan1."/active");	
+	$wlan_name = get("x", $path_run_phyinf_wlan1."/name");
+	$wlan_ssid = get("x", $path_wifi_wlan1."/ssid");
+	$wlan_chnl = get("x", $path_run_phyinf_wlan1."/media/channel");
+	$wlan_auto_chnl = get("x", $path_phyinf_wlan1."/media/channel");
+	/*wlan channel*/
+	if($wlan_auto_chnl == "0") //Auto
+	{
+		$wlan_auto_chnl = "0";
+	}
+	else
+	{
+		$wlan_auto_chnl = "1";
+	}
+	$wlan_ssid_broadcast = get("x", $path_wifi_wlan1."/ssidhidden");
+
+	/*wlan security*/
+	$wlan_encrypt  = get("x", $path_wifi_wlan1."/encrtype");
+	$wlan_auth = get("x", $path_wifi_wlan1."/authtype");
+	$wlan_weplen = get("x", $path_wifi_wlan1."/nwkey/wep/size");
+	if($wlan_encrypt == "NONE")
+	{
+		$wlan_security = "Disable";		
+	}
+	else if($wlan_encrypt == "WEP")
+	{
+		$enc = "wep";
+		if($wlan_auth == "OPEN")
+		{
+			$auth = "open";
+		}
+		else if($wlan_auth == "SHARED")
+		{
+			$auth = "shared";
+		}
+		if($wlan_weplen == "64")
+		{
+			$len = "64";
+		}
+		else if($wlan_weplen == "128")
+		{
+			$len = "128";
+		}
+		$wlan_security = $enc."_".$auth."_".$len;
+	}
+	else if($wlan_auth == "WPA+2") //wpa+wpa2 eap
+	{
+		$wlan_security = "wpaauto_eap";
+	}
+	else if($wlan_auth == "WPA2") //wpa2+eap
+	{
+		$wlan_security = "wpa2_eap";
+	}
+	else if($wlan_auth == "WPA") //wpa+eap
+	{
+		$wlan_security = "wpa_eap";
+	}
+	else if($wlan_auth == "WPA+2PSK") //wpa-psk/wpa2-psk
+	{
+		$wlan_security = "wpaauto_psk";
+	}
+	else if($wlan_auth == "WPA2PSK") //wpa2-psk
+	{
+		$wlan_security = "wpa2_psk";
+	}
+	else if($wlan_auth == "WPAPSK") //wpa-psk
+	{
+		$wlan_security = "wpa_psk";
+	}
+	else
+	{
+		$wlan_security = "wpaauto_psk";
+	}
+	
+	$wlan_txpower = get("x", $path_phyinf_wlan1."/media/txpower");
+	$wlan_beacon_interval = get("x", $path_phyinf_wlan1."/media/beacon");
+	$wlan_rts_threshold = get("x", $path_phyinf_wlan1."/media/rtsthresh");
+	$wlan_frag_threshold = get("x", $path_phyinf_wlan1."/media/fragthresh");
+	$wlan_dtim = get("x", $path_phyinf_wlan1."/media/dtim");
+	$wlan_short_preamble = get("x", $path_phyinf_wlan1."/media/preamble");
+	$wlan_cts = get("x", $path_phyinf_wlan1."/media/ctsmode");
+	$wlan_channel_bandwidth = get("x", $path_phyinf_wlan1."/media/dot11n/bandwidth");
+	$wlan_guard_interval = get("x", $path_phyinf_wlan1."/media/dot11n/guardinterval");
+
+
+	$wlan_tx_packet = get("x", $path_run_phyinf_wlan1."/stats/tx/packets");
+	$wlan_rx_packet = get("x", $path_run_phyinf_wlan1."/stats/rx/packets");
+	$wlan_tx_bytes = get("x", $path_run_phyinf_wlan1."/stats/tx/bytes");
+	$wlan_rx_bytes = get("x", $path_run_phyinf_wlan1."/stats/rx/bytes");
+
+	
+	$wlan_wmm_enable = get("x", $path_phyinf_wlan1."/media/wmm/enable");
+	$wlan_partition_enable = get("x", $path_wifi_wlan1."/acl/isolation");
+	if($wlan_partition_enable == "") 
+	{
+		$wlan_partition_enable = 0;		
+	}	
+
+
+	$support11n = 1;
+	$wlanMode = get("x", $path_phyinf_wlan1."/media/wlmode");
+	if ($wlanMode == b )		$wlanMode = 11b;
+	else if ($wlanMode == g )	$wlanMode = 11g;
+	else if ($wlanMode == n )	$wlanMode = 11n;
+	else if ($wlanMode == bg )	$wlanMode = 11bg;
+	else if ($wlanMode == gn )	$wlanMode = 11ng;
+	else if ($wlanMode == bgn )	$wlanMode = 11bgn;
+	else if ($wlanMode == an )	$wlanMode = 11na;
+	else if ($wlanMode == a )	$wlanMode = 11a;
+
+	if( get("x", $path_phyinf_wlan1."/media/dot11n/mcs/auto")=="1" )
+	{
+		$wlan_auto_txrate = "auto";
+		$wlan_txrate = "auto";
+	}
+	else
+	{
+		$wlan_auto_txrate = "fixed";
+		
+		$mcsIndex = get("x", $path_phyinf_wlan1."/media/dot11n/mcs/index");
+		
+		if( $wlan_channel_bandwidth=="20" && $wlan_guard_interval=="800" )
+		{
+			if( $mcsIndex==0 ) $wlan_txrate="6.5";
+			else if( $mcsIndex==1 ) $wlan_txrate="13.0";
+			else if( $mcsIndex==2 ) $wlan_txrate="19.5";
+			else if( $mcsIndex==3 ) $wlan_txrate="26.0";
+			else if( $mcsIndex==4 ) $wlan_txrate="39.0";
+			else if( $mcsIndex==5 ) $wlan_txrate="52.0";
+			else if( $mcsIndex==6 ) $wlan_txrate="58.5";
+			else if( $mcsIndex==7 ) $wlan_txrate="65.0";
+			else if( $mcsIndex==8 ) $wlan_txrate="13.0";
+			else if( $mcsIndex==9 ) $wlan_txrate="26.0";
+			else if( $mcsIndex==10 ) $wlan_txrate="39.0";
+			else if( $mcsIndex==11 ) $wlan_txrate="52.0";
+			else if( $mcsIndex==12 ) $wlan_txrate="78.0";
+			else if( $mcsIndex==13 ) $wlan_txrate="104.0";
+			else if( $mcsIndex==14 ) $wlan_txrate="117.0";
+			else if( $mcsIndex==15 ) $wlan_txrate="130.0";			
+		}
+		else if( $wlan_channel_bandwidth=="20" && $wlan_guard_interval=="400" )
+		{
+			if( $mcsIndex==0 ) $wlan_txrate="7.2";
+			else if( $mcsIndex==1 ) $wlan_txrate="14.4";
+			else if( $mcsIndex==2 ) $wlan_txrate="21.7";
+			else if( $mcsIndex==3 ) $wlan_txrate="28.9";
+			else if( $mcsIndex==4 ) $wlan_txrate="43.3";
+			else if( $mcsIndex==5 ) $wlan_txrate="57.8";
+			else if( $mcsIndex==6 ) $wlan_txrate="65.0";
+			else if( $mcsIndex==7 ) $wlan_txrate="72.0";
+			else if( $mcsIndex==8 ) $wlan_txrate="14.444";
+			else if( $mcsIndex==9 ) $wlan_txrate="28.889";
+			else if( $mcsIndex==10 ) $wlan_txrate="43.333";
+			else if( $mcsIndex==11 ) $wlan_txrate="57.778";
+			else if( $mcsIndex==12 ) $wlan_txrate="86.667";
+			else if( $mcsIndex==13 ) $wlan_txrate="115.556";
+			else if( $mcsIndex==14 ) $wlan_txrate="130.000";
+			else if( $mcsIndex==15 ) $wlan_txrate="144.444";				
+		}
+		else if( $wlan_channel_bandwidth=="20+40" && $wlan_guard_interval=="800" )
+		{
+			if( $mcsIndex==0 ) $wlan_txrate="13.5";
+			else if( $mcsIndex==1 ) $wlan_txrate="27.0";
+			else if( $mcsIndex==2 ) $wlan_txrate="40.5";
+			else if( $mcsIndex==3 ) $wlan_txrate="54.0";
+			else if( $mcsIndex==4 ) $wlan_txrate="81.0";
+			else if( $mcsIndex==5 ) $wlan_txrate="108.0";
+			else if( $mcsIndex==6 ) $wlan_txrate="121.0";
+			else if( $mcsIndex==7 ) $wlan_txrate="135.0";
+			else if( $mcsIndex==8 ) $wlan_txrate="27.0";
+			else if( $mcsIndex==9 ) $wlan_txrate="54.0";
+			else if( $mcsIndex==10 ) $wlan_txrate="81.0";
+			else if( $mcsIndex==11 ) $wlan_txrate="108.0";
+			else if( $mcsIndex==12 ) $wlan_txrate="162.0";
+			else if( $mcsIndex==13 ) $wlan_txrate="216.0";
+			else if( $mcsIndex==14 ) $wlan_txrate="243.0";
+			else if( $mcsIndex==15 ) $wlan_txrate="270.0";			
+		}
+		else if( $wlan_channel_bandwidth=="20+40" && $wlan_guard_interval=="400" )
+		{
+			if( $mcsIndex==0 ) $wlan_txrate="15.0";
+			else if( $mcsIndex==1 ) $wlan_txrate="30.0";
+			else if( $mcsIndex==2 ) $wlan_txrate="45.0";
+			else if( $mcsIndex==3 ) $wlan_txrate="60.0";
+			else if( $mcsIndex==4 ) $wlan_txrate="90.0";
+			else if( $mcsIndex==5 ) $wlan_txrate="120.0";
+			else if( $mcsIndex==6 ) $wlan_txrate="135.0";
+			else if( $mcsIndex==7 ) $wlan_txrate="150.0";
+			else if( $mcsIndex==8 ) $wlan_txrate="30.0";
+			else if( $mcsIndex==9 ) $wlan_txrate="60.0";
+			else if( $mcsIndex==10 ) $wlan_txrate="90.0";
+			else if( $mcsIndex==11 ) $wlan_txrate="120.0";
+			else if( $mcsIndex==12 ) $wlan_txrate="180.0";
+			else if( $mcsIndex==13 ) $wlan_txrate="240.0";
+			else if( $mcsIndex==14 ) $wlan_txrate="270.0";
+			else if( $mcsIndex==15 ) $wlan_txrate="300.0";			
+		}
+	}
+	
+	$wlan_protection = get("x", $path_wifi_wlan1."/authtype");
+	$timestamp = get("x","/runtime/device/uptime");
+
+	echo "<wlan_interface_".$INDEX.">";//jana
+	echo 	"<wlan_enable>".$wlan_enable."</wlan_enable>";
+	echo	"<wlan_name>".$wlan_name."</wlan_name>";
+	echo 	"<wlan_ssid>".$wlan_ssid."</wlan_ssid>";
+	echo 	"<wlan_dot11d_enable>".$wlan_dot11d_enable."</wlan_dot11d_enable>";
+	echo 	"<wlan_channel_list>".$wlan_channel_list."</wlan_channel_list>";
+	echo	"<wlan_channel>".$wlan_chnl."</wlan_channel>";
+	echo	"<wlan_auto_channel_enable>".$wlan_auto_chnl."</wlan_auto_channel_enable>";
+	echo 	"<wlan_dot11_mode>".$wlanMode."</wlan_dot11_mode>";
+	echo	"<wlan_ssid_broadcast>".$wlan_ssid_broadcast."</wlan_ssid_broadcast>";
+	echo	"<wlan_mode>".$wlan_mode."</wlan_mode>";
+	echo	"<wlan_idle_time>".$wlan_idle_time."</wlan_idle_time>";
+	echo 	"<wlan_security>".$wlan_security."</wlan_security>";
+	echo	"<wlan_auto_txrate>".$wlan_auto_txrate."</wlan_auto_txrate>";
+	echo 	"<wlan_txrate>".$wlan_txrate."</wlan_txrate>";
+	echo	"<wlan_txpower>".$wlan_txpower."</wlan_txpower>";
+	echo	"<wlan_beacon_interval>".$wlan_beacon_interval."</wlan_beacon_interval>";
+	echo	"<wlan_rts_threshold>".$wlan_rts_threshold."</wlan_rts_threshold>";
+	echo	"<wlan_fragmentation_threshold>".$wlan_frag_threshold."</wlan_fragmentation_threshold>";
+	echo	"<wlan_dtim>".$wlan_dtim."</wlan_dtim>";
+	echo	"<wlan_short_preamble>".$wlan_short_preamble."</wlan_short_preamble>";
+	echo	"<wlan_cts>".$wlan_cts."</wlan_cts>";
+	echo	"<wlan_wmm_enable>".$wlan_wmm_enable."</wlan_wmm_enable>";
+	echo	"<wlan_protection>".$wlan_protection."</wlan_protection>";
+	echo 	"<wlan_11n_protection>".$wlan_11n_protection."</wlan_11n_protection>";
+	echo	"<wlan_amsdu>".$wlan_amsdu."</wlan_amsdu>";
+	echo	"<wlan_channel_bandwidth>".$wlan_channel_bandwidth."</wlan_channel_bandwidth>";
+	echo	"<wlan_guard_interval>".$wlan_guard_interval."</wlan_guard_interval>";
+	echo	"<wlan_ext_subchannel>".$wlan_ext_subchannel."</wlan_ext_subchannel>";
+	echo	"<wlan_antenna_control>".$wlan_antenna_control."</wlan_antenna_control>";
+	echo	"<wlan_wds_mac>".$wlan_wds_mac."</wlan_wds_mac>"; //jana
+	echo 	"<wlan_partition_enable>".$wlan_partition_enable."</wlan_partition_enable>";
+	echo 	"<wlan_tx_packets>".$wlan_tx_packet."</wlan_tx_packets>";
+	echo 	"<wlan_rx_packets>".$wlan_rx_packet."</wlan_rx_packets>";
+	echo	"<wlan_lost_packets>".$wlan_lost_packets."</wlan_lost_packets>";
+	echo	"<wlan_error_packets>".$wlan_error_packets."</wlan_error_packets>"; //jana
+	
+//	echo	"<wlan_collision_packets>".$wlan_collision_packets."</wlan_collision_packets>"; //jana: no such tag name in the spac.
+	echo	"<wlan_tx_bytes>".$wlan_tx_bytes."</wlan_tx_bytes>";
+	echo	"<wlan_rx_bytes>".$wlan_rx_bytes."</wlan_rx_bytes>";
+	echo	"<timestamp>".$timestamp."</timestamp>";
+	echo "</wlan_interface_".$INDEX.">";//jana
+
+
+?>

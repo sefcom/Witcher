@@ -1,0 +1,50 @@
+#!/bin/sh
+
+action=$1
+end=$2
+
+case $action in
+  start)
+  /mydlink/opt.local stop
+  /mydlink/signalc > /dev/null 2>&1 &
+  /mydlink/mydlink-watch-dog.sh signalc 2>&1 &
+  echo "opt.local start ok."
+  ;;
+
+  stop)
+  pid=`ps | grep mydlink-watch-dog | grep -v grep | sed 's/^[ \t]*//'  | sed 's/ .*//' `
+  pids=`ps | grep mydlink-watch-dog | grep -v grep | sed 's/^[ \t]*//'  | sed 's/ .*//' `
+  for p in $pids
+  do
+    kill -9 $p
+  done
+  killall -9 mydlink-watch-dog.sh
+  killall -9 signalc
+  killall -9 tsa
+
+  echo "opt.local stop ok."
+  ;;
+
+  restart)
+  sleep 1
+
+  pids=`ps | grep mydlink-watch-dog | grep -v grep | sed 's/^[ \t]*//'  | sed 's/ .*//' `
+  for p in $pids
+  do
+    kill -9 $p
+  done
+  killall -9 mydlink-watch-dog.sh
+  killall -9 signalc
+  killall -9 tsa
+
+  /mydlink/signalc > /dev/null 2>&1 &
+  /mydlink/mydlink-watch-dog.sh signalc 2>&1 &
+  echo "opt.local restart ok."
+  ;;
+
+  *)
+  echo "/mydlink/opt.local {start|stop|restart}"
+  ;;
+esac
+
+exit 0

@@ -1,0 +1,61 @@
+#!/bin/sh
+##############################################################################
+# mdb is an interface for mydlink agent to query and set information of the  #
+# device.Mydlink agent will query device information from the mdb utility.   #
+# The platform provider shall implement mdb APIs, which link to the device¡¦s #
+# private functions set in order to access this device information.			 #
+##############################################################################
+
+case "$1" in
+get)
+	case "$2" in
+	fw_version|dev_model|dev_name|http_port|https_port|mac_addr|admin_passwd|register_st|\
+	attr_0|attr_1|attr_2|attr_3|attr_4|attr_5|attr_6|attr_7|attr_8|attr_9|\
+	sp_http_port|sp_https_port)
+		xmldbc -P /etc/scripts/mydlink/mdb.php -V CMD="$2" -V ACTION="GET"
+		;;
+	wlan_ap_list)
+		event SITESURVEY > /dev/null
+		sleep 5
+		xmldbc -P /etc/scripts/mydlink/mdb.php -V CMD="$2" -V ACTION="GET"
+		;;
+	*)
+		exit 1
+		;;
+	esac
+	;;
+set)
+	case "$2" in
+	admin_passwd|register_st| \
+	attr_0|attr_1|attr_2|attr_3|attr_4|attr_5|attr_6|attr_7|attr_8|attr_9)
+		xmldbc -P /etc/scripts/mydlink/mdb.php -V CMD="$2" -V ACTION="SET" -V ARGV="$3"
+		;;
+	*)
+		exit 1
+		;;
+	esac
+	;;
+apply)
+	xmldbc -P /etc/scripts/mydlink/mdb.php -V ACTION="APPLY" -V SCRIPTFILE=/var/run/mdbsh-$$.sh
+	if [ -f /var/run/mdbsh-$$.sh ]; then 
+			sh /var/run/mdbsh-$$.sh > /dev/null
+			rm /var/run/mdbsh-$$.sh
+	fi
+	;;
+*)
+	echo "Usage: mdb <get|set|apply> <command name> <params>"
+	echo "Commands:"
+	echo "  <get> fw_version                  Show firmware version"
+	echo "  <get> dev_model                   Show device model"
+	echo "  <get> dev_name                    Show device name"
+	echo "  <get|set> admin_passwd            Show/Set device admin password"
+	echo "  <get> http_port                   Show HTTP service port"
+	echo "  <get> https_port                  Show HTTPS service port" 
+	echo "  <get|set> register_st             Show/Set MyDlink registered status"
+	echo "  <get> mac_addr                    Show device mac address"
+	echo "  <get|set> [attr_0-attr_9]         Show/Set reserved slot for future use"
+	echo "  <get> sp_http_port                Show shareport service port (HTTP)"
+	echo "  <get> sp_https_port               Show shareport service port (HTTPS)"
+	;;
+esac
+exit 0

@@ -1,0 +1,15 @@
+<?
+include "/htdocs/mydlink/header.php";
+$settingsChanged    =$_POST["settingsChanged"];
+$ENABLE	=$_POST["enable"];
+
+$ret="fail";
+if($settingsChanged==1){
+	$DNSLOGP="/device/log/mydlink/dnsquery";
+	if($ENABLE==1)		{ set($DNSLOGP, 1); }
+	else if($ENABLE==0)	{ set($DNSLOGP, 0); }
+	$ret="ok";
+}
+?>
+<?=$ret?>
+

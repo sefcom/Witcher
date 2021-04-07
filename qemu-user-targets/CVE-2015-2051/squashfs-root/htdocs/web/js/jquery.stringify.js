@@ -1,0 +1,1 @@
+jQuery.extend({stringify:function stringify(e){var d=typeof(e);if(d!="object"||e===null){if(d=="string"){e='"'+e+'"'}return String(e)}else{var f,b,c=[],a=(e&&e.constructor==Array);for(f in e){b=e[f];d=typeof(b);if(d=="string"){b='"'+b+'"'}else{if(d=="object"&&b!==null){b=jQuery.stringify(b)}}c.push((a?"":'"'+f+'":')+String(b))}return(a?"[":"{")+String(c)+(a?"]":"}")}}});

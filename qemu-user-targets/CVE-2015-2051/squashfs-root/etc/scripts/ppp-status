@@ -1,0 +1,6 @@
+#!/bin/sh
+# ppp-status {ifname} {status} {session id} {mtu}
+echo "[$0]: [$1] [$2] [$3] [$4]" > /dev/console
+
+xmldbc -P /etc/services/INET/ppp4_status.php -V "IFNAME=$1" -V "STATUS=$2" -V "SESSID=$3" -V "MTU=$4" > /var/run/ppp4_status_$1.sh
+sh /var/run/ppp4_status_$1.sh

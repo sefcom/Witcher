@@ -1,0 +1,7 @@
+#!/bin/sh
+echo ----------------------------------------- > /dev/console
+echo ----------------------------------------- > /var/test
+echo [$0]: ifname[$1] device[$2] speed[$3] ip[$4] remote[$5] param[$6] > /dev/console
+echo ----------------------------------------- > /dev/console
+xmldbc -P /etc/services/INET/ppp4_ipup.php -V IFNAME=$1 -V DEVICE=$2 -V SPEED=$3 -V IP=$4 -V REMOTE=$5 -V PARAM=$6 > /var/run/ppp4_ipup_$1.sh
+sh /var/run/ppp4_ipup_$1.sh

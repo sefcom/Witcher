@@ -1,0 +1,188 @@
+body {padding-left: 6px;font-size: 9pt; height:85%; width:99%} /* Windows default font size */
+
+node_img{
+	/*display: block;*/
+	border-width: 0;
+	border-style: none;
+	FLOAT: left
+}
+
+UL.jqueryFileTree {
+	font-family: Verdana, sans-serif;
+	font-size: 11px;
+	line-height: 18px;
+	padding: 0px;
+	margin: 0px;
+}
+
+UL.jqueryFileTree LI {
+	list-style: none;
+	padding: 0px;
+	padding-left: 20px;
+	margin: 0px;
+	white-space: nowrap;
+	line-height: 30px;
+}
+
+UL.jqueryFileTree A {
+	color: #333;
+	text-decoration: none;
+	display: block;
+	padding: 0px 2px;
+}
+
+UL.jqueryFileTree A:hover {
+	background: #BDF;
+}
+
+.jqueryFileTree LI.warning { background: url("../webfile_images/warning.png") left top no-repeat; }
+.jqueryFileTree LI.tocollapse { background: url("../webfile_images/collapse.png") left no-repeat; }
+.jqueryFileTree LI.toexpanded { background: url("../webfile_images/expand.png") left no-repeat; }
+.jqueryFileTree LI.collapse { background: url("../webfile_images/directory.png") left top no-repeat; }
+.jqueryFileTree LI.file { background: url("../webfile_images/file.png") left top no-repeat; }
+
+a {
+  color: black;
+  text-decoration: none;
+}
+
+.cont {
+  background-color:  #FFFFFF;
+  width:100%
+}
+
+.main {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #FFFFFF;/*#FF33FF;*/
+  margin: 0 0 0 0;
+  padding: 0 0 0 0; 
+  position : absolute;
+  left : 0px;
+  top : 0px;
+}
+
+.header_box{
+	height: 30px;
+	width: 40%;
+}
+
+.header {
+  text-align: left;
+  font-size: 16pt;
+}
+
+.left {
+  width: 30%;
+  height: 25px;
+  border: 1px solid #696969;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0; 
+  background-color: #808080;
+  left : 0%;
+}
+
+.right {
+  width: 70%;
+  height: 25px;
+  border: 1px solid #696969;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0; 
+  background-color: #808080;
+  left : 30%;
+}
+
+.treeTable {
+  width: 30%;
+  height: 85%;
+  margin: 0 0 0 0;
+  padding: 0;
+  border: 0px;
+  vertical-align: top;
+  z-index: 1;
+  left : 0%;
+  top : 97px; 
+  position : absolute;  
+}
+
+.treeTable1 {
+	width: 100%;
+	height: 100%;
+	margin: 0 0 0 0;
+	padding: 0 0 0 0;
+	border: 0px;
+	vertical-align: top;
+	z-index: 1;
+	overflow: auto;
+	left : 1px;
+	position : absolute;
+	top: 206px;
+}
+
+.folderInfo {
+  width: 80%;
+  height: 85%;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  border: 1px;
+  vertical-align: top;
+  left : 0px;
+  top : 0px;
+  z-index: 1;  
+  overflow: auto;
+}
+
+#ltable{
+  background-color: #FFFFFF;
+  border: 0px solid #2F4F4F;
+  padding: 0 0 0 0;
+  margin: 0 0 0 0;
+}
+
+#rname { width: 51%; border: 1px solid #CCC; font-weight: Bold;}
+#rsize { width: 12%; border: 1px solid #CCC;}
+#rtype { width: 12%; border: 1px solid #CCC;}
+#rMTime { width: 25%; border: 1px solid #CCC;}
+
+#rtable{
+  text-align: left;
+  font-size: 11pt;
+  width: 100%;
+  border: 1px solid #ccc;
+  padding: 0px 0px 0px 0px;
+}
+
+#rtable>thead th{
+  background-color: #DFDFDF;
+  text-align: left;
+  font-size: 9pt;
+  border: 1px solid #CCC; 
+  padding: 1px 1px 1px 1px;
+}
+
+#rtable  td:hover{
+	background: #D8D8D8;
+}
+
+
+div.button {
+	height: 29px;
+	width: 133px;
+	background: url("../webfile_images/webfile_images/button.png") 0 0;
+	font-size: 14px;
+	color: #C7D92C;
+	text-align: center;
+	padding-top: 15px;
+}
+
+div.button:hover {
+    background: url("../webfile_images/webfile_images/button.png") 0 56px;
+    color: #95A226;
+	width: 133px;
+	height:29px;
+}
+
+.selected {
+	background-color: #3875d7;
+	color: #fff;
+}

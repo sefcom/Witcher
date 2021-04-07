@@ -1,0 +1,447 @@
+<?
+	/******************* alex ********************************  
+	(some tags need to check or modify)
+	wan_uptime
+	$wan_dhcpc_expired_time 
+	$timestamp  
+	$wan_uptime  
+	$ppp_connect_mode   
+	ppp_auth_type   
+	$wan_specify_dns 
+	$wan_dhcp_server_ip 
+	$wan_dhcpc_expired_time 
+	wan_wwan
+	************************************************************/
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";
+	$3gdate = "0";
+	if( query("/device/router/mode")=="3G" )
+	{
+		$3gdate = "1";
+	}
+	else
+	{
+		$path_inf_wan1 = XNODE_getpathbytarget("", "inf", "uid", "WAN-1", 0);
+    		$path_run_phyinf_wan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", query($path_inf_wan1."/phyinf"), 0);
+    		$path_run_inf_wan1 = XNODE_getpathbytarget("/runtime", "inf", "uid", query($path_inf_wan1."/phyinf"), 0);
+		$failover = query($path_inf_wan1."/backup");
+		$conn = query($path_run_inf_wan1."/inet/conn");
+		if ($failover != "")
+		{
+			$ttyp = query("/runtime/tty/entry:1/devname");
+			if ($ttyp != "")
+			{
+				if ($conn == "connected")
+				{
+					$3gdate = "0";
+				}
+				else
+				{
+					$3gdate = "1";
+				}	
+			}
+			
+		}
+		else
+		{
+			$3gdate = "0";
+		}
+		
+	}
+	if( $3gdate == "1")
+	{
+		$WAN1="WAN-3";
+		$path_inf_wan1 = XNODE_getpathbytarget("", "inf", "uid", $WAN1, 0);
+    		$path_run_phyinf_wan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", "PPP.WAN-3", 0);
+	}
+	else
+	{
+		$path_inf_wan1 = XNODE_getpathbytarget("", "inf", "uid", $WAN1, 0);
+    		$path_run_phyinf_wan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", query($path_inf_wan1."/phyinf"), 0);
+	}
+    $path_run_inf_wan1 = XNODE_getpathbytarget("/runtime", "inf", "uid", $WAN1, 0);
+    $path_inet_wan1 = XNODE_getpathbytarget("/inet", "entry", "uid", query($path_inf_wan1."/inet"), 0); 
+    $path_inf_wan2 = XNODE_getpathbytarget("", "inf", "uid", $WAN2, 0);
+    $path_inet_wan2 = XNODE_getpathbytarget("/inet", "entry", "uid", query($path_inf_wan2."/inet"), 0); 
+	
+
+	if( query($path_inet_wan1."/addrtype") == "ipv4")
+	{
+		$wan_mtu = get("x",$path_run_inf_wan1."/inet/ipv4/mtu");
+		$wan_ip = get("x",$path_run_inf_wan1."/inet/ipv4/ipaddr");   
+		$wan_netmask = ipv4int2mask(get("x",$path_run_inf_wan1."/inet/ipv4/mask"));
+		$wan_gateway = get("x",$path_run_inf_wan1."/inet/ipv4/gateway");
+		$wan_pridns = get("x",$path_run_inf_wan1."/inet/ipv4/dns");
+		$wan_secdns = get("x",$path_run_inf_wan1."/inet/ipv4/dns:2");
+	}
+	else
+	{
+		$wan_mtu = get("x",$path_run_inf_wan1."/inet/ppp4/mtu");
+		$wan_ip = get("x",$path_run_inf_wan1."/inet/ppp4/local");   
+		$wan_netmask = "255.255.255.255";
+		$wan_gateway = get("x",$path_run_inf_wan1."/inet/ppp4/peer");
+		$wan_pridns = get("x",$path_run_inf_wan1."/inet/ppp4/dns");
+		$wan_secdns = get("x",$path_run_inf_wan1."/inet/ppp4/dns:2");
+	}
+	
+if( 3gdate == "1" )
+{
+	$wan_status = get("x",$path_run_inf_wan1."/pppd/status");
+}
+else
+{
+	$wan_status = get("x",$path_run_phyinf_wan1."/linkstatus");
+} 
+	if($wan_status == ""){$wan_status="Disconnected";}
+	if($wan_status == "Disconnected")
+	{
+		$null_val       = "0.0.0.0";
+		$wan_ip         = $null_val;
+		$wan_gateway    = $null_val;
+		$wan_netmask    = $null_val;
+		$wan_pridns     = $null_val;
+		$wan_secdns     = $null_val;
+	}
+	else                         
+	{
+		$m_na = "N/A";
+		if($wan_ip=="")         {$wan_ip        = $m_na;}
+		if($wan_gateway=="")    {$wan_gateway   = $m_na;}
+		if($wan_netmask=="")    {$wan_netmask   = $m_na;}
+		if($wan_pridns=="")     {$wan_pridns    = $m_na;}
+		if($wan_secdns=="")     {$wan_secdns    = $m_na;}
+	}
+														
+	$wan_stime = get("x",$path_run_inf_wan1."/inet/uptime");        
+	$wan_ctime = get("x","/runtime/device/uptime");
+	if($wan_stime == "")
+	{
+		$wan_uptime = "0";
+	}
+	else
+	{
+		$wan_uptime = $wan_ctime - $wan_stime;           
+	}
+	 
+	$wan_tx_packets = get("x",$path_run_phyinf_wan1."/stats/tx/packets");
+	$wan_rx_packets = get("x",$path_run_phyinf_wan1."/stats/rx/packets");
+	$wan_collision_packets = get("x","/runtime/stats/wan/inf:1/tx/collisions");  //???  No define in Seattle DB
+	$wan_tx_bytes = get("x",$path_run_phyinf_wan1."/stats/tx/bytes");
+	$wan_rx_bytes = get("x",$path_run_phyinf_wan1."/stats/rx/bytes");
+
+//+++jana
+	
+	//$wan_specify_dns =
+	//$wan_dhcp_server_ip =                                           
+	$wan_dhcpc_expired_time= get("x",$path_run_inf_wan1."/udhcpc/lease");    
+	//$wan_lost_packets =
+	$timestamp = get("x","/runtime/device/uptime");
+//	$wan_uptime = get("x",$path_run_inf_wan1."/inet/uptime");
+	
+//---jana
+	                                                                      
+	echo "<wan_stats>";
+	echo	"<wan_mtu>".$wan_mtu."</wan_mtu>";
+	echo	"<wan_specify_dns>".$wan_specify_dns."</wan_specify_dns>";
+	echo	"<dlink_dns_enable></dlink_dns_enable>"; //alex
+	echo	"<wan_primary_dns>".$wan_pridns."</wan_primary_dns>";
+	echo	"<wan_secondary_dns>".$wan_secdns."</wan_secondary_dns>";
+	echo	"<wan_protocol>";
+	if( query($path_inet_wan1."/addrtype") == "ipv4")
+	{
+		if( query($path_inet_wan1."/ipv4/static") == "1" )
+		{	echo "Static";}
+		else
+		{	echo "DHCP";}
+	}
+	else
+	{
+		if( query($path_inet_wan1."/ppp4/over") == "eth" )
+		{	echo "PPPoE";}
+		else if( query($path_inet_wan1."/ppp4/over") == "pptp" )
+		{	echo "PPTP";}
+		else if( query($path_inet_wan1."/ppp4/over") == "l2tp" )
+		{	echo "L2TP";}
+		else
+		{	echo "TeleTypeWriter";}
+	}	
+	echo 	"</wan_protocol>";
+	echo 	"<wan_ip>".$wan_ip."</wan_ip>";
+	echo	"<wan_netmask>".$wan_netmask."</wan_netmask>";
+	echo	"<wan_default_gateway>".$wan_gateway."</wan_default_gateway>";
+	echo	"<wan_dhcp_server_ip>".$wan_dhcp_server_ip."</wan_dhcp_server_ip>";
+	echo	"<wan_dhcpc_expired_time>".$wan_dhcpc_expired_time."</wan_dhcpc_expired_time>";
+	
+//================ start of pppoe ===========================================================
+
+//+++alex
+																				
+	if( query($path_inet_wan1."/addrtype") == "ppp4" && query($path_inet_wan1."/ppp4/over") == "eth")
+	{
+		$ppp_enable = "1";
+	}
+	else
+	{
+		$ppp_enable = "";
+	}
+		
+	if($ppp_enable == "1")										// pppoe enable
+	{
+		if(get("x",$path_inet_wan1."/ppp4/static") == "1")    	// static pppoe       
+		{
+			$ppp_dynamic = "";
+		}
+		else							 						// dynamic pppoe
+		{
+			$ppp_dynamic = "1";
+		}
+					//determine the $ppp_connect_mode
+		if(get("x",$path_inet_wan1."/ppp4/dialup/mode") != "manual")				    
+		{
+			if(get("x",$path_inet_wan1."/ppp4/dialup/mode") == "ondemand")
+			{
+				$ppp_connect_mode = "on_demand";
+			}
+			else
+			{
+				$ppp_connect_mode = "auto";  // Change to auto in Seattle  Joseph 
+			}
+		}
+		else
+		{
+			$ppp_connect_mode = "manual";
+		}
+																				
+		$ppp_username = get("x",$path_inet_wan1."/ppp4/username");
+		$ppp_password = get("x",$path_inet_wan1."/ppp4/password");
+		$ppp_max_idletime = get("x",$path_inet_wan1."/ppp4/dialup/idletimeout")/60;   // the time unit : min
+		$ppp_ip = get("x",$path_run_inf_wan1."/inet/ppp4/local");
+		$ppp_netmask = "255.255.255.255";
+		$ppp_gateway = get("x",$path_run_inf_wan1."/inet/ppp4/peer");
+		$ppp_mtu = get("x",$path_run_inf_wan1."/inet/ppp4/mtu");
+		$ppp_connection_status = get("x",$path_run_phyinf_wan1."/linkstatus");  
+		if($ppp_connection_status != "")
+		{
+			$ppp_connection_status = "connected";
+		}	
+		else
+		{
+			$ppp_connection_status = "disconnect";
+		}
+			
+	}
+	else										 // pppoe disable
+	{
+		$ppp_username = "";
+		$ppp_password = "";
+		$ppp_max_idletime = "";
+		$ppp_ip = "";
+		$ppp_netmask = "";
+		$ppp_gateway = "";
+		$ppp_mtu = "";
+		$ppp_dynamic = "";
+		$ppp_connect_mode = "";
+		$ppp_connection_status  = "";
+	}	
+		
+	echo	"<wan_pppoe_session_0>";
+	echo		"<enable>".$ppp_enable."</enable>"; 
+	echo		"<dynamic>".$ppp_dynamic."</dynamic>"; 
+	echo		"<username>".$ppp_username."</username>";
+	echo		"<password>".$ppp_password."</password>";
+	echo		"<max_idletime>".$ppp_max_idletime."</max_idletime>"; 
+	echo		"<connect_mode>".$ppp_connect_mode."</connect_mode>";  //need to modify 
+	echo		"<ppp_auth_type></ppp_auth_type>";   
+	echo		"<ip>".$ppp_ip."</ip>"; 
+	echo		"<netmask>".$ppp_netmask."</netmask>";  
+	echo		"<gateway >".$ppp_gateway ."</gateway >";  
+	echo		"<mtu>".$ppp_mtu ."</mtu >"; 
+	echo		"<connection_status>".$ppp_connection_status."</connection_status >"; 		
+	echo	"</wan_pppoe_session_0>";
+
+//========================= end of pppoe ======================================
+
+
+//========================= start of pptp =====================================  
+	
+	if( query($path_inet_wan1."/addrtype") == "ppp4" && query($path_inet_wan1."/ppp4/over") == "pptp" )   // pptp enable
+	{
+		if(get("x",$path_inet_wan2."/ipv4/static") == "1")
+		{
+			$pptp_dynamic = "";		//static pptp
+		}
+		else
+		{
+			$pptp_dynamic = "1";		//dynamic pptp
+		}
+		                                                              
+		$pptp_username = get("x",$path_inet_wan1."/ppp4/username");
+		$pptp_password = get("x",$path_inet_wan1."/ppp4/password");
+		$pptp_max_idletime = get("x",$path_inet_wan1."/ppp4/dialup/idletimeout")/60; // unit: minute
+		
+		//determine the $pptp_connect_mode                         
+		if(get("x",$path_inet_wan1."/ppp4/dialup/mode") != "manual")
+		{
+			if(get("x",$path_inet_wan1."/ppp4/dialup/mode") == "ondemand")
+			{
+				$pptp_connect_mode = "on_demand";
+			}
+			else
+			{
+				$ppp_connect_mode = "auto";  // Change to auto in Seattle  Joseph 
+			}
+		}
+		else
+		{
+			$pptp_connect_mode = "manual";
+		}
+																					
+		$pptp_ip = get("x",$path_run_inf_wan1."/inet/ppp4/local");
+		$pptp_netmask = "255.255.255.255";
+		$pptp_gateway = get("x",$path_run_inf_wan1."/inet/ppp4/peer");
+		$pptp_server_ip = get("x",$path_inet_wan1."/ppp4/pptp/server");
+		$pptp_mtu = get("x",$path_run_inf_wan1."/inet/ppp4/mtu");
+		$pptp_connection_status = get("x",$path_run_phyinf_wan1."/linkstatus");		
+		if($pptp_connection_status != "")
+		{
+			$pptp_connection_status = "connected";
+		}	
+		else
+		{
+			$pptp_connection_status = "disconnect";
+		}	
+			
+	}
+	else						//pptp disable
+	{
+		$pptp_username = "";
+		$pptp_password = "";
+		$pptp_max_idletime = "";
+		$pptp_ip = "";
+		$pptp_netmask = "";
+		$pptp_gateway = "";
+		$pptp_server_ip = "";
+		$pptp_mtu = "";
+		$pptp_dynamic = "";
+		$pptp_connect_mode = "";
+		$pptp_connection_status  = "";
+	}
+		
+	echo	"<wan_pptp_session>";
+		echo	"<dynamic>".$pptp_dynamic."</dynamic>"; 
+		echo	"<username>".$pptp_username."</username>";
+		echo	"<password>".$pptp_password."</password>";
+		echo	"<max_idletime>".$pptp_max_idletime."</max_idletime>"; 
+		echo	"<connect_mode>".$pptp_connect_mode."</connect_mode>";  //need to modify 
+		echo	"<ppp_auth_type></ppp_auth_type>";     // need to check
+		echo	"<ip>".$pptp_ip."</ip>"; 
+		echo	"<netmask>".$pptp_netmask."</netmask>";  
+		echo	"<gateway >".$pptp_gateway."</gateway >";  
+		echo	"<server_ip >".$pptp_server_ip."</server_ip >";  
+		echo	"<mtu>".$pptp_mtu ."</mtu >"; 
+		echo	"<connection_status>".$pptp_connection_status."</connection_status >"; 	
+	echo	"</wan_pptp_session>";
+
+
+//========================= end of pptp ======================================
+
+//========================= start of l2tp ====================================		
+
+if(query($path_inet_wan1."/addrtype") == "ppp4" && query($path_inet_wan1."/ppp4/over") == "l2tp")   // l2tp enable
+	{
+		if(get("x",$path_inet_wan2."/ipv4/static") == "1")
+		{
+			$l2tp_dynamic = "";		//static l2tp
+		}
+		else
+		{
+			$l2tp_dynamic = "1";		//dynamic l2tp
+		}
+		
+		$l2tp_username = get("x",$path_inet_wan1."/ppp4/username");
+		$l2tp_password = get("x",$path_inet_wan1."/ppp4/password");
+		$l2tp_max_idletime = get("x",$path_inet_wan1."/ppp4/dialup/idletimeout")/60; // unit: minute
+		
+		//determine the $pptp_connect_mode
+		if(get("x",$path_inet_wan1."/ppp4/dialup/mode") != "manual")
+		{
+			if(get("x",$path_inet_wan1."/ppp4/dialup/mode") == "ondemand")
+			{
+				$l2tp_connect_mode = "on_demand";
+			}
+			else
+			{
+				$l2tp_connect_mode = "auto";  // Change to auto in Seattle  Joseph  
+			}
+		}
+		else
+		{
+			$l2tp_connect_mode = "manual";
+		}
+		
+		$l2tp_ip = get("x",$path_run_inf_wan1."/inet/ppp4/local");
+		$l2tp_netmask = "255.255.255.255";
+		$l2tp_gateway = get("x",$path_run_inf_wan1."/inet/ppp4/peer");
+		$l2tp_server_ip = get("x",$path_inet_wan1."/ppp4/l2tp/server");
+		$l2tp_mtu = get("x",$path_run_inf_wan1."/inet/ppp4/mtu");
+		$l2tp_connection_status = get("x",$path_run_phyinf_wan1."/linkstatus");
+		if($l2tp_connection_status != "")
+		{
+			$l2tp_connection_status = "connected";
+		}		
+		else
+		{
+			$l2tp_connection_status = "disconnect";
+		}
+	}
+	else						//l2tp disable
+	{
+		$l2tp_username = "";
+		$l2tp_password = "";
+		$l2tp_max_idletime = "";
+		$l2tp_ip = "";
+		$l2tp_netmask = "";
+		$l2tp_gateway = "";
+		$l2tp_server_ip = "";
+		$l2tp_mtu = "";
+		$l2tp_dynamic = "";
+		$l2tp_connect_mode = "";
+		$l2tp_connection_status  = "";
+	}
+		
+	echo	"<wan_l2tp_session>";
+		echo	"<dynamic>".$l2tp_dynamic."</dynamic>"; 
+		echo	"<username>".$l2tp_username."</username>";
+		echo	"<password>".$l2tp_password."</password>";
+		echo	"<max_idletime>".$l2tp_max_idletime."</max_idletime>"; 
+		echo	"<connect_mode>".$l2tp_connect_mode."</connect_mode>";  //need to modify 
+		echo	"<ppp_auth_type></ppp_auth_type>";     // need to check
+		echo	"<ip>".$l2tp_ip."</ip>"; 
+		echo	"<netmask>".$l2tp_netmask."</netmask>";  
+		echo	"<gateway >".$l2tp_gateway."</gateway >";  
+		echo	"<server_ip >".$l2tp_server_ip."</server_ip >";  
+		echo	"<mtu>".$l2tp_mtu ."</mtu >"; 
+		echo	"<connection_status>".$l2tp_connection_status."</connection_status >"; 	
+	echo	"</wan_l2tp_session>";
+
+//========================= end of l2tp =======================================		
+
+
+//========================= start of wan_wwan ===================================
+
+
+//========================= end of wan_wwan ===================================
+
+	echo	"<wan_tx_packets>".$wan_tx_packets."</wan_tx_packets>";
+	echo	"<wan_rx_packets>".$wan_rx_packets."</wan_rx_packets>";
+	echo	"<wan_lost_packets>".$wan_lost_packets."</wan_lost_packets>";
+	echo	"<wan_collision_packets>".$wan_collision_packets."</wan_collision_packets>";
+	echo	"<wan_tx_bytes>".$wan_tx_bytes."</wan_tx_bytes>";
+	echo	"<wan_rx_bytes>".$wan_rx_bytes."</wan_rx_bytes>";
+	echo	"<timestamp>".$timestamp."</timestamp>";
+	echo	"<wan_uptime>".$wan_uptime."</wan_uptime>";
+	echo "</wan_stats>";
+
+//---alex
+?>
+

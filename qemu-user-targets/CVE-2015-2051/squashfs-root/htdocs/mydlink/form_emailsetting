@@ -1,0 +1,61 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+
+$settingsChanged	=$_POST["settingsChanged"];
+$LogToServer		=$_POST["config.log_to_syslog"];
+$LogServerIPAddr	=$_POST["config.log_syslog_addr"];
+$LogOptSys			=$_POST["log_opt_system"];
+$LogOptDropPkt		=$_POST["log_opt_dropPackets"];
+$LogOptSysAct		=$_POST["log_opt_SysActivity"];
+$SMTPEmailAddr		=$_POST["config.smtp_email_addr"];
+$SMTPEmailSub		=$_POST["config.smtp_email_subject"];
+$SMTPEmailFrom		=$_POST["config.smtp_email_from_email_addr"];
+$SMTPEmailServerAddr=$_POST["config.smtp_email_server_addr"];
+$SMTPEmailAcct		=$_POST["config.smtp_email_acc_name"];
+$SMTPEmailPassword	=$_POST["config.smtp_email_pass"];
+$SMTPEmailAction	=$_POST["config.smtp_email_action"];
+$SMTPEmailPort		=$_POST["config.smtp_email_port"];
+$SMTPEmailEncrypt	=$_POST["config.smtp_email_secret"];
+$SMTPEmailAuth		=$_POST["config.smtp_email_enable_smtp_auth"];
+
+$LOGP	= "/device/log/remote";
+$SMTPP	= "/device/log/email";
+
+$ret="fail";
+if($settingsChanged==1){
+	if($LogToServer=="true"){
+		set($LOGP."/enable", "1");
+		if($LogServerIPAddr!="")
+		set($LOGP."/ipv4/ipaddr", $LogServerIPAddr);
+	}else if($LogToServer=="false"){
+		set($LOGP."/enable", "0");
+	}
+	if($SMTPEmailAddr!=""){
+		set($SMTPP."/enable", "1");
+		set($SMTPP."/from", $SMTPEmailFrom);
+		set($SMTPP."/to", $SMTPEmailAddr);
+		set($SMTPP."/subject", $SMTPEmailSub);
+		set($SMTPP."/smtp/server", $SMTPEmailServerAddr);
+		set($SMTPP."/smtp/port", $SMTPEmailPort);
+		set($SMTPP."/smtp/user", $SMTPEmailAcct);
+		set($SMTPP."/smtp/password", $SMTPEmailPassword);
+		if($SMTPEmailAuth=="true")			{set($SMTPP."/authenable", "1");}
+		else if($SMTPEmailAuth=="false")	{set($SMTPP."/authenable", "0");}
+		if($SMTPEmailEncrypt=="true")			{set($SMTPP."/secret", "1");}
+		else if($SMTPEmailEncrypt=="false")	{set($SMTPP."/secret", "0");}
+	}else{
+		set($SMTPP."/enable", "0");
+	}
+
+	$ret="ok";
+	
+	if($SMTPEmailAction=="true")
+	{
+		event("MYDLINK_TESTMAIL");
+		$ret = "test ".$ret;
+	}
+}
+?>
+<?=$ret?>
+

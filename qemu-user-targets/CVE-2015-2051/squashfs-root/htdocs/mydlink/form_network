@@ -1,0 +1,30 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/webinc/config.php";
+
+$path_inf_lan1 = XNODE_getpathbytarget("", "inf", "uid", $LAN1, 0);
+$lan1_inet = query($path_inf_lan1."/inet");
+$path_lan1_inet = XNODE_getpathbytarget("inet", "entry", "uid", $lan1_inet, 0);
+
+$settingsChanged=$_POST["settingsChanged"];
+$lanaddr		=$_POST["config.lan_network_address"];
+$dhcp_enable	=$_POST["config.dhcp_server_enabled"];
+
+$ret="fail";
+
+if($settingsChanged==1){
+	set($path_lan1_inet."/ipv4/ipaddr", $lanaddr);
+	if($dhcp_enable=="1")
+	{
+		set($path_inf_lan1."/dhcps4", "DHCPS4-1");
+	}
+	else if($dhcp_enable=="0")
+	{
+		set($path_inf_lan1."/dhcps4", "");
+	}
+	$ret=ok;
+}
+?>
+<?=$ret?>
+

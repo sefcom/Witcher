@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetIPv66rdTunnelSettings xmlns="http://purenetworks.com/HNAP1/">
+			<IPv6_ConnectionType></IPv6_ConnectionType>
+			<IPv6_6rdHubSpokeMode></IPv6_6rdHubSpokeMode>
+			<IPv6_6Rd_Configuration></IPv6_6Rd_Configuration>
+			<IPv6_6Rd_IPv6Prefix></IPv6_6Rd_IPv6Prefix>
+			<IPv6_6Rd_IPv6PrefixLength></IPv6_6Rd_IPv6PrefixLength>
+			<IPv6_6Rd_MaskLength></IPv6_6Rd_MaskLength>
+			<IPv6_6Rd_BorderRelayIPv4Address></IPv6_6Rd_BorderRelayIPv4Address>
+			<IPv6_PrimaryDNS></IPv6_PrimaryDNS>
+			<IPv6_SecondaryDNS></IPv6_SecondaryDNS>
+			<IPv6_LanIPv6AddressAutoAssignment></IPv6_LanIPv6AddressAutoAssignment>
+			<IPv6_LanAutoConfigurationType></IPv6_LanAutoConfigurationType>
+			<IPv6_LanIPv6AddressRangeStart></IPv6_LanIPv6AddressRangeStart>
+			<IPv6_LanIPv6AddressRangeEnd></IPv6_LanIPv6AddressRangeEnd>
+		</SetIPv66rdTunnelSettings>
+	</soap:Body>
+</soap:Envelope>			

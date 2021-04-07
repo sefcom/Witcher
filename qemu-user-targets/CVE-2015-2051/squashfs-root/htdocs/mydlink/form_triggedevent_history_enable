@@ -1,0 +1,13 @@
+<?
+include "/htdocs/mydlink/header.php";
+
+$ENABLE	=$_POST["enable"];
+
+$ret="fail";
+$TRIP="/device/log/mydlink/eventmgnt/trigger";
+if($ENABLE==1)		{ set($TRIP, 1); }
+else if($ENABLE==0)	{ set($TRIP, 0); }
+$ret="ok";
+?>
+<?=$ret?>
+

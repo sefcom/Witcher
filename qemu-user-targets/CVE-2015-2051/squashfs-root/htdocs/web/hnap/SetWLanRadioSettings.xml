@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+	<SetWLanRadioSettings xmlns="http://purenetworks.com/HNAP1/">
+		<Mode></Mode>
+		<ChannelWidth></ChannelWidth>
+		<SSIDBroadcast></SSIDBroadcast>
+		<QoS></QoS>
+		<Channel></Channel>
+		<SecondaryChannel></SecondaryChannel>
+		<SSID></SSID>
+		<Enabled></Enabled>
+		<RadioID></RadioID>
+		<TXPower></TXPower>
+		<Schedule></Schedule>
+	</SetWLanRadioSettings>
+</soap:Body>
+</soap:Envelope>

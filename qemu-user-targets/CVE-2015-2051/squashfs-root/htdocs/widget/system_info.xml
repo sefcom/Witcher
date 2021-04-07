@@ -1,0 +1,156 @@
+<?
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";	
+	$path_inf_wan1 = XNODE_getpathbytarget("", "inf", "uid", $WAN1, 0);
+    $path_run_phyinf_wan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", query($path_inf_wan1."/phyinf"), 0);
+    $path_inf_lan1 = XNODE_getpathbytarget("", "inf", "uid", $LAN1, 0);
+    $path_run_phyinf_lan1 = XNODE_getpathbytarget("/runtime", "phyinf", "uid", query($path_inf_lan1."/phyinf"), 0);
+	
+	$port1_link = get("x", $path_run_phyinf_lan1."/linkstatus:1");  
+	$port2_link = get("x", $path_run_phyinf_lan1."/linkstatus:2");  
+	$port3_link = get("x", $path_run_phyinf_lan1."/linkstatus:3");  
+	$port4_link = get("x", $path_run_phyinf_lan1."/linkstatus:4");  
+	$wan_link = get("x", $path_run_phyinf_wan1."/linkstatus");           
+
+	if($wan_link == "")
+	{
+		$wan_status = "Disconnected";
+	}
+	else if($wan_link == "1000F")
+	{
+		$wan_status = "1G";
+	}	
+	else if($wan_link == "100F")
+	{
+		$wan_status = "100M";
+	}
+	else if($wan_link == "100H")
+	{
+		$wan_status = "100M";
+	}
+	else if($wan_link == "10F")
+	{
+		$wan_status = "10M";
+	}
+	else if($wan_link == "10H")
+	{
+		$wan_status = "10M";
+	}                                           
+	if($port1_link == "")
+	{
+		$port1_status = "Disconnected";
+	}
+	else
+	{
+		$port1_status = "Connected";
+	}
+	if($port2_link == "")
+	{
+		$port2_status = "Disconnected";
+	}
+	else
+	{
+		$port2_status = "Connected";
+	}
+	if($port3_link == "")
+	{
+		$port3_status = "Disconnected";
+	}
+	else
+	{
+		$port3_status = "Connected";
+	}
+	if($port4_link == "")
+	{
+		$port4_status = "Disconnected";
+	}
+	else
+	{
+		$port4_status = "Connected";
+	}                                                    
+
+	$lan_mac = get("x","/runtime/devdata/lanmac");
+	$product_name = get("x","/runtime/device/modelname");      
+	
+	//+++jana 
+	
+	$vendor_name = get("x","/runtime/device/vendor");  
+	$device_name = get("x","/runtime/device/modelname");     //Replace devicename with modelname  Joseph Chao          
+  $hardware_version = get("x","/runtime/devdata/hwver");
+  if($hardware_version == "")
+  {
+  	$hardware_version = get("x","/runtime/devdata/hwrev");
+  }
+  $firmware_version_major = get("x","/runtime/device/firmwareversion");
+  //$firmware_version_minor = 
+  $firmware_version_build = get("x","/runtime/device/firmwarebuildno");
+  $firmware_version_date = get("x","/runtime/device/firmwarebuilddate");  
+  //$firmware_url = 
+  $firmware_update_info_url = get("x","/runtime/device/fwinfosrv").get("x","/runtime/device/fwinfopath");
+  //$firmware_notify_enable = 
+  //$firmware_notify_interval =       
+  $multi_language = get("x","/runtime/devdata/countrycode");
+  $multi_language_selection = get("x","/runtime/device/langcode");
+  //$wan_clone_mac_enable = 
+  //$wan_config_port_speed =   
+
+	$path_phyinf_wan1 = XNODE_getpathbytarget("", "phyinf", "uid", query($path_inf_wan1."/phyinf"), 0);
+	$wan_cloned_mac = get("x", $path_phyinf_wan1."/macaddr");
+
+	if ( $wan_cloned_mac!="" )
+	{
+		$wan_mac = $wan_cloned_mac;
+	}
+	else
+	{	
+		$wan_mac = get("x","/runtime/devdata/wanmac");
+	}
+	
+  $system_time = get("x","/runtime/time/date")  
+  ." ".get("x","/runtime/time/time");  
+											 
+  //---jana
+
+	echo 	"<system_info>";
+	echo 	"<vendor_name>".$vendor_name."</vendor_name>";
+	echo 	"<product_name>".$product_name."</product_name>";
+	echo 	"<device_name>".$device_name."</device_name>";
+	echo	"<hardware_version>".$hardware_version."</hardware_version>";
+	echo	"<firmware_version_major>".$firmware_version_major."</firmware_version_major>";
+	echo	"<firmware_version_minor>".$firmware_version_minor."</firmware_version_minor>";
+	echo	"<firmware_version_build>".$firmware_version_build."</firmware_version_build>";
+	echo	"<firmware_version_date>".$firmware_version_date."</firmware_version_date>"; //jana
+	echo	"<firmware_url>".$firmware_url."</firmware_url>";
+	echo	"<frimware_update_info_url>".$firmware_update_info_url."</frimware_update_info_url>";
+	echo	"<firmware_notify_enable>".$firmware_notify_enable."</firmware_notify_enable>";
+	echo	"<firmware_notify_interval>".$firmware_notify_interval."</firmware_notify_interval>";
+	echo	"<multi_language>".$multi_language."</multi_language>";
+	echo	"<multi_language_selection>".$multi_language_selection."</multi_language_selection>";
+	echo 	"<lan_mac>".$lan_mac."</lan_mac>";
+	echo	"<wan_mac>".$wan_mac."</wan_mac>";
+	echo	"<wan_clone_mac_enable>".$wan_clone_mac_enable."</wan_clone_mac_enable>";
+	echo	"<wan_cloned_mac>".$wan_cloned_mac."</wan_cloned_mac>";
+	echo	"<wan_config_port_speed>".$wan_config_port_speed."</wan_config_port_speed>";
+	echo 	"<switch_port_0_status>"; //jana
+	echo 		"<name>LAN0</name>";
+	echo 		"<status>".$port1_status."</status>";
+	echo 	"</switch_port_0_status>"; //jana
+	echo 	"<switch_port_1_status>"; //jana
+	echo 		"<name>LAN1</name>";
+	echo    	"<status>".$port2_status."</status>";
+	echo 	"</switch_port_1_status>"; //jana
+	echo 	"<switch_port_2_status>"; //jana
+	echo 		"<name>LAN2</name>";
+	echo 		"<status>".$port3_status."</status>";
+	echo 	"</switch_port_2_status>"; //jana
+	echo 	"<switch_port_3_status>"; //jana
+	echo 		"<name>LAN3</name>";
+	echo    	"<status>".$port4_status."</status>";
+	echo 	"</switch_port_3_status>"; //jana
+	echo 	"<switch_port_4_status>"; //jana
+	echo		"<name>WAN0</name>";
+	echo		"<status>".$wan_status."</status>";
+	echo 	"</switch_port_4_status>"; //jana
+	echo	"<system_time>".$system_time."</system_time>";
+	echo "</system_info>";
+?>

@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetIPv6Settings xmlns="http://purenetworks.com/HNAP1/">
+			<IPv6_ConnectionType></IPv6_ConnectionType>
+			<IPv6_ConnectionType2></IPv6_ConnectionType2>
+			<IPv6_PppoeUsername></IPv6_PppoeUsername>
+			<IPv6_PppoePassword></IPv6_PppoePassword>
+			<IPv6_PppoeNewSession></IPv6_PppoeNewSession>
+			<IPv6_PppoeReconnectMode></IPv6_PppoeReconnectMode>  
+			<IPv6_PppoeMaxIdleTime></IPv6_PppoeMaxIdleTime>
+			<IPv6_PppoeMTU></IPv6_PppoeMTU>
+			<IPv6_PppoeServiceName></IPv6_PppoeServiceName>
+			<IPv6_UseLinkLocalAddress></IPv6_UseLinkLocalAddress>
+			<IPv6_Address></IPv6_Address>
+			<IPv6_SubnetPrefixLength></IPv6_SubnetPrefixLength>
+			<IPv6_DefaultGateway></IPv6_DefaultGateway>
+			<IPv6_ObtainDNS></IPv6_ObtainDNS>
+			<IPv6_PrimaryDNS></IPv6_PrimaryDNS>
+			<IPv6_SecondaryDNS></IPv6_SecondaryDNS>
+			<IPv6_6In4LocalIPv6Address></IPv6_6In4LocalIPv6Address>
+			<IPv6_6In4LocalIPv4Address></IPv6_6In4LocalIPv4Address>
+			<IPv6_6In4RemoteIPv6Address></IPv6_6In4RemoteIPv6Address>
+			<IPv6_6In4RemoteIPv4Address></IPv6_6In4RemoteIPv4Address>
+			<IPv6_6To4Address></IPv6_6To4Address>
+			<IPv6_6To4Relay></IPv6_6To4Relay>
+			<IPv6_6Rd_Configuration></IPv6_6Rd_Configuration>
+			<IPv6_6Rd_IPv4Address></IPv6_6Rd_IPv4Address>
+			<IPv6_6Rd_IPv6Prefix></IPv6_6Rd_IPv6Prefix>
+			<IPv6_6Rd_IPv6PrefixLength></IPv6_6Rd_IPv6PrefixLength>
+			<IPv6_6Rd_IPv4MaskLength></IPv6_6Rd_IPv4MaskLength>
+			<IPv6_6Rd_BorderRelayIPv4Address></IPv6_6Rd_BorderRelayIPv4Address>
+			<IPv6_DhcpPd></IPv6_DhcpPd>
+			<IPv6_LanAddress></IPv6_LanAddress>
+			<IPv6_LanAddressPrefixLength></IPv6_LanAddressPrefixLength>
+			<IPv6_LanLinkLocalAddress></IPv6_LanLinkLocalAddress>
+			<IPv6_LanLinkLocalAddressPrefixLength></IPv6_LanLinkLocalAddressPrefixLength>
+			<IPv6_LanIPv6AddressAutoAssignment></IPv6_LanIPv6AddressAutoAssignment>
+			<IPv6_LanAutomaticDhcpPd></IPv6_LanAutomaticDhcpPd> 
+			<IPv6_LanAutoConfigurationType></IPv6_LanAutoConfigurationType>
+			<IPv6_LanRouterAdvertisementLifeTime></IPv6_LanRouterAdvertisementLifeTime>
+			<IPv6_LanIPv6AddressRangeStart></IPv6_LanIPv6AddressRangeStart>
+			<IPv6_LanIPv6AddressRangeEnd></IPv6_LanIPv6AddressRangeEnd>
+			<IPv6_LanDhcpLifeTime></IPv6_LanDhcpLifeTime>
+			<IPv6_LanUniqueLocalAddressStatus></IPv6_LanUniqueLocalAddressStatus>
+			<IPv6_LanUniqueLocalAddressDefaultPrefix></IPv6_LanUniqueLocalAddressDefaultPrefix>
+			<IPv6_LanUniqueLocalAddressPrefix></IPv6_LanUniqueLocalAddressPrefix>
+			<IPv6_LanUniqueLocalAddressPrefixLength></IPv6_LanUniqueLocalAddressPrefixLength>
+			<IPv6_LanUniqueLocalAddress></IPv6_LanUniqueLocalAddress>
+			<IPv6_SimpleSecurityStatus></IPv6_SimpleSecurityStatus>
+			<IPv6_MulticastStatus></IPv6_MulticastStatus>
+		</SetIPv6Settings>
+	</soap:Body>
+</soap:Envelope>

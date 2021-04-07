@@ -1,0 +1,35 @@
+<?
+include "/htdocs/mydlink/header.php";
+
+$settingsChanged	=$_POST["settingsChanged"];
+$PUSH				=$_POST["config.log_enable"];
+$USERLOGIN			=$_POST["config.log_userloginfo"];
+$FWUPGRADE			=$_POST["config.log_fwupgrade"];
+$WLINTRU_V1			=$_POST["config.log_wirelesswarn"];
+$WLINTRU_V2			=$_POST["config.wirelesswarn"];
+
+$LOGP				="/device/log/mydlink/eventmgnt/pushevent";
+$PUSHP				=$LOGP."/enable";
+$USERLOGINP			=$LOGP."/types/userlogin";
+$FWUPGRADEP			=$LOGP."/types/firmwareupgrade";
+$WLINTRUP			=$LOGP."/types/wirelessintrusion";
+
+$WLINTRU = 0;
+
+if($WLINTRU_V1 == 1 || $WLINTRU_V2 == 1)
+	$WLINTRU = 1;
+
+if($USERLOGIN	== 1 || $FWUPGRADE == 1 || $WLINTRU == 1)
+	$PUSH = 1;
+
+$ret="fail";
+if($settingsChanged==1){
+	set($PUSHP, $PUSH);
+	set($USERLOGINP, $USERLOGIN);
+	set($FWUPGRADEP, $FWUPGRADE);
+	set($WLINTRUP, $WLINTRU);
+}
+$ret="ok";
+?>
+<?=$ret?>
+

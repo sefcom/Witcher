@@ -1,0 +1,44 @@
+#!/bin/sh
+KRC=/var/killrc0
+if [ -f $KRC ]; then
+	sh $KRC
+	rm $KRC
+
+	# wait for pending request
+	val=`service status request`
+	while [ "$val" != "0" ]; do
+		echo "[$0]: wait for pending request ..." > /dev/console
+		sleep 1
+		val=`service status request`
+	done
+
+	# wait for all service to stop.
+	service ALL stop
+	sleep 1
+	val=`service status running`
+	while [ "$val" != "0" ]; do
+		echo "[$0]: ($val) wait for service stopping ..." > /dev/console
+		service ALL stop
+		sleep 1
+		val=`service status running`
+	done
+
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" > /dev/console
+	echo "!! RC0 STOPPED, READY TO START AGAIN !!" > /dev/console
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" > /dev/console
+	/etc/scripts/dbload.sh 
+fi
+
+for i in /etc/init0.d/S??* ; do
+	# Ignore dangling symlinks (if any).
+	[ ! -f "$i" ] && continue
+	# run the script
+	#echo [$i start]
+	$i start
+	# generate stop script
+	echo "$i stop" > $KRC.tmp
+	[ -f $KRC ] && cat $KRC >> $KRC.tmp
+	mv $KRC.tmp $KRC
+done
+[ -f $KRC ] && chmod +x $KRC
+echo "[$0] done!"

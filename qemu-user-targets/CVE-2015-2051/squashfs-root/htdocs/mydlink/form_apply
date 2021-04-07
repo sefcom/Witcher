@@ -1,0 +1,22 @@
+<?
+include "/htdocs/mydlink/header.php";
+include "/htdocs/phplib/xnode.php";
+include "/htdocs/webinc/config.php";
+
+$settingsChanged=$_POST["settingsChanged"];
+$Sta_type		=$_POST["Sta_type"];
+$Sta_reboot		=$_POST["Sta_reboot"];
+
+$ret="fail";
+
+if($settingsChanged==1){
+	if($Sta_type==1)	 event("DBSAVE");
+	if($Sta_reboot==1){
+		event("DBSAVE");
+		event("REBOOT");
+	}
+	$ret="ok";
+}
+?>
+<?=$ret?>
+

@@ -1,0 +1,20 @@
+<?
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";	
+	$INDEX = 0;
+	$WLAN = $WLAN1;
+	echo "<wlan_stats>";
+	$WLAN = $WLAN1;
+	if($WLAN!="")
+	{
+		include "/htdocs/widget/wlan_stats_entry.xml";
+		$INDEX++;
+	}
+	$WLAN = $WLAN2;
+	if($WLAN!="")
+	{
+		include "/htdocs/widget/wlan_stats_entry.xml";
+		$INDEX++;
+	}
+	echo "</wlan_stats>";
+?>

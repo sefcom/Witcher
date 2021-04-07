@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetDynamicDNSIPv6Settings> 
+			<DynamicDNSIPv6List>
+				<DDNSIPv6Info> 
+					<Status></Status> 
+					<IPv6Address></IPv6Address> 
+					<Hostname></Hostname> 
+				</DDNSIPv6Info> 
+			</DynamicDNSIPv6List> 
+		</SetDynamicDNSIPv6Settings>
+	</soap:Body>
+</soap:Envelope>

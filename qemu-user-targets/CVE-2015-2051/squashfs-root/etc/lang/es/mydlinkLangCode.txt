@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=Estimado Administrador:<br>El usuario "
+EMAIL_USER_ADD_MAIN2="acaba de introducirse en su red dom&#233;stica. Si desea obtener informaci&#243;n m&#225;s detallada, inicie sesi&#243;n en la aplicaci&#243;n mydlink o en el portal mydlink<a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> para comprobar el estado del usuario "
+EMAIL_USER_ADD_MAIN3=".<br>Servicio mydlink
+EMAIL_WIRELESS_DENY_MAIN1=Estimado Administrador :<br>Un usuario no deseado "
+EMAIL_WIRELESS_DENY_MAIN2=" intenta acceder a su red dom&#233;stica. Si desea obtener m&#225;s informaci&#243;n detallada, inicie sesi&#243;n en la aplicaci&#243;n mydlink para bloquear inmediatamente el dispositivo.<br>Servicio mydlink
+EMAIL_FW_NEW_MAIN1=Estimado Administrador:<br>Existe nuevo firmware disponible para su router dom&#233;stico. Si desea actualizar el firmware, aseg&#250;rese antes de que el ordenador port&#225;til est&#225; conectado a su red dom&#233;stica e inicie sesi&#243;n en el router a trav&#233;s de http://dlinkrouter o http://192.168.0.1 <br>
+EMAIL_FW_NEW_MAIN2=Una vez que ha iniciado sesi&#243;n, haga clic en \"configuraci&#243;n manual\" para acceder a la p&#225;gina \"Mantenimiento\". A continuaci&#243;n, pulse \"comprobar\" en la secci&#243;n de \"Actualizaci&#243;n de firmware\" para descargar el firmware.<br>Tras descargar el firmware, c&#225;rguelo en el router para finalizar el procedimiento de actualizaci&#243;n.<br>Servicio mydlink
+EMAIL_TEST_MAIN=Estimado usuario de la aplicaci&#243;n mydlink:<br>Este es un mensaje de prueba de la aplicaci&#243;n "mydlink lite". Si recibe este mensaje, significa que puede utilizar la funci&#243;n "Notificaci&#243;n de eventos" en la aplicaci&#243;n mydlink. <br>Equipo de mydlink

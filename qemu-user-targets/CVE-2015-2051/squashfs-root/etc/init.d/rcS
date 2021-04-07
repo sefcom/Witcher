@@ -1,0 +1,10 @@
+#!/bin/sh
+for i in /etc/init.d/S??* ;do
+	# Ignore dangling symlinks (if any).
+	[ ! -f "$i" ] && continue
+	# Run the script.
+	echo "[$i]"
+	$i
+done
+echo "[$0] done!"
+/etc/init0.d/rcS

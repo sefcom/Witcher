@@ -1,0 +1,8 @@
+EMAIL_USER_ADD_MAIN1=K&#230;re Administrator: <br>Bruger "
+EMAIL_USER_ADD_MAIN2=" er netop g&#229;et ind p&#229; dit hjemmenetv&#230;rk. Hvis du &#248;nsker en mere detaljeret information, kan du logge ind til mydlink-App eller mydlink-portalen <a href = http://mydlink.com/entrance>http://mydlink.com/entrance</a> for at kontrollere status for brugeren check the status of user "
+EMAIL_USER_ADD_MAIN3=".<br>mydlink Service
+EMAIL_WIRELESS_DENY_MAIN1=K&#230;re Administrator: <br>En uvelkommen bruger "
+EMAIL_WIRELESS_DENY_MAIN2=" fors&#248;ger at tr&#230;nge ind i dit hjemmenetv&#230;rk! Hvis du vil have mere detaljeret information, kan du logge ind til mydlink-App for &#248;jeblikkeligt at blokere enheden.<br>mydlink Service
+EMAIL_FW_NEW_MAIN1=K&#230;re Administrator: <br>En ny firmware er tilg&#230;ngelig til din hjemmerouter. Hvis du vil opdatere din firmware, skal du f&#248;rst s&#248;rge for, at din b&#230;rbare er tilsluttet dit hjemmenetv&#230;rk og logge ind via http://dlinkrouter eller http://192.168.0.1<br>
+EMAIL_FW_NEW_MAIN2=S&#229;snart du logger ind, klikkes p&#229; \"manual setup\" [manuel indstilling] for at f&#229; adgang til siden \"Maintenance\" [Vedligeholdelse]. Tryk derefter p&#229; \"check\" i afsnittet \"Firmware Upgrade\" for at downloade firmwaren.<br>Efter downloadning af firmwaren indl&#230;ses den routeren for at afslutte opdateringsproceduren.<br>mydlink Service
+EMAIL_TEST_MAIN=K&#230;re bruger af mydlink-App,<br>Dette er en test-mail fra applikationen &#8220;mydlink lite&#8221;. Hvis du modtager denne mail, betyder det, at du kan anvende funktionen &#8220;Event Notification&#8221; [H&#230;ndelsesmeddelelse] i mydlink-App. <br>mydlink-teamet

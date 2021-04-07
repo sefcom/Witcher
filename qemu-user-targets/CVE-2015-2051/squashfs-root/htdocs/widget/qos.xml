@@ -1,0 +1,19 @@
+<? 
+	include "/htdocs/phplib/xnode.php";
+	include "/htdocs/webinc/config.php";	
+	if (get("x", "/device/qos/enable") != "") $qos_enable = get("x", "/device/qos/enable");
+	else $qos_enable = get("x", "/bwc/entry:1/enable");
+	
+	/*The value of qos_traffic_shapping_enable should be 1 to make the value of qos_enable valid 
+		for the widget of D-Link Router Network Monitor ver:2.01.B06. 
+		The behavior is reference DIR-655 QOS settings.*/
+	$qos_traffic_shapping_enable = $qos_enable;
+
+	echo "<qos>";
+	echo 	"<qos_enable>".$qos_enable."</qos_enable>";
+	echo	"<qos_traffic_shapping_enable>".$qos_traffic_shapping_enable."</qos_traffic_shapping_enable>";
+	echo	"<qos_auto_classify_enable>".$qos_auto_classify_enable."</qos_auto_classify_enable>";
+	echo	"<wmm_enable>".$wmm_enable."</wmm_enable>";
+	echo	"<wlan_qos_auto_classify_enable>".$wlan_qos_en."</wlan_qos_auto_classify_enable>";	
+	echo "</qos>";
+?>

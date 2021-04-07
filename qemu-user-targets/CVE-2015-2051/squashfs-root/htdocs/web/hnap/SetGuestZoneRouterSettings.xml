@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+<SetGuestZoneRouterSettings xmlns="http://purenetworks.com/HNAP1/">
+	<InternetAccessOnly></InternetAccessOnly>
+	<IPAddress></IPAddress>
+	<SubnetMask></SubnetMask>
+	<DHCPServer></DHCPServer>
+	<DHCPRangeStart></DHCPRangeStart>
+	<DHCPRangeEnd></DHCPRangeEnd>
+	<DHCPLeaseTime></DHCPLeaseTime>
+</SetGuestZoneRouterSettings>
+</soap:Body>
+</soap:Envelope>

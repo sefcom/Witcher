@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<SetDynamicDNSSettings xmlns="http://purenetworks.com/HNAP1/" > 
+			<Enabled></Enabled>
+			<ServerAddress></ServerAddress>
+			<Hostname></Hostname>
+			<Username></Username>
+			<Password></Password>
+			<Timeout></Timeout>
+		</SetDynamicDNSSettings>
+	</soap:Body>
+</soap:Envelope>
