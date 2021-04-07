@@ -1,0 +1,23 @@
+# dont process the run_install script
+run_install
+
+VERSION
+
+www/local
+!www/local/plugins/README
+!www/local/config/motd.txt.example
+!www/local/nmap_scans/subnets/nmap.xsl
+
+# Set up empty dirs
+bin/*
+!bin/README
+etc/*
+!etc/README
+sql/*
+!sql/EXAMPLE.sql.disable
+!sql/list_all_hosts.sql
+www/*.htm
+
+cfg_archive_local
+
+spool
