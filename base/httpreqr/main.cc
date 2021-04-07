@@ -249,7 +249,9 @@ void clear_shm_values(){
         printf("EXITING PARENT and setting afl_id = 0\n");
         test_process_info_ptr->capture = false ;
         test_process_info_ptr->afl_id = 0;
-        sleep(1);
+        //sleep(1);
+    } else {
+        printf("not clearing b/c in child\n");
     }
 }
 
@@ -450,8 +452,22 @@ static void recvAFLRequests(RequestData *reqD) {
       /* Child process. Close descriptors and run free. */
       string id_str = getenv("__AFL_SHM_ID");
       int shm_id = atoi(id_str.c_str());
+
+      int mem_key = atoi(getenv("AFL_META_INFO_ID"));
+        int test_shm_id = shmget(mem_key , sizeof(test_process_info), 0666);
+        if (test_shm_id < 0 ) {
+            printf("*** shmget error using memkey=%d *** ERROR: \n", mem_key);
+            exit(1);
+        }
+        printf("*** shmat attaching to mem_key=%d shm_id=%d ***\n", mem_key, test_shm_id);
+        test_process_info_ptr = (test_process_info *) shmat(test_shm_id, NULL, 0);  /* attach */
+        if ((long) test_process_info_ptr == -1) {
+            printf("*** shmat attaching error could not attach to %d ***\n", mem_key);
+            exit(2);
+        }
+
       test_process_info_ptr->afl_id = shm_id;
-      test_process_info_ptr->capture=true;
+
       test_process_info_ptr->reqr_process_id = getpid();
       isparent=false;
       std::string cpid = std::to_string(getpid());
@@ -467,12 +483,26 @@ static void recvAFLRequests(RequestData *reqD) {
 
       //shm_id = shmget(449988, 65536, 0666);
       afl_area_ptr = (unsigned char*)  shmat(shm_id, NULL, 0);
+      unsigned int bitset=0;
+      for (int x=0; x < 65000; x++){
+          bitset += afl_area_ptr[x];
+      }
+      printf("[WC][CHILD-FORK] AFL_SHM_ID=%d, AFL ptr = %p state=%d cap=%d afl_id=%d START BITS SET = %d\n", shm_id, afl_area_ptr,
+               test_process_info_ptr->initialized, test_process_info_ptr->capture, test_process_info_ptr->afl_id, bitset);
 
-      printf("[WC][CHILD-FORK] AFL_SHM_ID  = %x, AFL ptr = %p trace_value=%d \n", shm_id, afl_area_ptr, afl_area_ptr[0]);
 
-//      sleep(1);
+      test_process_info_ptr->capture=true;
       sendRequest(reqD);
       test_process_info_ptr->capture=false;
+      test_process_info_ptr->afl_id = 0;
+
+      bitset = 0;
+      for (int x=0; x < 65000; x++){
+          bitset += afl_area_ptr[x];
+      }
+      printf("[WC][CHILD-FORK] AFL_SHM_ID=%d, AFL ptr = %p state=%d cap=%d afl_id=%d END BITS SET = %d\n", shm_id, afl_area_ptr,
+               test_process_info_ptr->initialized, test_process_info_ptr->capture, test_process_info_ptr->afl_id, bitset);
+
       checkForServerErrors(reqD->getPort());
       printf("[WC][CHILD-FORK] Error information => %s\n", test_process_info_ptr->error_type);
 
