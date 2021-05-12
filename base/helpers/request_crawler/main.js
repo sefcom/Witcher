@@ -180,14 +180,18 @@ if (process.argv.length > 3) {
 
     var BASE_SITE = process.argv[2];
     var BASE_APPDIR = process.argv[3];
+    var headless = true;
+    if (process.argv.length>4 && process.argv[4] === "--no-headless"){
 
+        headless = false;
+    }
     var files_fn = path.join(BASE_APPDIR, "files.dat");
     var SEED_DIR = path.join(BASE_APPDIR, "input");
 
     //session_id = get_a_session();
     let doInit = (process.argv.length <= 4);
 
-    let appData = new iser.AppData(doInit, BASE_APPDIR, BASE_SITE);
+    let appData = new iser.AppData(doInit, BASE_APPDIR, BASE_SITE, headless);
 
     if (fs.existsSync(files_fn)){
         let paths_to_test = fs.readFileSync(files_fn,'utf8');

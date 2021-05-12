@@ -20,11 +20,11 @@ function sleepg(ms) {
 }
 class AppData{
 
-    constructor(initializeWithBase, base_appdir, base_site) {
+    constructor(initializeWithBase, base_appdir, base_site, headless) {
         this.requestsFound = {};
 
         this.site_url = new URL(base_site);
-
+        this.headless = headless;
         this.inputSet = new Set();
         this.currentURLRound = 1;
         this.collectedURL = 0;
@@ -41,7 +41,9 @@ class AppData{
         //this.site_ip = base_site.
 
         if (!this.loadDataFromJSON()){
-            this.addRequest(FoundRequest.requestParamFactory(`${this.site_url.href}/admin`, "GET", "",{},"initial",this.site_url.href))
+            if (this.site_url.href.endsWith("/")){
+                this.addRequest(FoundRequest.requestParamFactory(`${this.site_url.href}/admin`, "GET", "",{},"initial",this.site_url.href))
+            }
             this.addRequest(FoundRequest.requestParamFactory(`${this.site_url.href}`, "GET", "",{},"initial",this.site_url.href))
             if (initializeWithBase){
 
@@ -145,7 +147,7 @@ class AppData{
         //0.3533549273542278&_=1617038119579
         //0.8389814703576484&_=1617038119586
         //0.5336236531483045
-        let timeVarRegex = /0\.[0-9]{12,20}/; // e.g., 0.3533549273542278
+        let timeVarRegex = /[0-9.]+[0-9]{6,50}/; // e.g., 0.3533549273542278
         // All keys must be the same for a match
         for (let [skey,svalues] of Object.entries(soughtParams)){
             // add as a match when a variable matches the format for timestamp nanoseconds
@@ -233,6 +235,18 @@ class AppData{
             }
 
             if (prevPathname === soughtPathname && (!soughtURL.hash || savedReq.hash === soughtURL.hash)){
+
+                if (postData.startsWith("<?xml")){
+                    let testPostData = savedReq.postData();
+                    let re = new RegExp(/<soap:Body>(.*)<\/soap:Body>/);
+                    if (re.test(postData) && re.test(testPostData)){
+                        let pd_match = re.exec(postData)
+                        let test_pd_match = re.exec(testPostData);
+
+                        let matchVal = this.fuzzyValueMatch(pd_match[1], test_pd_match[1])
+                        return matchVal;
+                    }
+                }
 
                 let testParamsArr = savedReq.getAllParams();
 
@@ -328,8 +342,10 @@ class AppData{
      */
     addInterestingRequest(foundRequest){
         let requestsAdded =0 ;
-        let tempURL = new URL(foundRequest.url());
-
+        let tempURL = foundRequest.url();
+        if (tempURL.endsWith('.css') || tempURL.endsWith('.jpg') || tempURL.endsWith('.gif') || tempURL.endsWith('.png') || tempURL.endsWith(".js")  || tempURL.endsWith(".ico")){
+            return requestsAdded;
+        }
         if (this.containsEquivURL(foundRequest) ) { //|| this.containsMaxNbrSameKeys(tempURL)
             //do nothing for now
             //console.log("[WC] Could have been added, ",req.url(), req.method(), req.postData());
@@ -514,6 +530,8 @@ class RequestExplorer {
         this.cookies = [];
         this.bearer = "";
         this.isLoading = false;
+        this.reinitPage= false;
+        this.loadedURLs = [];
         if (appData.numRequestsFound() > 0){
             this.currentRequestKey = currentRequest.getRequestKey();
             this.url = currentRequest.getURL();
@@ -537,7 +555,7 @@ class RequestExplorer {
             this.cookieData = "";
         }
         this.requestsAdded = 0;
-        this.timeoutLoops = 20;
+        this.timeoutLoops = 45;
         this.timeoutValue = 3;
         this.workernum = workernum;
         this.gremCounter = {};
@@ -580,7 +598,7 @@ class RequestExplorer {
     }
 
 
-    async getAttribute(node, attribute){
+    async getAttribute(node, attribute, defaultval=""){
         let valueHandle = await node.getProperty(attribute);
         let val = await valueHandle.jsonValue();
         if (isDefined(val)){
@@ -588,7 +606,7 @@ class RequestExplorer {
             //elements.push(val);
             return val;
         }
-        return ""
+        return defaultval;
     }
 
     async searchForInputs(node){
@@ -599,8 +617,11 @@ class RequestExplorer {
 
         let foundRequest = FoundRequest.requestParamFactory(nodeaction, method, "",{},"PageForms",this.appData.site_url.href);
 
+        const buttontags = await node.$$('button');
+        let formdata = await this.searchTags(buttontags);
+
         const inputtags = await node.$$('input');
-        let formdata = await this.searchTags(inputtags);
+        formdata += await this.searchTags(inputtags);
 
         const selectags = await node.$$('select');
         formdata += await this.searchTags(selectags);
@@ -657,79 +678,184 @@ class RequestExplorer {
     }
 
     async addURLsFromPage(page, parenturl){
-        // these are always GETs
         let requestsAdded = 0;
-        const anchorlinks = await this.searchForURLSelector(page, 'a', 'href');
-        //console.log("LINKS ", anchorlinks);
-        requestsAdded += this.appData.addValidURLS(anchorlinks, parenturl, "OnPageAnchor");
-        const iframelinks = await this.searchForURLSelector(page, 'iframe', 'src');
-        requestsAdded += this.appData.addValidURLS(iframelinks, parenturl, "OnPageIFrame");
+        try {
+            // these are always GETs
+            const anchorlinks = await this.searchForURLSelector(page, 'a', 'href');
+            //console.log("LINKS ", anchorlinks);
+            requestsAdded += this.appData.addValidURLS(anchorlinks, parenturl, "OnPageAnchor");
+            const iframelinks = await this.searchForURLSelector(page, 'iframe', 'src');
+            requestsAdded += this.appData.addValidURLS(iframelinks, parenturl, "OnPageIFrame");
+
+        } catch (ex){
+            console.log(`[WC] Error ${ex}`)
+        }
         return requestsAdded;
     }
 
-    async addFormDataFromPage(page, parenturl){
-//        console.log("Starting formdatafrompage");
+    async addFormData(page) {
         let requestsAdded = 0;
-        for (const frame of this.page.mainFrame().childFrames()){
-
-            const forms = await frame.$$('form');
-            for (let i=0; i < forms.length; i++) {
-                console.log("[WC] first form ACTION=", await this.getAttribute(forms[i], "action"), await this.getAttribute(forms[i], "method"));
-                requestsAdded += await this.searchForInputs(forms[i]);
-                await forms[i].evaluate(form => form.submit());
-                //await page.$eval('form-selector', form => form.submit());
+        try{
+            const forms = await page.$$('form').catch(reason => {
+                console.log(`received error in page. ${reason} `);
+            });
+            if (isDefined(forms)){
+                for (let i = 0; i < forms.length; i++) {
+                    let faction = await this.getAttribute(forms[i], "action", "");
+                    let fmethod = await this.getAttribute(forms[i], "method", "GET");
+                    console.log("[WC] second form ACTION=", faction, fmethod);
+                    requestsAdded += await this.searchForInputs(forms[i]);
+                }
             }
 
-            const anchorlinks = await this.searchForURLSelector(frame, 'a', 'href');
-            //console.log("FRAME LINKS", anchorlinks);
-            requestsAdded += this.appData.addValidURLS(anchorlinks, parenturl, "OnPageAnchor");
-            // const frameNode = await frame.$('html');
-            // console.log("[WC] searching for inputs in page");
-            // await this.searchForInputs(frameNode);
+        } catch (ex){
+            console.log(`[WC] Error ${ex}`)
         }
-        const forms = await page.$$('form');
-        for (let i=0; i < forms.length; i++) {
-            console.log("[WC] second form ACTION=", await this.getAttribute(forms[i], "action"), await this.getAttribute(forms[i], "method"));
-            requestsAdded += await this.searchForInputs(forms[i]);
+        return requestsAdded;
+    }
+
+    async addDataFromBrowser(page, parenturl){
+//        console.log("Starting formdatafrompage");
+        let requestsAdded = 0;
+        let childFrames = this.page.mainFrame().childFrames();
+
+        if (typeof childFrames !== 'undefined' && childFrames.length > 0){
+            for (const frame of this.page.mainFrame().childFrames()){
+                console.log("ADDING form data from FRAMES.")
+                requestsAdded += await this.addFormData(page);
+                requestsAdded += await this.addURLsFromPage(page);
+            }
+
+        } else {
+            requestsAdded = await this.addFormData(page);
+            requestsAdded += await this.addURLsFromPage(page, parenturl);
         }
+
         //const bodynode = await page.$('html');
         //requestsAdded += await this.searchForInputs(bodynode);
         return requestsAdded;
     }
 
+
     async addCodeExercisersToPage(gremlinsHaveStarted){
         if (gremlinsHaveStarted){
             console.log("[WC] Using alternative launcher (horde only)");
-            // await this.page.evaluate(()=>{
-            //     function startHorde(){
-            //         let ff = gremlins.species.formFiller();
-            //
-            //         let horde = window.gremlins.createHorde()
-            //             .gremlin(ff)
-            //             .gremlin(gremlins.species.clicker().clickTypes(['click',"mousemove","mouseover","dblclick","mouseout"]))
-            //             .gremlin(gremlins.species.scroller())
-            //             .mogwai(gremlins.mogwais.gizmo().maxErrors(200))
-            //             .mogwai(gremlins.mogwais.alert())
-            //             .gremlin(function() {
-            //                 window.$ = function() {};
-            //             });
-            //         horde.strategy(gremlins.strategies.distribution()
-            //             .delay(5) // wait 50 ms between each action
-            //             .distribution([0.2, 0.6, .2])
-            //         );
-            //         horde.unleash({nb: 10000});
-            //         console.log("[WC] Launched Alternative HORDE");
-            //     }
-            //
-            //     setTimeout(startHorde, 2000);
-            //
-            // });
+            await this.page.evaluate(()=>{
+                function randr(a) {
+                    return function() {
+                        var t = a += 0x6D2B79F5;
+                        t = Math.imul(t ^ t >>> 15, t | 1);
+                        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                    }
+                }
+                function sleep(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+                async function triggerHorde(){
+                    $("select").trigger("change");
+                    await sleep(100);
+                    $("select").prop("selectedIndex",1)
+
+                }
+                async function checkHordeLoad(){
+                    if (typeof window.gremlins === 'undefined') {
+                        console.log("cannot find gremlins, attempting to load on the fly");
+                        (function (d, script) {
+                            script = d.createElement('script');
+                            script.type = 'text/javascript';
+                            script.async = true;
+                            script.onload = function () {
+                                // remote script has loaded
+                            };
+                            script.src = 'https://trickel.com/gremlins.min.js';
+                            //script.src = 'https://unpkg.com/gremlins.js';
+                            d.getElementsByTagName('head')[0].appendChild(script);
+                        }(document));
+                    }
+                }
+                async function repeativeHorde(){
+
+
+                    let pforms = document.getElementsByTagName("form");
+
+                    for(let i = 0; i < pforms.length; i++) {
+                        let f = pforms[i];
+                        if(typeof f.submit === 'function') {
+                            console.log("[WC] repeativeHord: submitting form")
+                            f.submit();
+                        } else if (typeof f.submit === 'undefined') {
+                            console.log("[WC] repeativeHord: The method submit of ", f, "is undefined");
+                        } else {
+                            //console.log("[WC] repeativeHord: It's neither undefined nor a function. It's a " + typeof f.submit, f);
+                        }
+
+                    }
+
+                }
+                async function coolHorde(){
+
+                    console.log("[WC] Setting fillTextElement to new function");
+                    // ff.prototype.fillTextElement = function(element) {
+                    //     console.log("[WC] happily filling in a form");
+                    //     const character = randomizer.character();
+                    //     const newValue = element.value + character;
+                    //     triggerSimulatedOnChange(element, newValue, window.HTMLInputElement.prototype);
+                    //     return character;
+                    // };
+
+                    var noChance = new gremlins.Chance();
+                    //noChance.prototype.bool = function(options) {return true;};
+                    noChance.character = function(options) {
+                        if (options != null){
+                            return "2";
+                        } else {
+                            let rnd =  Math.random()
+                            if (rnd > 0.7){
+                                return "Witcher";
+                            } else if (rnd > 0.3){
+                                return "127.0.0.1";
+                            } else {
+                                return "2"
+                            }
+                        }
+                    };
+                    console.log("[WC] UNLEASHING Reloaded Horde!!!");
+
+                    let ff = window.gremlins.species.formFiller(console.log, noChance, window);
+                    const distributionStrategy = gremlins.strategies.distribution({
+                        distribution: [0.53, 0.23, 0.23,0.01], // the first three gremlins have more chances to be executed than the last
+                        delay: 20,
+                    });
+                    for (let i =0; i < 5; i ++){
+                        await gremlins.createHorde({
+                            species: [gremlins.species.clicker(),ff,gremlins.species.typer(), gremlins.species.scroller()],
+                            mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
+                            strategies: [distributionStrategy],
+                            randomizer: noChance
+                        }).unleash();
+
+                    }
+
+                    console.log("[WC] Done with the unleashing");
+
+                    clearInterval(repeativeHorde);
+                    clearInterval(triggerHorde);
+                }
+
+                console.log("[WC] setting timeout for coolhorde")
+                setTimeout(checkHordeLoad, 3500);
+                setTimeout(coolHorde, 4000);
+                setTimeout(function(){setInterval(repeativeHorde, 5000)}, 20000);
+                setTimeout(function(){setInterval(triggerHorde, 500)}, 5000);
+            });
         } else {
             // ##############################################################################
             //                         START Injected Exercise Code
             // ##############################################################################
+            console.log("[WC] running code injection evaluation");
             await this.page.evaluate(()=>{
-                const CLICK_ELE_SELECTOR = "div,li,span,a,input,p,button";
+                const CLICK_ELE_SELECTOR = "div,li,span,input,p,button";
                 //const CLICK_ELE_SELECTOR = "button";
                 var usedText = new Set();
                 const STARTPAGE = window.location.href;
@@ -820,7 +946,13 @@ class RequestExplorer {
                         let ele = randomArr[eleIndex];
                         //console.log(`[WC] ${indent(level)} L${level} attempt to click on  ${ele.textContent}`);
                         try {
-
+                            if (ele.href != null){
+                                console.log(`FOUND URL of ${ele.href}`)
+                                if (ele.href.indexOf("support.dlink.com") !== -1){
+                                    console.log(`[WC] IGNORING url of FOUND URL of ${ele.href}`)
+                                    continue;
+                                }
+                            }
                             let searchText="";
                             if (ele.outerHTML != null) {
                                 searchText += ele.outerHTML;
@@ -863,6 +995,7 @@ class RequestExplorer {
                                     // if (usedText.has(node.textContent) ){
                                     //     return;
                                     // }
+
                                     usedText.add(node.textContent);
                                     let clickEvent = document.createEvent ('MouseEvents');
                                     clickEvent.initEvent (eventType, true, true);
@@ -931,10 +1064,23 @@ class RequestExplorer {
 
                 }
                 async function repeativeHorde(){
-                    for (let f of document.getElementsByTagName("form")){ f.submit();}
+                    let pforms = document.getElementsByTagName("form");
+                    for(let i = 0; i < pforms.length; i++) {
+                        let f = pforms[i];
+                        if(typeof f.submit === 'function') {
+                            console.log("[WC] repeativeHord: submitting form")
+                            f.submit();
+                        } else if (typeof f.submit === 'undefined') {
+                            //console.log("[WC] repeativeHord: The method submit of ", f, "is undefined");
+                        } else {
+                            //console.log("[WC] repeativeHord: It's neither undefined nor a function. It's a " + typeof f.submit, f);
+                        }
+
+                    }
 
                 }
                 async function lameHorde(){
+
                     console.log("Searching and clicking.");
                     window.alert = function(message) {/*console.log(`Intercepted alert with '${message}' `)*/};
 
@@ -950,12 +1096,30 @@ class RequestExplorer {
                     window.addEventListener("hashchange", hashChangeEncountered);
                     var filter   = Array.prototype.filter;
                     var clickableElements = filter.call( all_elements, function( node ) {
+                        if (node.hasOwnProperty("href") && node.href.startsWith("http")){
+                            return false;
+                        }
                         return node.hasOwnProperty('hasClicker');
                     });
                     console.log("[WC] clicky  DOM elements count = ", clickableElements.length);
 
                     //await clickSpam(clickableElements);
                     await clickSpam(all_elements);
+
+                    let pforms = document.getElementsByTagName("form");
+                    for(let i = 0; i < pforms.length; i++) {
+                        let frm = pforms[i];
+                        if(typeof frm.submit === 'function') {
+                            console.log("Submitting a form");
+                            frm.submit();
+                        } else if (typeof frm.submit === 'undefined') {
+                            console.log("[WC] lameHorde: The method submit of ", frm, "is undefined");
+                        } else {
+                            //console.log("[WC] lameHorde: It's neither undefined nor a function. It's a " + typeof frm.submit, frm);
+                        }
+
+                    }
+
                     //
                     console.log(`[WC] lamehorde is done.`);
 
@@ -979,50 +1143,52 @@ class RequestExplorer {
                                 // remote script has loaded
                             };
                             script.src = 'https://trickel.com/gremlins.min.js';
+                            //script.src = 'https://unpkg.com/gremlins.js';
                             d.getElementsByTagName('head')[0].appendChild(script);
                         }(document));
                     }
                 }
+                async function triggerHorde(){
+                    $("select").trigger("change");
+                    await sleep(100);
+                    $("select").prop("selectedIndex",1)
+
+                }
                 async function coolHorde(){
-                    let ff = window.gremlins.species.formFiller();
-                    var noChance = function(seed){}
-                    noChance.prototype.bool = function(options) {return true;};
-                    noChance.prototype.character = function(options) {
+                    var noChance = new gremlins.Chance();
+                    //noChance.prototype.bool = function(options) {return true;};
+                    noChance.character = function(options) {
                         if (options != null){
                             return "2";
-                        } else { return "Q";}
-                    };
-                    noChance.prototype.natural = function (options) {
-                        return Math.floor(this.randr() * (options.max - options.min + 1) + options.min);
-                    };
-                    noChance.prototype.randr = randr(29);
-                    noChance.prototype.pick = function (arr, count) {
-                        if (!count || count === 1) {
-                            return arr[this.natural({min:0, max: arr.length - 1})];
                         } else {
-                            return this.arr.slice(0, count);
+                            let rnd =  Math.random()
+                            if (rnd > 0.7){
+                                return "Witcher";
+                            } else if (rnd > 0.3){
+                                return "127.0.0.1";
+                            } else {
+                                return "2"
+                            }
                         }
                     };
-                    noChance.prototype.email = function() {return "e@e.com";};
-                    ff.randomizer(new noChance());
-                    //console.log(ff.randomizer);
+                    console.log("[WC] UNLEASHING Reloaded Horde!!!");
 
-                    let horde = window.gremlins.createHorde()
-                        .gremlin(ff)
-                        .gremlin(gremlins.species.clicker().clickTypes(['click',"mousemove","mouseover","dblclick","mouseout"]))
-                        .gremlin(gremlins.species.scroller())
-                        .mogwai(gremlins.mogwais.gizmo().maxErrors(200))
-                        .mogwai(gremlins.mogwais.alert())
-                        .gremlin(function() {
-                            window.$ = function() {};
-                        });
-                    horde.strategy(gremlins.strategies.distribution()
-                        .delay(7) // wait 50 ms between each action
-                        .distribution([0.2, .8, 0.1, 0.1,0.1])
-                    );
+                    let ff = window.gremlins.species.formFiller(console.log, noChance, window);
+                    const distributionStrategy = gremlins.strategies.distribution({
+                        distribution: [0.5, 0.2, 0.2,0.1], // the first three gremlins have more chances to be executed than the last
+                        delay: 20,
+                    });
+                    await gremlins.createHorde({
+                        species: [gremlins.species.clicker(),ff,gremlins.species.typer(), gremlins.species.scroller()],
+                        mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
+                        strategies: [distributionStrategy],
+                        randomizer: noChance
+                    }).unleash({nb:100000});
 
-                    console.log("[WC] UNLEASHING Horde!!!");
-                    await horde.unleash({nb:10000});
+
+
+                    clearInterval(repeativeHorde);
+                    clearInterval(triggerHorde);
 
                     clearInterval(repeativeHorde);
                 }
@@ -1030,6 +1196,7 @@ class RequestExplorer {
                 console.log("[WC] setting timeout for lamehorde")
                 setTimeout(lameHorde, 2000);
                 setTimeout(function(){setInterval(repeativeHorde, 150)}, 3000);
+                setTimeout(function(){setInterval(triggerHorde, 500)}, 5000);
                 console.log("[WC] setting timeout for coolhorde")
                 setTimeout(checkHordeLoad, 19000);
                 setTimeout(coolHorde, 20000);
@@ -1112,6 +1279,7 @@ class RequestExplorer {
                     //response =
                     //let p1 = page.waitForResponse(url.origin + url.pathname);
                     //let p1 = page.waitForResponse(request => {console.log(`INSIDE request_page= ${request_page} ==> ${request.url()}`);return request.url().startsWith(url.origin);}, {timeout:10000});
+
                     response = await page.goto(url.href, options);
 
                     //response = await p1
@@ -1125,98 +1293,13 @@ class RequestExplorer {
                 // This problem appears to be tied to setIncerpetRequest(true)
                 // https://github.com/puppeteer/puppeteer/issues/5492
 
-
-
                 //response = await page.goto(url.href, options);
-                if(isDefined(response)) {
-                    console.log("[WC] status = ", response.status(), response.statusText(), response.url());
-                    // only update status if current value is not 200
-                    if (this.appData.requestsFound[this.currentRequestKey].hasOwnProperty("response_status")) {
-                        if (this.appData.requestsFound[this.currentRequestKey]["response_status"] !== 200){
-                            this.appData.requestsFound[this.currentRequestKey]["response_status"] = response.status();
-                        }
-                    } else {
-                        this.appData.requestsFound[this.currentRequestKey]["response_status"] = response.status();
-                    }
 
-                    if (response.headers().hasOwnProperty("content-type")){
-                        this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = response.headers()["content-type"];
-                    } else {
-                        if (!this.appData.requestsFound[this.currentRequestKey].hasOwnProperty("response_content-type")){
-                            this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = response.headers()["content-type"];
-                        }
-                    }
-                    if (response.status() >= 400){
-                        console.log(`[WC] Received response error (${response.status()}) for ${page.url()} `);
-                        return;
-                    }
-                    //console.log(response);
+                let response_good = await this.checkResponse(response, page.url());
 
-                    console.log(await response.headers());
-
-                    if(response.status() !== 200){
-                        //console.log("[WC] ERROR status = ", response.status(), response.statusText(), response.url())
-                    }
-                    let responseText = await response.text();
-                    if (!isInteractivePage(response, responseText)){
-                        console.log(`[WC] ${page.url()} is not an interactive page, skipping`);
-                        return;
-                    }
-                    if (responseText.length < 20) {
-                        console.log(`[WC] ${page.url()} is too short of a page at ${responseText.length}, skipping`);
-                        return;
-                    }
-                    if (responseText.upper().search(/<TITLE> INDEX OF /) > -1){
-                        console.log("Index page, should disaable for fuzzing")
-                        this.appData.requestsFound[this.currentRequestKey]["response_status"] = 999;
-                        this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = "application/dirlist";
-                    }
+                if (response_good){
+                    madeConnection = await this.initpage(page, url);
                 }
-
-                if (fs.existsSync("/app/gremlins.min.js")) {
-                    const gremscript = fs.readFileSync("/app/gremlins.min.js", 'utf8');
-                    console.log(`\nread in gremscript ${gremscript.length}\n`);
-                    await page.evaluate(gremscript);
-                } else {
-                    console.log(`loading gremscript from remote location`);
-                    await page.addScriptTag({ url: 'https://trickel.com/gremlins.min.js' });
-                }
-
-                this.isLoading = false;
-
-                await page.screenshot({path: '/p/tmp/screenshot-pre.png', type:"png"});
-
-                console.log("Waited for goto and response and div");
-                this.requestsAdded += await this.addURLsFromPage(this.page, url);
-                this.requestsAdded += await this.addFormDataFromPage(this.page, url);
-                //console.log(this.appData.requestsFound[this.currentRequestKey]["processed"]% 2 === 0);
-
-                // JSHandle.prototype.getEventListeners = function () {
-                //     return this._client.send('DOMDebugger.getEventListeners', { objectId: this._remoteObject.objectId });
-                // };
-
-                const elementHandles = await page.$$('div,li,span,a,input,p,button');
-                for (let ele of elementHandles){
-                    await ele.evaluate(node => node["hasClicker"]="true");
-                    // const listeners = await ele.getEventListeners();
-                    // console.log("LISTENERS = ", listeners);
-                    // for (let l of listeners.listeners){
-                    //
-                    //     console.log("ATTEMPTING SOME SORT OF SOMETHINMG", l);
-                    //     if (l.type === "click" || l.type === "mousedown" || l.type === "mouseup"){
-                    //         await ele.evaluate(node => node["hasClicker"]="true");
-                    //         break;
-                    //     }
-                    // }
-                }
-
-                await page.evaluate( () => {
-                    let selected = document.querySelectorAll('button');
-                });
-
-                await this.addCodeExercisersToPage(false);
-                //await this.startCodeExercisers();
-                madeConnection = true;
                 break; // connection successful
             } catch (e) {
                 console.log(`Error: Browser cannot connect to '${url.href}' RETRYING`);
@@ -1233,6 +1316,7 @@ class RequestExplorer {
             //console.log("Performing timeout and element search");
 
             for (var cnt=0; cnt < this.timeoutLoops;cnt++){
+
                 let roundResults = this.getRoundResults();
                 if (page.url().indexOf("/") > -1) {
                     shortname = path.basename(page.url());
@@ -1241,14 +1325,42 @@ class RequestExplorer {
                 if (this.currentRequestKey in this.appData.requestsFound){
                     processedCnt = this.appData.requestsFound[this.currentRequestKey]["processed"];
                 }
+                if (typeof this.requestsAdded === "string"){
+                    this.requestsAdded = parseInt(this.requestsAdded);
+                }
+                let startingReqAdded = this.requestsAdded;
+                this.requestsAdded += await this.addDataFromBrowser(page, url);
 
                 console.log(`\tW#${this.workernum} ${shortname} Count ${cnt} Round ${this.appData.currentURLRound} loopcnt ${processedCnt}, added ${this.requestsAdded} reqs : Inputs: ${roundResults.totalInputs}, (${roundResults.equaltoRequests}/${roundResults.totalRequests}) reqs left to process ${gremCounterStr}`);
-                let startingReqAdded = this.requestsAdded;
-                this.requestsAdded += await this.addURLsFromPage(page, url);
-                this.requestsAdded += await this.addFormDataFromPage(page, url);
+                let pinfo = this.browser.process();
+                if (isDefined(pinfo) && pinfo.killed){
+                    console.log("Breaking out from test loop b/c BROWSER IS DEAD....")
+                    break;
+                }
+                // if new requests added on last passs, then keep going
                 if (startingReqAdded < this.requestsAdded){
                     cnt = (cnt > 3) ? cnt-3: 0;
                 }
+
+                const now_url = await page.url();
+                const this_url = this.url.href
+                if (this.reinitPage){
+                    madeConnection = await this.initpage(page, url, true);
+                    this.reinitPage = false;
+                }
+                if (now_url !== this_url){
+                    console.log(`[WC] Attempting to reload target page b/c browser changed urls ${this_url !== now_url} '${this.url}' != '${now_url}'`)
+                    this.isLoading = true;
+                    let response = await page.goto(this.url, options);
+
+                    let response_good = await this.checkResponse(response, page.url());
+
+                    if (response_good){
+                        madeConnection = await this.initpage(page, url, true);
+                    }
+                    this.isLoading = false;
+                }
+
                 await page.waitFor(this.timeoutValue*1000);
                 // eval for iframes, a, forms
                 if (this.workernum === 0 && cnt % 3 === 1){
@@ -1287,6 +1399,95 @@ class RequestExplorer {
 
     }
 
+    async initpage(page, url, doingReload=false) {
+        if (fs.existsSync("/app/gremlins.min.js")) {
+            const gremscript = fs.readFileSync("/app/gremlins.min.js", 'utf8');
+            console.log(`\nread in gremscript ${gremscript.length}\n`);
+            await page.evaluate(gremscript);
+        } else {
+            console.log(`loading gremscript from remote location`);
+            await page.addScriptTag({url: 'https://trickel.com/gremlins.min.js'});
+            //await page.addScriptTag({url: 'https://unpkg.com/gremlins.js'});
+
+        }
+
+        this.isLoading = false;
+
+        await page.screenshot({path: '/p/tmp/screenshot-pre.png', type: "png"});
+
+        console.log("Waited for goto and response and div");
+        this.requestsAdded += this.addDataFromBrowser(page, url);
+
+        //console.log(this.appData.requestsFound[this.currentRequestKey]["processed"]% 2 === 0);
+
+        // JSHandle.prototype.getEventListeners = function () {
+        //     return this._client.send('DOMDebugger.getEventListeners', { objectId: this._remoteObject.objectId });
+        // };
+
+        //await this.submitForms(page);
+
+        const elementHandles = await page.$$('div,li,span,a,input,p,button');
+        for (let ele of elementHandles) {
+            if (!doingReload){
+                await ele.evaluate(node => node["hasClicker"] = "true");
+            }
+        }
+
+        await this.addCodeExercisersToPage(doingReload);
+        //await this.startCodeExercisers();
+        return true;
+    }
+
+    async checkResponse(response, cururl) {
+        if(isDefined(response)) {
+            console.log("[WC] status = ", response.status(), response.statusText(), response.url());
+            // only update status if current value is not 200
+            if (this.appData.requestsFound[this.currentRequestKey].hasOwnProperty("response_status")) {
+                if (this.appData.requestsFound[this.currentRequestKey]["response_status"] !== 200) {
+                    this.appData.requestsFound[this.currentRequestKey]["response_status"] = response.status();
+                }
+            } else {
+                this.appData.requestsFound[this.currentRequestKey]["response_status"] = response.status();
+            }
+
+            if (response.headers().hasOwnProperty("content-type")) {
+                this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = response.headers()["content-type"];
+            } else {
+                if (!this.appData.requestsFound[this.currentRequestKey].hasOwnProperty("response_content-type")) {
+                    this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = response.headers()["content-type"];
+                }
+            }
+            if (response.status() >= 400) {
+                console.log(`[WC] Received response error (${response.status()}) for ${cururl} `);
+                return false;
+            }
+            //console.log(response);
+
+            console.log(await response.headers());
+
+            if (response.status() !== 200) {
+                //console.log("[WC] ERROR status = ", response.status(), response.statusText(), response.url())
+            }
+            let responseText = await response.text();
+            if (!isInteractivePage(response, responseText)) {
+                console.log(`[WC] ${cururl} is not an interactive page, skipping`);
+                return false;
+            }
+            if (responseText.length < 20) {
+                console.log(`[WC] ${cururl} is too short of a page at ${responseText.length}, skipping`);
+                return false;
+            }
+            if (responseText.toUpperCase().search(/<TITLE> INDEX OF /) > -1) {
+                console.log("Index page, should disaable for fuzzing")
+                this.appData.requestsFound[this.currentRequestKey]["response_status"] = 999;
+                this.appData.requestsFound[this.currentRequestKey]["response_content-type"] = "application/dirlist";
+            }
+        } else {
+            return false;
+        }
+        return true;
+    }
+
     async do_login(page){
         //curl -i -s -k -X $'POST' --data-binary $'ipamusername=admin&ipampassword=password&phpipamredirect=%2F' $'http://10.90.90.90:9797/app/login/login_check.php'
         var loginData = this.loginData;
@@ -1313,20 +1514,16 @@ class RequestExplorer {
             //         "Content-Type": "application/x-www-form-urlencoded"
             //     }
             // };
-            // if (req.url().startsWith(`${self.appData.site_url.href}`)){
-            //     let basename = path.basename(req.url());
-            //     if (basename.indexOf("?") > -1) {
-            //         basename = basename.slice(0,basename.indexOf("?"));
-            //     }
-            //     // skip if it has a period for nodejs apps
-            //     if (basename.indexOf(".") > -1){
-            //         // do nothing
-            //     } else {
-            //         let foundRequest = FoundRequest.requestObjectFactory(req);
-            //         foundRequest.from = "LoginInterceptedRequest";
-            //         self.requestsAdded += self.appData.addInterestingRequest(foundRequest );
-            //     }
-            // }
+            if (req.url().startsWith(`${self.appData.site_url.href}`)){
+                let basename = path.basename(req.url());
+                if (basename.indexOf("?") > -1) {
+                    basename = basename.slice(0,basename.indexOf("?"));
+                }
+
+                let foundRequest = FoundRequest.requestObjectFactory(req);
+                foundRequest.from = "LoginInterceptedRequest";
+                self.requestsAdded += self.appData.addInterestingRequest(foundRequest );
+            }
             req.continue();
         }
         page.on('request', interceptLoginRequest);
@@ -1338,7 +1535,7 @@ class RequestExplorer {
         console.log(`[Login] URL GOTO'ed `);
 
         try {
-            if (loginData["usernameSelector"]){
+            if (loginData["usernameSelector"] || loginData["passwordSelector"]){
 
                 await page.keyboard.press("Escape");
                 await page.keyboard.press("Escape");
@@ -1347,9 +1544,10 @@ class RequestExplorer {
                     await p.click();
                     await(sleepg(100));
                 }
-
-                await page.focus(loginData["usernameSelector"]);
-                await page.keyboard.type(loginData["usernameValue"], {delay:100});
+                if (loginData["usernameSelector"]) {
+                    await page.focus(loginData["usernameSelector"]);
+                    await page.keyboard.type(loginData["usernameValue"], {delay:100});
+                }
                 await page.focus(loginData["passwordSelector"]);
                 await page.keyboard.type( loginData["passwordValue"], {delay:100});
                 const element = await page.$(loginData["passwordSelector"]);
@@ -1412,6 +1610,8 @@ class RequestExplorer {
         page.removeListener('request', interceptLoginRequest);
         let cookies = await page.cookies();
         console.log(cookies);
+
+
         return cookies
     }
 
@@ -1509,7 +1709,7 @@ class RequestExplorer {
 
                 if (target.url() !== self.url.href && target.url().startsWith(`${self.appData.site_url.origin}`)) {
 
-                    console.log(`TARGETED CHANGED from ${self.url.href} to ${target.url()} `);
+                    //console.log(`TARGETED CHANGED from ${self.url.href} to ${target.url()} `);
                     //console.log(target);
                     let foundRequest = FoundRequest.requestParamFactory(target.url(),"GET", "",{},"targetChanged", self.appData.site_url.href);
                     foundRequest.from = "targetChanged";
@@ -1604,9 +1804,17 @@ class RequestExplorer {
 
             // Save Request info if we can
             if (req.method() !== "GET" || req.postData() || req.resourceType() === "xhr"){
-                console.log("NONGET: ", req.url(), "method=",req.method(), "headers=",req.headers(), "restype=", req.resourceType(), "data=", req.postData());
+                //console.log("NONGET: ", req.url(), "method=",req.method(), "restype=", req.resourceType(), "data=", req.postData());
             }
-
+            if (req.url().search(/.*HNAP1/) > -1){
+                let re = new RegExp(/<soap:Body>(.*)<\/soap:Body>/);
+                if (re.test(req.postData())){
+                    let pd_match = re.exec(req.postData());
+                    console.log(`${GREEN}${req.url()} ${pd_match[1]}${ENDCOLOR}`);
+                } else {
+                    console.log(`${GREEN}${req.url()} NO SOAP MATCH ${req.postData()} ${ENDCOLOR}`);
+                }
+            }
             if (self.url.href === req.url()) {
                 //not sure why reforming request data for continue here.
 
@@ -1637,7 +1845,9 @@ class RequestExplorer {
                 console.log("processRequest caught to add method and data ");
                 console.log("\t", self.method, pdata.method)
                 console.log("\t", self.postData, pdata.postData)
-
+                if (!self.isLoading){
+                    self.reinitPage = true;
+                }
                 req.continue(pdata);
 
             } else {
@@ -1650,10 +1860,10 @@ class RequestExplorer {
                     self.appData.addQueryParam(key, value);
                 });
                 if (req.url().startsWith(self.appData.site_url.origin)){
-                    console.log("Intercepted in processRequest ", req.url(), req.method());
+                    //console.log("Intercepted in processRequest ", req.url(), req.method());
                     let basename = path.basename(tempurl.pathname);
                     if (req.url().indexOf("rest") > -1 && (req.method() === "POST" || req.method() === "PUT")){
-                        console.log(basename, req.method(), req.headers(), req.resourceType());
+                        //console.log(basename, req.method(), req.headers(), req.resourceType());
                     }
 
                     let foundRequest = FoundRequest.requestObjectFactory(req, self.appData.site_url.href);
@@ -1693,6 +1903,13 @@ class RequestExplorer {
                     req.abort('aborted');
                 } else {
                     if (req.isNavigationRequest() && req.frame() === self.page.mainFrame() ) {
+                        if (typeof self.last_nav_request !== "undefined" && self.last_nav_request === req.url()){
+                            console.log("[WC] this is the same as last nav request, ignoring");
+                            req.abort()
+                            self.last_nav_request = req.url();
+                            return;
+                        }
+                        self.last_nav_request = req.url();
                         if (req.url().indexOf("gremlins") > -1){
                             console.log("[WC] CONTINUING with getting some gremlins in here.");
                             req.continue();
@@ -1700,13 +1917,15 @@ class RequestExplorer {
                         }
                         if (self.isLoading){
                             console.log(`[WC] \tRequest granted while still in loading phase ${req.resourceType()} ${req.url()} `);
+
                             req.continue();
                         } else {
-                            console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()}`);
-                            req.respond(req.redirectChain().length
-                              ? { body: '' } // prevent 301/302 redirect
-                              : { status: 204 } // prevent navigation by js
-                            )
+
+                                console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()}`);
+                                req.respond(req.redirectChain().length
+                                  ? { body: '' } // prevent 301/302 redirect
+                                  : { status: 204 } // prevent navigation by js
+                                )
                             //req.abort();
                         }
 
@@ -1728,15 +1947,23 @@ class RequestExplorer {
                         //     cookiestr += `${cookie.name}=${cookie.value}; `
                         // }
                         // pdata.headers["Cookie"] = cookiestr;
-                        console.log("\nprocessRequest REFORMED continue --- > nav req = ", req.isNavigationRequest(),
-                            "is main frame = ", req.frame() === self.page.mainFrame(),
-                            "is loading = ", self.isLoading,
-                            "url = ", req.url(), "\n");
+                        // console.log("\nprocessRequest REFORMED continue --- > nav req = ", req.isNavigationRequest(),
+                        //     "is main frame = ", req.frame() === self.page.mainFrame(),
+                        //     "is loading = ", self.isLoading,
+                        //     "url = ", req.url(), "\n");
                         if (req.frame() === self.page.mainFrame()){
                             if (self.isLoading){
+
+                                self.loadedURLs.push(tempurl.origin + tempurl.pathname);
                                 req.continue();
                             } else {
-                                req.abort();
+                                req.continue();
+                                // if (self.loadedURLs.includes(tempurl.origin + tempurl.pathname)){
+                                //     console.log(`[WC] \tAllowing reload of frame ${req.url()}`);
+                                //     req.continue();
+                                // } else {
+                                //     req.abort();
+                                // }
                             }
                         } else {
                             req.continue()
@@ -1749,15 +1976,19 @@ class RequestExplorer {
         }
 
         console.log("WE ARE STARTING THE BROWSER!!!!! ", this.url.href);
+        console.log("HEADLESS = ", this.appData.headless);
         try {
             try{
-                this.browser = await puppeteer.launch({headless:true, args:["--disable-features=site-per-process", "--window-size=1920,1040"], "defaultViewport": null }); //
+                this.browser = await puppeteer.launch({headless:this.appData.headless, args:["--disable-features=site-per-process", "--window-size=1920,1040"], "defaultViewport": null }); //
                 console.log("OPENED BROWSER!");
+                this.browser_up = true;
             } catch (xerror) {
                 console.log("UNABLE TO OPEN X DISPLAY");
                 if (xerror.message.indexOf("Unable to open X display") > -1){
-                    this.browser = await puppeteer.launch({headless:true, args:["--disable-features=site-per-process"] });
+                    this.browser = await puppeteer.launch({headless:this.appData.headless, args:["--disable-features=site-per-process"] });
+                    this.browser_up = true;
                 } else {
+                    this.browser_up = false;
                     // noinspection ExceptionCaughtLocallyJS
                     throw(xerror);
                 }
@@ -1765,17 +1996,19 @@ class RequestExplorer {
             let pagetimeout = setTimeout(function(){
                     console.log("I think we are STUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
                     try{
+                        this.browser_up = false;
                         self.browser.close();
                     } catch (err){
                         console.log("\tProblem closing browser after timeout\n");
                     }
 
-                }, this.timeoutLoops*this.timeoutValue*1000 + 60000);
+                }, this.timeoutLoops*this.timeoutValue*1000 + 6000);
 
             let gremlinsErrorTest = setInterval(function(){
                 if (self.gremlins_error && self.lamehord_done){
                     console.log("Ohh no, they killed Gizmo!, and the lamhord completed.  Aborting!!!");
                     try{
+                        this.browser_up = false;
                         self.browser.close();
                     } catch (err){
                         console.log("\tProblem closing browser after timeout\n");

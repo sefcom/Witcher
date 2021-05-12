@@ -11,11 +11,10 @@ RUN chmod -R 0755  /app/resources/
 RUN chmod 0755 /app/system/config.php
 
 RUN chown www-data -R /app/
-RUN sed -i 's/opcache.enable=1/opcache.enable=0/' /etc/php/7.2/apache2/php.ini
-RUN sed -i 's/opcache.enable=1/opcache.enable=0/' /etc/php/7.2/cli/php.ini
-RUN sed -i 's/opcache.enable=1/opcache.enable=0/' /usr/lib/php/7.2/php.ini*
+
 RUN sed -i 's/opcache.enable=1/opcache.enable=0/' /usr/local/lib/php.ini
 RUN echo 'opcache.enable=0' >> /app/php.ini
+
 
 COPY entrypoint.sh /entrypoint.sh
 

@@ -1,11 +1,13 @@
 <?php
 
+if (file_exists("/tmp/start_test.dat")) {
+
     $coverage_dpath = "/tmp/coverages/"; //__DIR__;
-    if (!is_dir($current_dir)){
-        mkdir($current_dir, 0777, true);
+    if (!is_dir($coverage_dpath)){
+        mkdir($coverage_dpath, 0777, true);
     }
     $tarut = (isset($_SERVER['SCRIPT_FILENAME']) && !empty($_SERVER['SCRIPT_FILENAME'])) ? $_SERVER['SCRIPT_FILENAME'] : $_SERVER['REQUEST_URI'];
-    $tarut_dirname = str_replace("/app", "", dirname($tarut));
+    $tarut_dirname = realpath(dirname($tarut));
     $tarut_dirname = str_replace("/","+",$tarut_dirname );
 
     $tarut_basename = basename($tarut, ".php");
@@ -79,3 +81,4 @@
     }
 
     $_coverage_dumper = new coverage_dumper();
+}

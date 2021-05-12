@@ -145,7 +145,7 @@ class FoundRequest  {
             this._url.search = this._url.search.replace(/([Q2])[Q2]+/g,"$1")
             this._urlstr = this._url.href;
             if (this._url.search){
-                console.log(`Cleaned up VARS => ${this._url.search}  ---> ${this._urlstr}`);
+                //console.log(`Cleaned up VARS => ${this._url.search}  ---> ${this._urlstr}`);
             }
         }
         // this.getURL().searchParams.forEach(function (value, key, parent){
@@ -167,7 +167,7 @@ class FoundRequest  {
     }
 
     cleanPostDataRepeats(){
-        if (this._postData === ""){
+        if (this._postData === "" || this._postData.startsWith('<?xml')){
             return;
         }
         const boundryIndex = this.getContentType().indexOf("----WebKitFormBoundary");

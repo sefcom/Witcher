@@ -5,6 +5,7 @@
  * sudo aptitude install libcurl4-openssl-dev
  * Compile and run the code
  * g++ main.cc -o httpreqr -lcurl
+
  */
 
 #include <sys/stat.h>
@@ -50,6 +51,7 @@ bool isparent = true;
 int tbd_shm_id = 0;
 static unsigned char *afl_area_ptr =0;
 int fake_afl_shm_id =0;
+bool use_shm = true;
 
 string ToHex(const string& s, bool upper_case /* = true */)
 {
@@ -92,6 +94,13 @@ public:
           }
           cookies.append(getenv("LOGIN_COOKIE"));
       }
+      if (getenv("MANDATORY_COOKIE")){
+          if (cookies.size() > 0){
+              cookies += ",";
+          }
+          cookies.append(getenv("MANDATORY_COOKIE"));
+      }
+      cout << "Variable data loaded";
     }
     string getPort(){
       size_t first = url.find(":");
@@ -111,7 +120,12 @@ public:
       if (gets.size() == 0){
         return url;
       } else {
-        return url + "?" +  gets;
+        if (url.find('?') == std::string::npos){
+             return url + "?" +  gets;
+        } else {
+             return url + "&" +  gets;
+        }
+
       }
     }
     bool hasCookies(){
@@ -135,7 +149,9 @@ public:
           cout << "AFTERJSON='" << posts << "'" << endl;
         }
       }
-
+      if (posts.size() == 0){
+          return posts = "&";
+      }
       return posts;
     }
 
@@ -281,7 +297,7 @@ void sendRequest(RequestData *reqD ){
   CURL *curl;
   CURLcode code(CURLE_FAILED_INIT);
   CURLcode res;
-  long timeout = 30;
+  long timeout = 3;
   if (getenv("DEBUG")){
       timeout = 600;
   }
@@ -453,22 +469,17 @@ static void recvAFLRequests(RequestData *reqD) {
       string id_str = getenv("__AFL_SHM_ID");
       int shm_id = atoi(id_str.c_str());
 
-      int mem_key = atoi(getenv("AFL_META_INFO_ID"));
-        int test_shm_id = shmget(mem_key , sizeof(test_process_info), 0666);
-        if (test_shm_id < 0 ) {
-            printf("*** shmget error using memkey=%d *** ERROR: \n", mem_key);
-            exit(1);
-        }
-        printf("*** shmat attaching to mem_key=%d shm_id=%d ***\n", mem_key, test_shm_id);
-        test_process_info_ptr = (test_process_info *) shmat(test_shm_id, NULL, 0);  /* attach */
-        if ((long) test_process_info_ptr == -1) {
-            printf("*** shmat attaching error could not attach to %d ***\n", mem_key);
-            exit(2);
-        }
-
       test_process_info_ptr->afl_id = shm_id;
 
       test_process_info_ptr->reqr_process_id = getpid();
+      FILE *fptr;
+      // opening file in writing mode
+      fptr = fopen("/tmp/httpreqr.pid", "w");
+      if (fptr){
+          fprintf(fptr, "%d", getpid());
+          fclose(fptr);
+      }
+
       isparent=false;
       std::string cpid = std::to_string(getpid());
 
@@ -521,7 +532,6 @@ static void recvAFLRequests(RequestData *reqD) {
 
     //test_process_info_ptr->reqr_process_id = child_pid;
 
-
     printf("[WC][PARENT-FORK]\t\tCheck for child status from Parent %d for %d \n", getpid(), test_process_info_ptr->reqr_process_id);
 
     if (infinite && write(FORKSRV_FD + 1, &child_pid, 4) != 4) {
@@ -572,9 +582,9 @@ static void recvAFLRequests(RequestData *reqD) {
     if (WIFEXITED(status)) {
       printf("\t\t\tRESULTS exited, status=%d signal=%d, total_val=%d\n", WEXITSTATUS(status), WTERMSIG(status), status);
     } else if (WIFSIGNALED(status)) {
-      printf("\t\t\tRESULTS killed by signal %d\n", WTERMSIG(status));
+      printf("\t\t\t\e[33mRESULTS killed by signal %d\e[0m\n", WTERMSIG(status));
     } else if (WIFSTOPPED(status)) {
-      printf("\t\t\tRESULTS stopped by signal %d\n", WSTOPSIG(status));
+      printf("\t\t\t\e[33mRESULTS stopped by signal %d\e[0m\n", WSTOPSIG(status));
     } else if (WIFCONTINUED(status)) {
       printf("\t\t\tRESULTS continued\n");
     } else {
@@ -668,6 +678,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
+  use_shm = !getArg(argc, argv, "--nomem");
 
   string url = getArg(argc, argv, "--url", true);
   if (url.size() == 0 ){
@@ -688,9 +699,11 @@ int main(int argc, char *argv[])
   reqD->setJSON(json);
   cout << "TEST " << reqD->getURL() << " Using port:" << reqD->getPort() << endl;
 
-  atexit(clear_shm_values);
+  if (use_shm){
+      atexit(clear_shm_values);
 
-  initMemory();
+      initMemory();
+  }
 
   writeOutAFLSHM(reqD->getPort());
 

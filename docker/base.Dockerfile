@@ -17,9 +17,8 @@ RUN apt-get install -y git
 
 #APT-FAST installation
 RUN /bin/bash -c "$(curl -sL https://git.io/vokNn) "
-RUN apt-fast update
 
-RUN apt-fast -y upgrade
+RUN apt-fast update && apt-fast -y upgrade && apt-fast update
 
 # Install all APT packages
 
@@ -42,7 +41,7 @@ RUN apt-fast install -y git build-essential  binutils-multiarch nasm \
                         # editors
                         vim emacs \
                         # analysis
-                        afl qemu gdb \
+                        afl qemu gdb patchelf \
                         # web
                         apache2 apache2-dev supervisor
 
@@ -126,16 +125,19 @@ RUN echo "export TZ=$TZ" >> /home/wc/.bashrc
 RUN usermod -a -G www-data wc
 
 #"Installing" the Witcher's Dash that abends on a parsing error when STRICT=1 is set.
-#COPY config/dash /bin/dash
-#COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /bin/dash
+#
 
-COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
+#COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
+COPY --chown=wc:wc /httpreqr/httpreqr.64 /httpreqr
 
 COPY afl /afl
 ENV AFL_PATH=/afl
 
 COPY --chown=wc:wc helpers/ /helpers/
 COPY --chown=wc:wc phuzzer /helpers/phuzzer
+
+RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  pip install archr ipdb "
+
 RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  cd /helpers/phuzzer && pip install -e ."
 
 COPY --chown=wc:wc witcher /witcher/
@@ -145,13 +147,13 @@ RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate && pip install
 COPY --chown=wc:wc wclibs /wclibs
 #COPY --chown=wc:wc bins /bins
 
-#COPY --chown=wc:wc httpreqr /httpreqr
+COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /crashing_dash
 
 ENV CONTAINER_NAME="witcher"
 ENV WC_TEST_VER="EXWICHR"
 ENV WC_FIRST=""
 ENV WC_CORES="10"
-ENV WC_TIMEOUT="600"
+ENV WC_TIMEOUT="1200"
 ENV WC_SET_AFFINITY="0"
 # single script takes "--target scriptname"
 ENV WC_SINGLE_SCRIPT=""

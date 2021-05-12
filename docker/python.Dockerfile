@@ -3,7 +3,7 @@ MAINTAINER tricke
 
 COPY --chown=wc:wc pythonsrc37 /pythonsrc/
 
-RUN cd /pythonsrc && ./configure && make -j50 && make install
+RUN cd /pythonsrc && bash ./configure && make -j50 && make install
 
 COPY config/supervisord.conf /etc/supervisord.conf
 

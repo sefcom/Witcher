@@ -10,8 +10,45 @@ import signal
 import time
 import json
 import glob
+import pwd
 import sys
 import os
+import re
+
+filter_list = ["categories.php",
+               "commands.php",
+               "compliancepolicies.php",
+               "compliancepolicyelements.php",
+               "compliancereports.php",
+               "customProperties.php",
+               "deviceConnTemplates.php",
+               "devices.php",
+               "lib/ajaxHandlers/ajaxArchiveFiles.php",
+               "lib/ajaxHandlers/ajaxBackupSyslog.php",
+               "lib/ajaxHandlers/ajaxDeleteAllLoggingFiles.php",
+               "lib/ajaxHandlers/ajaxDeleteTemplate.php",
+               "lib/ajaxHandlers/ajaxGetFileByPath.php",
+               "lib/ajaxHandlers/ajaxGetIpByDevName.php",
+               "lib/ajaxHandlers/ajaxGetLogFile.php",
+               "lib/ajaxHandlers/ajaxGetTemplateForCreate.php",
+               "lib/ajaxHandlers/ajaxLoadTemplateforedit.php",
+               "lib/ajaxHandlers/ajaxReadDirtoArr.php",
+               "lib/crud/categories.crud.php",
+               "lib/crud/commands.crud.php",
+               "lib/crud/compliancepolicies.crud.php",
+               "lib/crud/compliancepolicyelements.crud.php",
+               "lib/crud/compliancereports.crud.php",
+               "lib/crud/customProperties.crud.php",
+               "lib/crud/devices.crud.php",
+               "lib/crud/scheduler.crud.php",
+               "lib/crud/settingsEmail.crud.php",
+               "lib/crud/snippets.crud.php",
+               "lib/crud/userprocess.php",
+               "lib/crud/vendors.crud.php",
+               "scheduler.php",
+               "updater.php",
+               "useradmin.php",
+               "vendors.php"]
 
 class Witcher():
     AFLR, AFLHR, WICH, WICR, WICHR, EXWIC, EXWICH, EXWICHR, DEV = "AFLR", "AFLHR", "WICH", "WICR", "WICHR", "EXWIC", "EXWICH", "EXWICHR", "DEV"
@@ -26,6 +63,7 @@ class Witcher():
         self.testver = args.testver
         self.dictionary_fn = os.path.join(self.testloc, self.testver,"dict.txt")
         self.seed_path = os.path.join(self.testloc, self.testver, "input")
+        self.work_dir = os.path.join(self.testloc, self.testver, "work")
         self.appdir = args.appdir
 
         path = pathlib.Path(self.seed_path)
@@ -53,7 +91,7 @@ class Witcher():
             self.fuzz_campaign_status = json.load(open(self.fuzz_campaign_status_fn,"r"))
 
         self.request_data_fn = os.path.join(self.testloc,"request_data.json")
-        self.request_data = json.load(open(self.request_data_fn,"r"))
+        self.request_data = json.load(open(self.request_data_fn,"r", encoding='latin-1'))
 
         self.cores = int(self.jconfig.get("cores", args.cores))
         self.timeout = self.jconfig.get("timeout", args.timeout)
@@ -73,7 +111,14 @@ class Witcher():
         self.server_procs = []
         self.kill = False
 
+        if args.container_name:
+            self.container_info = {'name': args.container_name}
+        else:
+            self.container_info = None
+
         self.create_war_filter()
+        self.url_filter = args.url_filter
+
 
     def save_filesdata(self):
         json.dump(self.fuzz_campaign_status,open(self.fuzz_campaign_status_fn,"w"))
@@ -85,12 +130,15 @@ class Witcher():
         env["DOCUMENT_ROOT"] = self.appdir
         if self.affinity is not None:
             env["AFL_SET_AFFINITY"] = self.affinity
-        if "mandatory_cookie" in self.jconfig:
-            env["MANDATORY_COOKIE"] = self.jconfig["mandatory_COOKIE"]
-        if "mandatory_get" in self.jconfig:
-            env["MANDATORY_GET"] = self.jconfig["mandatory_get"]
-        if "mandatory_post" in self.jconfig:
-            env["MANDATORY_POST"] = self.jconfig["mandatory_post"]
+
+        direct = self.jconfig.get("direct",{})
+        if "mandatory_cookie" in direct:
+            env["MANDATORY_COOKIE"] = direct["mandatory_cookie"]
+        if "mandatory_get" in direct:
+            env["MANDATORY_GET"] = direct["mandatory_get"]
+        if "mandatory_post" in direct:
+            env["MANDATORY_POST"] = direct["mandatory_post"]
+
         env["SERVER_NAME"] = env.get("SERVER_NAME","witcher")
         env["STRICT"] = "1"
         self.use_reqr = True if "R" in self.testver else False
@@ -154,45 +202,78 @@ class Witcher():
             start_time = datetime.now().strftime("%Y_%m_%d_%H_%M")
             self.fuzz_campaign_status.append({"trial_start": start_time, "trial_complete": False, "targets": []})
             trial = self.fuzz_campaign_status[trial_index]
+
             for reqkey, req in self.request_data["requestsFound"].items():
 
-                # if "SQL" not in req["_url"].upper():
-                #     continue
-
-                url = urlparse(req["_url"])
-                if req["_method"].upper() == "GET":
-                    if len(url.query) <= 2:
-                        print(f"[*] Skipping {reqkey} b/c {url.query} is {len(url.query)} and less than 3")
-                        continue
-
-                if url.path.endswith("/") and req["_url"].find("/?") > -1:
-                    print(f"[*] Skipping {reqkey} b/c looks like dir listing")
+                if self.url_filter and re.search(self.url_filter, req["_url"]):
+                    pass
+                elif not self.url_filter:
+                    pass
+                else:
+                    # did not match filter, will not add url
                     continue
 
-                if req.get("response_status", 200) == 999:
-                    print(f"[*] Skipping {reqkey} response status was set to 999")
-                    continue
+                match_found = False
+                for x in filter_list:
+                    if re.search(x, req["_url"]):
+                        match_found = True
+                        break
 
 
-                if req["_method"].upper() == "POST":
-                    if len(req["_postData"]) <= 2:
-                        print(f"[*] Skipping {reqkey} b/c no post Data")
+                is_soapaction = False
+                if match_found:
+                    url = urlparse(req["_url"])
+                else:
+                    if re.match(r"http://.*/[a-zA-Z0-9_\-\.]+\.(css|js|toff|woff|jpg|gif|png)\?[0-9a-zA-Z ]*", req["_url"]):
                         continue
 
-                if self.server_cmd:
-                    url = url._replace(query="")
+                    if "_headers" in req and ("soapaction" in req["_headers"] or "SOAPACTION" in req["_headers"]):
+                        retr_url = req["_headers"].get("soapaction", None)
+                        if retr_url is None:
+                            retr_url = req["_headers"].get("SOAPACTION", None)
+                        url = urlparse(retr_url)
+                        is_soapaction = True
+                    else:
+                        url = urlparse(req["_url"])
+
+                    if req["_method"].upper() == "GET":
+                        if len(url.query) + len(req.get("_postData",[])) < 2 :
+                            print(f"[*] Skipping {reqkey} b/c {url.query} is {len(url.query)} and less than 3")
+                            continue
+
+                    if url.path.endswith("/") and req["_url"].find("/?") > -1:
+                        print(f"[*] Skipping {reqkey} b/c looks like dir listing")
+                        continue
+
+                    if req.get("response_status", 200) == 999:
+                        print(f"[*] Skipping {reqkey} response status was set to 999")
+                        continue
+
+
+                    if req["_method"].upper() == "POST":
+                        if len(url.query) + len(req.get("_postData",[])) < 2:
+                            print(f"[*] Skipping {reqkey} b/c no post Data")
+                            continue
+
+                if self.container_info:
                     target_path = urlunparse(url)
                 else:
-                    url = urlparse(req["_url"])
-                    urlpath = url.path
-                    if urlpath.startswith("/"):
-                        urlpath = urlpath[1:]
-                        
-                    target_path = os.path.join(self.appdir, urlpath)
+                    if self.server_cmd:
+                        url = url._replace(query="")
+                        target_path = urlunparse(url)
 
-                    if not os.path.exists(target_path):
-                        target_path = Witcher.find_path(urlpath, last_rootpath)
-                        last_rootpath.add(target_path.replace(urlpath,""))
+                    else:
+                        url = urlparse(req["_url"])
+                        urlpath = url.path
+                        if urlpath.startswith("/"):
+                            urlpath = urlpath[1:]
+
+                        target_path = os.path.join(self.appdir, urlpath)
+
+                        if not os.path.exists(target_path):
+                            target_path = Witcher.find_path(urlpath, last_rootpath)
+                            last_rootpath.add(target_path.replace(urlpath,""))
+
 
                 if self.jconfig.get("afl_inst_interpreter_binary","").find("php-cgi") > -1:
                     if url.path.find(".php") == -1 and not url.path.endswith("/"):
@@ -206,6 +287,9 @@ class Witcher():
                     continue
 
 
+                if target_path.find("HNAP1/Login") > -1:
+                    continue
+
                 # if request has user input, this only checks if query params or post data is passed in
                 if req["_url"].find("?") or req["_url"].find("&") or len(req["_postData"]) > 2:
                     print(f" Fuzzing #{fcnt} at {target_path}")
@@ -214,12 +298,13 @@ class Witcher():
                         if target_path in targets_added:
                             index = targets_added[target_path]
                             trial["targets"][index]["requests"].append(reqkey)
+                            trial["targets"][index]["is_soapaction"] = is_soapaction
                             if method in trial["targets"][index]["methods"]:
                                 trial["targets"][index]["methods"][method] += 1
                         else:
                             targets_added[target_path] = len(trial["targets"])
                             trial["targets"].append({"target_path": target_path, "requests": [reqkey],
-                                                     "methods": {method: 1},
+                                                     "methods": {method: 1}, "is_soapaction": is_soapaction,
                                                      "last_completed_trial": -1, "last_completed_refuzz": -1})
                 else:
                     print(f"Skipping {req['_url']} b/c no query or post data.")
@@ -233,6 +318,8 @@ class Witcher():
     def create_seeds(self, requests):
         seed_name_stub = os.path.join(self.seed_path,"seed-")
         seeds = []
+        if len(requests) > 50:
+            requests = requests[:10]
         for reqkey in requests:
             req = self.request_data["requestsFound"][reqkey]
             strid = req["_id"]
@@ -242,7 +329,13 @@ class Witcher():
             urlquery = url.query.encode("utf-8")
             post_data = req.get('_postData','').encode("utf-8")
 
-            strout = b"%s\x00%s\x00%s" % (cookie_data, urlquery, post_data)
+            headers = req.get('_headers','')
+            headers_out = ""
+            for k,v in headers.items():
+                if k.upper() == "SOAPACTION" or k.upper() == "HNAP_AUTH":
+                    headers_out += f"{k}:{v}\n"
+
+            strout = b"%s\x00%s\x00%s\x00%s" % (cookie_data, urlquery, post_data, headers_out.encode('utf-8'))
             if len(strout) > 3:
                 seeds.append(strout)
         if len(seeds) == 0:
@@ -302,9 +395,10 @@ class Witcher():
 
                 proc_info["proc"] = subprocess.Popen(server_cmd, env=server_env_vars, stdout=outfile,
                                                      stderr=outfile, close_fds=True)
-                print(f"Starting up {proc_info}")
+                #print(f"Starting up {proc_info}")
                 self.server_procs.append(proc_info)
                 increasing_port = increasing_port + 1
+
             wait_cnt = 0
             all_servers_up = False
             time.sleep(2)
@@ -327,7 +421,8 @@ class Witcher():
                         if not si["up"]:
                             print(f"DOING: pkill -P {p.pid}")
                             os.system(f"pkill -P {p.pid}")
-                            os.system(f"pkill -9 -f {p['port']}")
+                            print(f"DOING: pkill -9 -f {si['port']}")
+                            os.system(f"pkill -9 -f {si['port']}")
                             print("attempting to bring up again.")
                             outfile = open(si["logfile"], "a")
                             si["proc"] = subprocess.Popen(si["server_cmd"], env=si["env"], stdout=outfile, stderr=outfile, close_fds=True)
@@ -352,19 +447,33 @@ class Witcher():
 
     def kill_servers(self):
         print("Bringing down external servers")
+
         for si in self.server_procs:
             p = si["proc"]
+            if p:
+                print(f"\tDOING: pkill -P {p.pid}")
+                os.system(f"pkill -P {p.pid}")
             if p and p.poll() is None:
                 try:
                     p.kill()
                 except Exception as ex:
                     print(f"ERROR with bringing down {ex}")
+            print(f"\tDOING: pkill -9 -f {si['port']}")
+            os.system(f"pkill -f {si['port']}")
+            os.system(f"pkill -9 -f 'port={si['port']}'") # just to be sure!
+
+        self.server_procs = []
+
 
 
     def start_fuzzer(self, do_resume, target_path, method_map, dictionary_str, seeds):
 
         os.environ["method_map"] = method_map
         os.environ["SCRIPT_FILENAME"] = target_path
+
+        with open("/tmp/start_test.dat","w") as wf:
+            wf.write("Trace me if you can, little one.")
+
         if target_path.startswith("http"):
             binary_options = self.change_url_to_target(target_path)
             print(f"NEW BIN OPTS {binary_options}")
@@ -372,19 +481,28 @@ class Witcher():
             binary_options = self.binary_options
 
         fuzzer = Phuzzer.phactory(phuzzer_type=Phuzzer.WITCHER_AFL, target=self.fuzzer_target_binary, target_opts=binary_options,
-                                  work_dir=Witcher.WORKING_DIR, seeds=seeds, afl_count=self.cores,
+                                  work_dir=self.work_dir, seeds=seeds, afl_count=self.cores,
                                   create_dictionary=False, timeout=self.timeout, memory=self.memory,
                                   run_timeout=self.run_timeout, dictionary=dictionary_str,
                                   use_qemu=self.use_qemu, resume=do_resume, login_json_fn=self.config_loc,
-                                  base_port=self.server_base_port)
+                                  base_port=self.server_base_port, container_info=self.container_info)
+
+        def chown_files():
+            # by default, AFL creates all files and dirs with permissions of 700
+            # as a result, unless running witcher as root, it cannot access the files unless they are
+            # owned by the current user, which is what this is meant to do. It runs in reporter,
+            if self.container_info:
+
+                fuzzer.chown_container_files(pwd.getpwuid( os.getuid() ).pw_uid)
 
         start_results = {"totalfail": False, "timeout": False }
         reporter = Reporter(self.fuzzer_target_binary, self.report_dir, self.cores, self.first_crash, self.timeout,
-                            fuzzer.work_dir)
+                            fuzzer.work_dir, chown_files=chown_files)
 
         reporter.set_script_filename(target_path)
 
         fuzzer.start()
+
         reporter.start()
         print("Starting Reporter...")
         # Monitor phuzzer's execution
@@ -393,17 +511,26 @@ class Witcher():
             reporter.enable_printing()
             verified_start = False
             run_time = 0
+
             while True:
                 if not verified_start:
+                    chown_files()
                     start_results = fuzzer.startup_status()
                     totalcnt = start_results["totalcnt"]
                     successcnt = start_results["successcnt"]
-                    if totalcnt == self.cores or run_time > 120:
+                    forkfailcnt = start_results["forkfail"]
+                    if forkfailcnt >= 1:
+                        print(f"[*]\033[31mError at least 1 instance failed to communicate with fork server \033[0m")
+                        import ipdb
+                        ipdb.set_trace()
+                        raise Exception("Fork server handshake failure count too high")
+                    if successcnt + len(start_results['failedseeds']) == self.cores or run_time > 120:
                         verified_start = True
-                        success_percent = (float(successcnt) / float(totalcnt)) * 100
+                        success_percent = (float(successcnt) / float(totalcnt)) * 100 if totalcnt > 0 else 0
                         if success_percent < 80:
                             print(f"[*] Error less than 80% ({successcnt}/{totalcnt} = {success_percent:3.2f})of the fuzzers started up successfully please investigate")
                             start_results["totalfail"] = True
+
                             break
                         else:
                             start_results["totalfail"] = False
@@ -411,6 +538,7 @@ class Witcher():
                         start_results["totalfail"] = False
 
                 if not crash_seen and fuzzer.found_crash():
+                    chown_files()
                     # print ("\n[*] Crash found!")
                     crash_seen = True
                     reporter.set_crash_seen()
@@ -430,16 +558,18 @@ class Witcher():
             self.kill = True
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             end_reason = "Exception occurred"
             print("\n[*] Unknown exception received (%s). Terminating fuzzer." % e)
             self.kill = True
             raise
         finally:
             print("[*] Terminating fuzzer.")
-            self.kill_servers()
+            chown_files()
             reporter.stop()
             fuzzer.stop()
-
+            os.system("rm -f /tmp/start_test.dat")
             if self.kill:
                 exit(199)
         return start_results
@@ -451,14 +581,65 @@ class Witcher():
         results_dir = os.path.join(self.report_dir, targets_dir)
         return results_dir
 
+    def fix_perms_in_dir(self, tdir):
+        if not os.path.exists(tdir):
+            print(f"Target dir {tdir} does not exist.")
+            return
+
+        # this is only a problem for qemu-user targets running in a docker container
+        if self.container_info:
+            perm_id = pwd.getpwuid( os.getuid() ).pw_uid
+
+            perm_cmd = f"cd {tdir}/.. && /bin/chown {perm_id}:{perm_id} -R . && find . -type d -exec chmod +rx {{}} \; " \
+                       f"&& find . -type f -exec chmod +r {{}} \;"
+
+            volume = f"{tdir}:{tdir}"
+            perm_cmd = ["docker", "run", "--rm", "-v", volume, "ubuntu:20.04", "/bin/bash", "-c", perm_cmd]
+
+            subprocess.check_output(perm_cmd)
+
+
+    # it uses this method b/c with qemu-user running as root, AFL creates unreadble file permissions
+    def docker_copy(self, from_dir, to_dir):
+        if not os.path.exists(from_dir):
+            print(f"From dir {from_dir} does not exist, cannot copy.")
+            return
+
+        os.makedirs(to_dir, exist_ok=True)
+
+        from_volume = f"{from_dir}:/from"
+        to_volume = f"{to_dir}:/to"
+        cp_cmd = ["docker", "run", "--rm", "-v", from_volume,"-v", to_volume, "ubuntu:20.04",
+                  "/bin/cp", "-a", "/from/.", "/to"]
+
+        subprocess.check_output(cp_cmd)
+
+        # just in case a rouge file gets created between last permission set and the copy, make sure all the files in
+        # in the to directory have acceptable permissions
+        self.fix_perms_in_dir(to_dir)
+
     def copy_fuzzer_output_to_results(self, trial_index, target_path):
+        if self.container_info:
+            self.fix_perms_in_dir(self.work_dir)
 
         dst = self.results_target_dir(trial_index, target_path)
 
-        print(f"Copy from {Witcher.WORKING_DIR} to dst={dst}")
+        print(f"Copy from {self.work_dir} to dst={dst}")
+
         if os.path.exists(dst):
             shutil.rmtree(dst)
-        shutil.copytree(Witcher.WORKING_DIR, dst)
+
+        if self.container_info:
+            self.docker_copy(self.work_dir, dst)
+        else:
+            try:
+                shutil.copytree(self.work_dir, dst)
+            except:
+                time.sleep(10)
+                try:
+                    shutil.copytree(self.work_dir, dst)
+                except:
+                    print("\033[31mError couldn't copy results \033[0m\n")
 
     def copy_fuzzer_results_to_output(self, trial_index, target_path):
 
@@ -500,6 +681,7 @@ class Witcher():
         url = url._replace(netloc=netloc)
         strurl=urlunparse(url)
         out_opts = []
+
         for cmdopt in self.binary_options:
             out_opts.append(cmdopt.replace("@@url@@", strurl))
         return out_opts
@@ -557,16 +739,16 @@ class Witcher():
             for trial_index in range(0, nbr_trials):
                 self.init_shared_memory()
 
-                self.start_external_servers()
-
                 print(f"TRIAL INDEX = {trial_index}")
                 self.init_fuzz_campaign_status(trial_index)
                 trial = self.fuzz_campaign_status[trial_index]
                 targets = trial["targets"].copy()
-                print(f"Trial_start = {trial['trial_start']}")
+                print(f"Trial start = {trial['trial_start']}")
 
                 if self.jconfig["script_random_order"] == 1:
                     random.shuffle(targets)
+
+                self.start_external_servers()
 
                 for refuzz_index in range(0, nbr_refuzzes):
                     if self.jconfig["script_random_order"] == 2:
@@ -585,35 +767,74 @@ class Witcher():
                             print(f"Skipping {target['target_path']} Trial={trial_index}, Refuzz={refuzz_index} last_completed_refuzz={target['last_completed_refuzz']}")
                             continue
 
+                        regex = re.compile(r"(?P<prefix>http://)([0-9\.]+)(?P<postfix>.*)")
+
+                        target_url = target['target_path']
+                        result_storage_pathname = target_url
+
                         do_resume = refuzz_index > 0
 
-                        if do_resume:
-                            self.copy_fuzzer_results_to_output(trial_index, target['target_path'])
+                        # if soapaction, then go to url of first request if exists else default
 
-                        print(f"FUZZING \033[33m{target['target_path']}\033[0m Trial={trial_index}, Refuzz={refuzz_index} last_completed_refuzz={target['last_completed_refuzz']}")
+                        if target['is_soapaction']:
+                            if len(target['requests']) > 0 :
+                                req0 = target['requests'][0]
+
+                                trequest = self.request_data['requestsFound'][req0]
+                                target_url = trequest["_url"]
+                                soap_urlstr = None
+                                if "soapaction" in trequest["_headers"]:
+                                    soap_urlstr = trequest["_headers"]["soapaction"]
+                                elif "SOAPACTION" in trequest["_headers"]:
+                                    soap_urlstr = trequest["_headers"]["SOAPACTION"]
+
+                                if soap_urlstr:
+                                    soap_urlstr = soap_urlstr.replace('"', "")
+                                    result_storage_pathname = urlparse(soap_urlstr).path
+                            else:
+                                target_url = "http://127.0.0.1/HNAP1"
+
+                        urlmatch = regex.match(target_url)
+                        if urlmatch:
+                            if self.container_info:
+                                target_url = regex.sub(r'\g<prefix>127.0.0.1\g<postfix>', target_url)
+                            if not target["is_soapaction"]:
+                                result_storage_pathname = urlparse(target_url).path
+
+                        print(f"FUZZING \033[33m{target['target_path']}\033[0m Trial={trial_index}, Refuzz={refuzz_index} last_completed_refuzz={target['last_completed_refuzz']} result_path={result_storage_pathname}")
+
+                        if do_resume:
+                            self.copy_fuzzer_results_to_output(trial_index, result_storage_pathname)
+
                         seeds = self.create_seeds(target["requests"])
                         dictionary_str = self.create_dictionary(target)
 
                         method_map = self.build_methd_map(target["methods"])
-                        start_results = self.start_fuzzer(do_resume, target["target_path"], method_map, dictionary_str, seeds)
+                        start_results = self.start_fuzzer(do_resume, target_url, method_map, dictionary_str, seeds)
                         #return {"successcnt":success, "totalcnt":totallogs, "testfailed":testfailed, "failedseeds": failedseeds}
                         # if startup fails (in other words there's more fuzzers that failed to come up than successful ones.
 
-                        while len(seeds) > 0 and (start_results.get("totalfail", True) and start_results.get("testfailed", 0) > 0):
+                        while len(seeds) > 0 and (start_results.get("totalfail", True)):
                             failed_seeds = start_results.get("failedseeds", [])
                             if failed_seeds:
+                                print(f"We have {len(failed_seeds)} seeds that caused a failure during initialization")
                                 for fn in failed_seeds:
-                                    seedpath = f"/tmp/output/initial_seeds/{fn}"
+                                    seedpath = f"{self.work_dir}/initial_seeds/{fn}"
                                     if os.path.exists(seedpath):
-                                        with open(seedpath,"rb") as rf:
-                                            print(f"Removing seed  {seedpath} len={len(seeds)}")
-                                            seeds.remove(rf.read())
-                                            print(f"Aftrer removal len={len(seeds)}")
+                                        os.remove(seedpath)
+                                seeds = []
+                                for fn in glob.iglob(f"{self.work_dir}/initial_seeds/*"):
+                                    with open(fn,"rb") as rf:
+                                        seeds.append(rf.read())
                             else:
-                                seeds.remove(seeds[0])
+                                print("\033[36mCould not find and failed seeds, so removing last seed")
+                                seeds.remove(seeds[len(seeds)-1])
 
                             print(f"\033[33mAttempting to fuzz again {target['target_path']}\033[0m with {len(seeds)} seeds and {start_results}")
-                            start_results = self.start_fuzzer(do_resume, target["target_path"], method_map, dictionary_str, seeds)
+                            start_results = self.start_fuzzer(do_resume, target_url, method_map, dictionary_str, seeds)
+
+                        if start_results.get("totalfail", True):
+                            print(f"EXITING while but total fail still True with {start_results}")
 
                         if start_results.get("timeout", False):
                             target["last_completed_trial"] = trial_index
@@ -621,21 +842,27 @@ class Witcher():
                         else:
                             print(f"\033[31mFailed to FUZZ {target['target_path']}\033[0m")
 
-                        self.copy_fuzzer_output_to_results(trial_index, target['target_path'])
+                        #os.system(f"sudo chown etrickel:etrickel {self.work_dir}/. -R")
+
+                        self.copy_fuzzer_output_to_results(trial_index, result_storage_pathname)
                         self.save_campaign_status()
                         sys.stdout.flush()
                         time.sleep(1)
                         self.kill_servers()
                         print("Sleeping a few and then will start up external servers ")
                         time.sleep(10)
+
+                        self.fix_perms_in_dir(self.work_dir) # extra precaution for perms, I'm tired of these exceptions coming at the end of the loop!
+
                         self.start_external_servers()
                 self.kill_servers()
 
         except Exception as exp:
             import traceback
             traceback.print_exc()
-            self.kill_servers()
+
         finally:
+            self.kill_servers()
             os.environ.clear()
             os.environ.update(_environ_backup)
             # kill supervisor to shutdown container, if its parent is supervisord (pid == 1)
