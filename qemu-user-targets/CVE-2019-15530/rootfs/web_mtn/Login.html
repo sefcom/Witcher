@@ -1,0 +1,377 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link href="css/jquery.selectbox.css" type="text/css" rel="stylesheet"/>
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/Login.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.qrcode.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<style>
+.loginstyled-text{
+    color:#333333;
+    border: 1px solid #e1e6ec;
+	border-right:none;
+    font-size: 14px;
+    height: 40px;
+	line-height: 40px;
+	padding-left:14px;
+    width: 284px;
+	float:left;
+
+}
+.login-style-texteye-div {
+    height: 40px;
+    line-height: 40px;
+    position: relative;
+    width: 328px;
+}
+
+.login-styled-texteye-long{
+   color:#333333;
+    border: 1px solid #e1e6ec;
+    font-size: 14px;
+    height: 40px;
+	line-height: 40px\9;
+	padding-left:14px;
+    width: 284px;
+	padding-right:30px;
+}
+
+#code{
+width:78px;
+height:78px;
+position:relative;
+}
+#codeico{
+position:absolute;
+width:36px;
+height:36px;
+top:28px;
+left:24px;
+ }
+ 
+#homefooter, .footer_home{height:48px;}    
+.footer_home{clear:both;}   
+ .wrapper{    
+   min-height:100%;    
+   _height:100%;    
+   margin-bottom:-48px; 
+}
+.error_login{
+    background-image: url("image/icon_jingshi.png");
+    background-repeat: no-repeat;
+    height: 16px;
+    overflow: hidden;
+    width: 16px;
+	padding-top:1px;
+	margin-right:6px;
+}
+
+.login_text_eye_div
+{
+	border: 1px solid #498fc0;
+    position: relative;
+	padding-left: 14px;
+	padding-right: 36px;
+	border-radius: 4px;
+}
+
+.login_text_eye_input
+{
+	color: #333333;
+    border: 0;
+    font-size: 14px;
+    height: 40px;
+	line-height: 40px\9;
+    width: 278px;
+}
+
+.wizardwelcom{
+background-image:url("image/pic_login_bg.png");
+background-repeat:repeat-x;
+}
+.wizardwelcombox{
+    left: 50%;
+    margin-left: -303px;
+    margin-top: -300px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: fixed;
+    top: 50%;
+    width: 606px;
+	height:418px;
+    z-index: 2;
+	border-radius: 8px;
+	background-color:#ffffff;
+}
+.inputpwdlable{
+	top:7.5px;
+}
+.ui-input-rightimg_eye1{
+	top: 11px;
+}
+</style>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+//var HNAP = new HNAP_XML();
+
+$(document).ready( function() {
+  G_MacBookFlag=$.cookie('ismacportal');
+  if(G_MacBookFlag)
+  {
+  	document.getElementById("CreatePopMacMessage").style.display="";
+	return ;
+  
+  }
+	
+	document.getElementById("admin_Password1").onclick = function()
+	{
+		document.getElementById("pwdstr1").style.display = "none";
+	};
+	document.getElementById("admin_Password1").onblur = function()
+	{
+		document.getElementById("admin_Password2").value=this.value;
+		if (this.value.length == 0)
+		{
+			document.getElementById("pwdstr1").style.display = "inline";
+		}
+	};
+	
+	document.getElementById("admin_Password2").onclick = function()
+	{
+		document.getElementById("pwdstr2").style.display = "none";
+	};
+	document.getElementById("admin_Password2").onblur = function()
+	{
+		document.getElementById("admin_Password1").value=this.value;
+
+		if (this.value.length == 0)
+		{
+			document.getElementById("pwdstr2").style.display = "inline";
+		}
+	};	
+	
+	$("#admin_Password1").bind('input propertychange',function(){
+		document.getElementById("pwdstr1").style.display = "none";
+	});
+	$("#admin_Password2").bind('input propertychange',function(){
+		document.getElementById("pwdstr2").style.display = "none";
+	});
+	
+	document.title=I18N("j","Login_Router_Name");//DIR-822+
+	document.getElementById("logIn_btn").value = I18N("j","Login_Btn");//登录
+	GetLanguage();
+});
+
+//根据语言修改样式
+function GetLanguage()
+{
+	if(G_Language == "en-us")
+	{
+		$("#download_app").css({"margin-left":"3px"});
+	}
+}
+
+function OnClickLogin()
+	{
+		var Login_Password = document.getElementById("admin_Password1").value;
+
+		var Login_Captcha = "";
+		//document.getElementById("admin_Password1").disabled = true;
+		//document.getElementById("admin_Password2").disabled = true;
+
+		document.getElementById("logIn_btn").disabled = true;
+		document.getElementById("error_1").style.display="none";
+		doLogin(Login_Password,Login_Captcha)
+		.done(function(){
+			var problem_goto_page = $.cookie('problem_page');
+			if (typeof(problem_goto_page) != "undefined") {
+				$.removeCookie('problem_page');
+				window.location.href = problem_goto_page;
+				return;
+			}
+			
+			
+             var redirect_url = $.cookie("RedirectUrl");
+			
+			if((redirect_url == null) || (redirect_url.indexOf("Login.html") > 0) || (redirect_url.indexOf("html") < 0))
+			{
+				window.location.href = "/Home.html";	
+			}
+			else								
+			{	
+				window.location.href = redirect_url;		
+			}
+		})
+		.fail(function(){
+			//document.getElementById("admin_Password1").disabled = false;
+			//document.getElementById("admin_Password2").disabled = false;
+			document.getElementById("logIn_btn").disabled = false;
+
+			//alert("密码错误，请重新输入");
+			if(document.getElementById("admin_Password1").value =="")
+			{
+				//showErr("error_1","errorinfo_1",I18N("j","Err_Login_PwdEmpty"));
+				if(G_Language == "en-us")
+				{
+					showErr("error_1","errorinfo_1","Please enter the login password.");
+				}
+				else
+				{
+					showErr("error_1","errorinfo_1","请输入登录密码。");
+				}
+			}
+			else
+			{
+				//showErr("error_1","errorinfo_1",I18N("j","Err_Login_PwdInvalid"));
+				if(G_Language == "en-us")
+				{
+					showErr("error_1","errorinfo_1","The password is wrong, please enter again.");
+				}
+				else
+				{
+					showErr("error_1","errorinfo_1","密码错误，请重新输入。");
+				}
+			}
+			if(document.getElementById("loginpassworddiv2").style.display == "none")
+			{
+				document.getElementById("admin_Password1").focus();
+				document.getElementById("pwdstr1").style.display = "none";
+			}
+			else
+			{
+				document.getElementById("admin_Password2").focus();
+				document.getElementById("pwdstr2").style.display = "none";
+			}
+			//document.getElementById("error_1").style.display="";
+			document.getElementById("admin_Password1").value = "";
+			document.getElementById("admin_Password2").value = "";
+		});		
+	}
+
+	function detect_KeyValue(e)
+	{
+		var key = window.event ? e.keyCode : e.which;
+		if (key == 13)	
+		{	
+			if($("#loginpassworddiv1").is(":hidden"))
+			document.getElementById("admin_Password1").value=document.getElementById("admin_Password2").value;
+			else
+			document.getElementById("admin_Password2").value=document.getElementById("admin_Password1").value;
+			document.getElementById("logIn_btn").click();
+		}
+	}
+	
+function passwordType(tag,wirelesstype)
+{
+	if(tag==0)//显示密码
+	{
+			document.getElementById("loginpassworddiv1").style.display="none";
+			document.getElementById('loginpassworddiv2').style.display="";
+			if (document.getElementById("admin_Password2").value.length == 0)
+			{
+				document.getElementById("pwdstr2").style.display = "inline";
+			}
+			else
+			{
+				document.getElementById("pwdstr2").style.display = "none";
+			}
+			
+
+	}
+	else//隐藏密码
+	{
+			if (document.getElementById("admin_Password1").value.length == 0)
+			{
+				document.getElementById("pwdstr1").style.display = "inline";
+			}
+			else
+			{
+				document.getElementById("pwdstr1").style.display = "none";
+			}
+			
+			document.getElementById('loginpassworddiv1').style.display="";
+			document.getElementById('loginpassworddiv2').style.display="none";
+	}
+	
+}	
+</script>
+</head>
+
+<body class="wizardwelcom">
+
+<div class="wizardwelcombox">
+	<div style="background-color:#4598aa; height:88px;">
+		<div style="margin-left:150px; "><div class="pull-left" style="padding-top:27px; padding-right:12px;"><img src="image/d-link_logo02.png" width="148" height="30"></div><div class="pull-left" style="margin-top:30px;border-left:3px solid #ffffff; height:28px; line-height:28px; padding-left:18px;color:#ffffff; font-size:28px; font-weight:bold;">&nbsp;DIR-823G&nbsp;&nbsp;</div></div>
+	</div>
+		<table cellspacing="0" cellpadding="0"  style=" width:width:290px; margin:0 auto;margin-top:68px;">
+		
+		<tr>
+				<td>
+				<div class="login_text_eye_div" id="loginpassworddiv1">
+				   <input type="password" id="admin_Password1" size="27" maxlength="63" name="admin_Password1" class="login_text_eye_input hiddeneye"  onkeydown="detect_KeyValue(event);">
+				   <div class="ui-input-rightimg_eye1" id="closepassword2" onClick="passwordType(0);"><img src="image/icon_xianshi.png" height="20" width="20"></div>
+					<label id="pwdstr1" for="admin_Password1" class="inputpwdlable"><script>I18N("h","Login_Password");</script><!-- 请输入管理员密码 --></label>
+				</div>
+				<div class="login_text_eye_div" id="loginpassworddiv2" style="display:none; ">
+				  <input type="text" id="admin_Password2" size="30" maxlength="63" name="admin_Password2" class="login_text_eye_input hiddenclean"   onkeydown="detect_KeyValue(event);">
+				  <div class="ui-input-rightimg_eye1" id="openpassword2" onClick="passwordType(1);"><img src="image/icon_yingcang.png" height="20" width="20"></div>
+				<label id="pwdstr2" for="admin_Password2" class="inputpwdlable"><script>I18N("h","Login_Password");</script><!-- 请输入管理员密码 --></label>
+				</div>
+				</td>
+	  </tr>		
+		<tr id="error_1" style="display:none;" align="left">
+				<td class="errorinfo" style="padding-top:12px; ">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<div class="error_login"></div>
+								</td>
+								<td id="errorinfo_1"></td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			  </tr>		
+		<tr style="height:28px; "></tr>
+		<tr><td><input type="button" value="" id="logIn_btn" class="styled_button_long" onClick="OnClickLogin();"></td></tr>
+	  </table>
+</div>
+
+
+
+
+
+
+<div id="CreatePopMacMessage"  style=" display:none;" class="CreateTransparentBg">
+	  <div class="AlertPopRect">
+			  <div style="font-size:14px;color:#666666;">
+				<table style="height:126px;width:400px; text-align:center; margin:0 auto;" align="center">
+					<tr>
+						<td style="height:40px; line-height:40px; ">
+						<script>I18N("h","Login_Portal");</script>
+						<!-- 您的电脑不支持Portal页面配置，无法进行正常配置<br>
+						请您将Portal页面关闭后重新打开浏览器进行登录配置 -->
+						</td>
+					</tr>
+				</table>
+				</div>
+	  </div>
+</div>
+</body>
+</html>

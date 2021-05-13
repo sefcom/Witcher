@@ -1,0 +1,4 @@
+echo 1 > /proc/sys/net/bridge/bridge-http-redirect-flush-mac
+/usr/bin/pgrep -f /usr/bin/wifidog | /usr/bin/xargs /bin/kill -9 > /dev/null 2>&1
+/bin/busybox sleep 10
+/sbin/start-stop-daemon -S -x /usr/bin/wifidog -- -c /etc/wifidog.conf -s

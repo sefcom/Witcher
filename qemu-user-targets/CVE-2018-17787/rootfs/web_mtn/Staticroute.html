@@ -1,0 +1,932 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/AdvWlanAccess.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPStaticroute.js"></script>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var G_List = [];
+var G_list_Length=0;
+var G_BList=[];
+var ExistNetworkList=[];//存放已有net表目
+var DebugMode=0;
+var lanip="";
+var lanmask="";
+var wanip="";
+var wanmask="";
+var wangateway="";
+var wantype="";
+var guestip="";
+var guestmask="";
+var MAX_TABLELIST_NUM=16;//表中最大规则数
+var modify=false;
+var modifyID = -1;
+//var HNAP = new HNAP_XML();
+
+function Load_HTML()	
+{	
+	$("#select_wantype").selectbox();
+	
+}
+
+
+$(document).ready( function() {
+	document.getElementById("right_content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	MoreContainMiniheight();
+	Load_HTML();
+	GetXML();
+	checkTimeout();
+	
+	document.getElementById("savebutton5").value = I18N("j","Commom_Save");//保存
+	document.getElementById("cancelbutton").value = I18N("j","Commom_Cancel");//取消
+	document.getElementById("savebutton").value = I18N("j","Commom_Apply");//确定
+	$("#savebutton5").attr("disabled",true).removeClass("styled_button_s_active").addClass("styled_button_s");
+	$("input[type='text']").live("keyup",function () {
+		addInput(this);
+	});
+});
+function addInput(label){
+	//hideAllErrorInfo();
+	//$("#error_list_num").hide();
+	if(label.id=="dest_ip"){
+		$("#error_1").hide();
+		var dest_ipValue=$(label).val();
+		var IPresult=checkIpAddr(dest_ipValue);
+		switch(IPresult)//目的网络地址
+		{
+			case ERR_IP_EMPTY:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrEmpty"));
+				return false;
+			case ERR_IP_NOTNUMBER:
+			case ERR_IP_FORMAT:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrFormat"));
+				return false;
+			case ERR_IP_ALLZERO:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrAllZero"));
+				return false;
+			case ERR_IP_ALLONE:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrAllOne"));
+				return false;
+			case ERR_IP_INVALID:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrNet"));
+				return false;
+			case ERR_IP_FIRSTZERO:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrFirstZero"));
+				return false;
+			case ERR_IP_LOOP:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrLoop"));
+				return false;
+			case ERR_IP_GROUP:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrGroup"));
+				return false;
+		}
+
+			if(($.inArray(dest_ipValue,ExistNetworkList))!=-1)
+			{
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSame"));
+				return false;
+			}
+
+	}else if(label.id=="dest_mask"){
+		$("#error_2").hide();
+		var dest_maskValue=$(label).val();
+		var maskresult=isValidMask(dest_maskValue);//检查Mask格式是否正确
+		switch(maskresult)
+		{
+			case ERR_MASK_EMPTY:
+				showErr("error_2","errorinfo_2",I18N("j","Err_Staticroute_MaskEmpty"));//空mask
+				return false;
+			case ERR_MASK_ONE:
+			//	break;
+			case CORRECT:
+				if(CORRECT!=checkNetMaskMatch(dest_ipValue,dest_maskValue))
+				{
+					showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_IpMaskNotMatch"));//IP和mask不匹配
+					return false;
+				}
+
+				//判断目的网络是否在lan侧
+				var destmask_Int=transIptoInt(dest_maskValue);//将目的mask转换成整数
+				var lanmask_Int=transIptoInt(lanmask);//将lanmask转换成整数
+				var checklanmask=( destmask_Int < lanmask_Int ? dest_maskValue : lanmask);//取得较小者
+				if(isSameNet(dest_ipValue,lanip,checklanmask)!=ERR_IP_DIFFNET)
+				{
+					showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSameLan"));
+					return false;
+				}
+				//判断目的网络是否与访客网络相同
+				var guestmask_Int=transIptoInt(guestmask);//将guestmask转换成整数
+				var checkguestmask=( destmask_Int < guestmask_Int ? dest_maskValue : guestmask);//取得较小者
+				if(isSameNet(dest_ipValue,guestip,checkguestmask)!=ERR_IP_DIFFNET)
+				{
+					showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSameGuest"));
+					return false;
+				}
+				if(wanmask!="")//判断目的网络是否在wan侧
+				{
+					var wanmask_Int=transIptoInt(wanmask);//将wanmask转换成整数
+					var checkwanmask=( destmask_Int < wanmask_Int ? dest_maskValue : wanmask);//取得较小者
+					if(isSameNet(dest_ipValue,wanip,checkwanmask)!=ERR_IP_DIFFNET)
+					{
+						showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSameWan"));
+						return false;
+					}
+				}
+				break;
+			default:
+				showErr("error_2","errorinfo_2",I18N("j","Err_Staticroute_Mask"));
+				return false;
+		}
+
+	}else if(label.id=="dest_gateway"){
+		$("#error_3").hide();
+		var dest_gatewayValue=$(label).val();
+		var gatewayresult=checkIpAddr(dest_gatewayValue);
+		switch(gatewayresult)//检查网关
+		{
+			case ERR_IP_EMPTY:
+				showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayEmpty"));
+				return false;
+			case CORRECT:
+				//网关需要在lan或wan侧网段
+				if(wanmask=="")
+				{
+					if(isSameNet(dest_gatewayValue,lanip,lanmask)==ERR_IP_DIFFNET)
+					{
+						showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_NetworkLanWanNotSubet"));
+						return false;
+					}
+					else if(ERR_HOSTID_INV==checkIpMaskMatch(dest_gatewayValue,lanmask))//用mask检查Lan IP，主机号全0或1
+					{
+						showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayHostId"));
+						return false;
+					}
+				}
+				else if(wantype == "DHCPPPPoE")
+				{
+					if(isSameNet(dest_gatewayValue,lanip,lanmask)==ERR_IP_DIFFNET && (dest_gatewayValue+"")!=wangateway)
+					{
+						showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_NetworkpppoeWan"));
+						return false;
+					}
+				}
+				else if(isSameNet(dest_gatewayValue,lanip,lanmask)==ERR_IP_DIFFNET && isSameNet(dest_gatewayValue,wanip,wanmask)==ERR_IP_DIFFNET)//检查是否在lan或wan网段
+				{
+					showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_NetworkLanWanNotSubet"));
+					return false;
+				}
+				else if(isSameNet(dest_gatewayValue,lanip,lanmask)==SAMESUBNET && ERR_HOSTID_INV==checkIpMaskMatch(dest_gatewayValue,lanmask))
+				{
+					showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayHostId"));//用mask检查Lan IP，主机号全0或1
+					return false;
+				}
+				else if(isSameNet(dest_gatewayValue,wanip,wanmask)==SAMESUBNET && ERR_HOSTID_INV==checkIpMaskMatch(dest_gatewayValue,wanmask))
+				{
+					showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayHostId"));//用mask检查Wan IP，主机号全0或1
+					return false;
+				}
+
+				break;
+			default:
+				showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayFormat"));
+				return false;
+		}
+	}
+
+}
+function IschangeFlag()
+{
+	if(G_List!=G_BList)
+	{
+		changeFlag=true;
+	}
+	else
+	{
+		changeFlag=false;
+	}
+	
+}
+
+function GetXML()	
+	{	
+		GetResult_1st();
+	}
+	function GetResult_1st()
+	{
+
+		var soapAction = new SOAPAction();
+		var sOAPGetnetworksResponse = new SOAPGetnetworksResponse();
+		var sOAPGetGuestouterResponse=new SOAPGetGuestouterResponse();
+		var sOAPGetWanSettingsResponse = new SOAPGetWanSettingsResponse();
+		var sOAPGetStaticouteResponse = new SOAPGetStaticrouteResponse();
+		//LAN口相关
+		var lanMessage = soapAction.sendSOAPAction("GetNetworkSettings", null, sOAPGetnetworksResponse);
+		//guest相关
+		var guestMessage = soapAction.sendSOAPAction("GetGuestNetworkSettings", null, sOAPGetGuestouterResponse);
+		//wan相关
+		var wanMessage = soapAction.sendSOAPAction("GetWanSettings", null,sOAPGetWanSettingsResponse);
+		//staticRoute
+		var staticRouters = soapAction.sendSOAPAction("GetStaticRouteSettings", null,sOAPGetStaticouteResponse);
+
+		$.when(lanMessage,wanMessage,staticRouters,guestMessage)
+				.done(function(r1,r2,r3,r4){
+					GetResult_2nd(r1,r2,r3,r4);
+				})
+				.fail(function(){
+					if (DebugMode == 1)	{
+						alert("[!!GetXML Error!!] Function: GetResult_1nd");
+					}
+				});
+
+
+		/*var result_xml = new StringDoc();
+		if (result_xml != null)
+		{
+			result_xml.Set("GetMultipleHNAPs/GetStaticRouteSettings");
+			result_xml.Set("GetMultipleHNAPs/GetNetworkSettings");
+			result_xml.Set("GetMultipleHNAPs/GetSysStatus");
+			result_xml.Set("GetMultipleHNAPs/GetGuestNetworkSettings");
+			HNAP.SetXMLAsync("GetMultipleHNAPs", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+		}
+		else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}*/
+	}
+	
+	function GetResult_2nd(lanMessage,wanMessage,staticRouters,guestMessage)
+	{
+
+		lanip=lanMessage.IPAddress;
+		lanmask=lanMessage.SubnetMask;
+
+		wanip = wanMessage.IPAddress;
+		wanmask = wanMessage.SubnetMask;
+		wangateway = wanMessage.Gateway;
+		wantype = wanMessage.Type;
+
+		guestip = guestMessage.IPAddress;
+		guestmask = guestMessage.SubnetMask;
+
+		for(var i = 0;i<staticRouters.StaticRouteClientInfoLists.ClientInfo.length;i++){
+			var clientInfoList = [];
+			clientInfoList[0]=staticRouters.StaticRouteClientInfoLists.ClientInfo[i].IPAddress;
+			clientInfoList[1]=staticRouters.StaticRouteClientInfoLists.ClientInfo[i].SubnetMask;
+			clientInfoList[2]=staticRouters.StaticRouteClientInfoLists.ClientInfo[i].Gateway;
+			G_List.push(clientInfoList);
+			G_BList.push(clientInfoList);
+		}
+		CreateBindTable();
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+
+
+		//var GetResult_2nd = result_xml.Get("GetStaticRouteSettingsResponse/GetStaticRouteSettingsResult");
+		/*var GetResult_2nd = result_xml.Get("GetMultipleHNAPsResponse/GetMultipleHNAPsResult");
+		if (GetResult_2nd == "OK"){
+			lanip=result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_ipaddr");
+			lanmask=result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_netmask");
+			
+			wanip = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_ipaddr");
+			wanmask = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_netmask");
+			wangateway = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_gateway");
+			wantype = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_proto");
+			
+			guestip=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_ipaddr");
+			guestmask=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_netmask");
+			
+			var ruleinfo= result_xml.Get("GetMultipleHNAPsResponse/GetStaticRouteSettingsResponse/staticroute_list");
+			var rulelist=[];
+			var ruletem=[];
+			if(ruleinfo!="")
+			{
+				ruletem=ruleinfo.split(";");
+			}
+			for(var i=0;i<ruletem.length;i++)
+			{
+				G_List.push(ruletem[i].split(","));	
+				G_BList.push(ruletem[i].split(","));	
+				
+			}
+			
+			//G_BList=G_List;
+
+			CreateBindTable();
+			document.getElementById("right_content").style.display="";
+			document.getElementById("CreateOnloadMessage").style.display="none";
+			
+		} else {	
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+			if (DebugMode == 1)	{	
+				alert("[!!GetXML Error!!] Function: GetResult_2nd");
+			}
+		}*/
+	}
+	
+function CreateBindTable()
+{
+	if(G_List.length>0)
+	{
+		document.getElementById("trnull").style.display="none";
+	}
+	else
+	{
+		document.getElementById("trnull").style.display="";
+	}
+	ClearTable("staticroutelist",3);
+	var TableList=[];
+	ExistNetworkList=[];
+	for(var i=0;i<G_List.length;i++)
+	{
+		TableList[i]=[];
+		TableList[i].push(i+1);
+		TableList[i].push(G_List[i][0]); //ip
+		TableList[i].push(G_List[i][1]); //mask
+		TableList[i].push(G_List[i][2]); //gateway
+		ExistNetworkList.push(G_List[i][0]);
+		TableList[i].push("<div class='editimg' style='float:left;width:50%; background-position:center;' onclick='modifyData("+i+")'></div><div style='float:left;width:50%; background-position:center;' class='delimg' onclick='deleteData("+i+")'></div>");
+	}
+	CreateTable("staticroutelist", TableList);
+}
+
+	function modifyData(id)
+	{
+		document.getElementById("savebutton").disabled=false;
+		edit=-1;
+		document.getElementById("createPop").style.display = "";
+		document.getElementById("dest_ip").value=G_List[id][0];
+		document.getElementById("dest_mask").value=G_List[id][1];
+		document.getElementById("dest_gateway").value=G_List[id][2];
+		modify=true;
+		modifyID=id;
+		ExistNetworkList.splice(modifyID,1);
+	}
+
+	
+	function AddCancle()
+	{
+		document.getElementById("createPop").style.display = "none";
+		hideAllErrorInfo();
+		if(modify){
+			ExistNetworkList.splice(modifyID,0,[G_List[modifyID][0]]);
+		}
+	}
+	
+	
+	
+	function Add()
+	{
+		edit=-1;
+		document.getElementById("createPop").style.display = "";
+		document.getElementById("dest_ip").value="";
+		document.getElementById("dest_mask").value="";
+		document.getElementById("dest_gateway").value="";
+		var row_num=G_List.length;
+		if(row_num >= MAX_TABLELIST_NUM)
+		{
+			showErr("error_list_num","errorinfo_list_num",I18N("j","Err_Staticroute_ListNumRange"));
+			document.getElementById("savebutton").disabled=true;
+		}
+		modify=false;
+	}
+
+	
+	function closeCreateRulePOP()
+	{
+		var result=checkSetValues();
+		if(result)
+		{
+			var ip=document.getElementById("dest_ip").value;
+			var mask=document.getElementById("dest_mask").value;
+			var gateway=document.getElementById("dest_gateway").value;
+			if(modify){
+				G_List[modifyID][0]=ip;
+				G_List[modifyID][1]=mask;
+				G_List[modifyID][2]=gateway;
+			}else
+			G_List.push([ip,mask,gateway]);
+			resetRulePOP();
+			CreateBindTable();
+			IschangeFlag();
+			$("#savebutton5").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+		}
+	}
+	function resetRulePOP()
+	{
+		document.getElementById("createPop").style.display = "none";
+		document.getElementById("dest_ip").value="";
+		document.getElementById("dest_mask").value="";
+		document.getElementById("dest_gateway").value="";
+	}
+	
+
+	function deleteData(id)
+	{	document.getElementById("savebutton").disabled=false;
+		G_List.splice(id,1);
+		CreateBindTable();
+		IschangeFlag();
+		$("#savebutton5").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+	}
+
+function hideAllErrorInfo()
+{
+	$("#error_1").hide();
+	$("#error_2").hide();
+	$("#error_3").hide();
+	$("#error_list_num").hide();
+}
+function checkSetValues()
+{
+	hideAllErrorInfo();
+	var dest_ipValue=$("#dest_ip").val();
+	var dest_maskValue=$("#dest_mask").val();
+	var dest_gatewayValue=$("#dest_gateway").val();
+
+	var IPresult=checkIpAddr(dest_ipValue);
+	switch(IPresult)//目的网络地址
+	{
+		case ERR_IP_EMPTY:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrEmpty"));
+			return false;
+		case ERR_IP_NOTNUMBER:
+		case ERR_IP_FORMAT:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrFormat"));
+			return false;
+		case ERR_IP_ALLZERO:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrAllZero"));
+			return false;
+		case ERR_IP_ALLONE:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrAllOne"));
+			return false;
+		case ERR_IP_INVALID:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrNet"));
+			return false;
+		case ERR_IP_FIRSTZERO:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrFirstZero"));
+			return false;
+		case ERR_IP_LOOP:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrLoop"));
+			return false;
+		case ERR_IP_GROUP:
+			showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpAddrGroup"));
+			return false;	
+	}
+	
+	var maskresult=isValidMask(dest_maskValue);//检查Mask格式是否正确
+	switch(maskresult)
+	{
+		case ERR_MASK_EMPTY:
+			showErr("error_2","errorinfo_2",I18N("j","Err_Staticroute_MaskEmpty"));//空mask
+			return false;
+		case ERR_MASK_ONE:
+		//	break;
+		case CORRECT:
+			if(CORRECT!=checkNetMaskMatch(dest_ipValue,dest_maskValue))
+			{
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_IpMaskNotMatch"));//IP和mask不匹配
+				return false;
+			}
+			
+			//判断目的网络是否在lan侧
+			var destmask_Int=transIptoInt(dest_maskValue);//将目的mask转换成整数
+			var lanmask_Int=transIptoInt(lanmask);//将lanmask转换成整数
+			var checklanmask=( destmask_Int < lanmask_Int ? dest_maskValue : lanmask);//取得较小者
+			if(isSameNet(dest_ipValue,lanip,checklanmask)!=ERR_IP_DIFFNET)
+			{
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSameLan"));
+				return false;
+			}
+			//判断目的网络是否与访客网络相同
+			var guestmask_Int=transIptoInt(guestmask);//将guestmask转换成整数
+			var checkguestmask=( destmask_Int < guestmask_Int ? dest_maskValue : guestmask);//取得较小者
+			if(isSameNet(dest_ipValue,guestip,checkguestmask)!=ERR_IP_DIFFNET)
+			{
+				showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSameGuest"));
+				return false;
+			}
+			if(wanmask!="")//判断目的网络是否在wan侧
+			{
+				var wanmask_Int=transIptoInt(wanmask);//将wanmask转换成整数
+				var checkwanmask=( destmask_Int < wanmask_Int ? dest_maskValue : wanmask);//取得较小者
+				if(isSameNet(dest_ipValue,wanip,checkwanmask)!=ERR_IP_DIFFNET)
+				{
+					showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSameWan"));
+					return false;
+				}
+			}
+			break;
+		default:
+			showErr("error_2","errorinfo_2",I18N("j","Err_Staticroute_Mask"));
+			return false;
+	}
+	
+	var gatewayresult=checkIpAddr(dest_gatewayValue);
+	switch(gatewayresult)//检查网关
+	{
+		case ERR_IP_EMPTY:
+			showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayEmpty"));
+			return false;
+		case CORRECT:
+			//网关需要在lan或wan侧网段
+			if(wanmask=="")
+			{
+				if(isSameNet(dest_gatewayValue,lanip,lanmask)==ERR_IP_DIFFNET)
+				{
+					showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_NetworkLanWanNotSubet"));
+					return false;
+				}
+				else if(ERR_HOSTID_INV==checkIpMaskMatch(dest_gatewayValue,lanmask))//用mask检查Lan IP，主机号全0或1
+				{
+					showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayHostId"));
+					return false;
+				}
+			}
+			else if(wantype == "DHCPPPPoE")
+			{
+				if(isSameNet(dest_gatewayValue,lanip,lanmask)==ERR_IP_DIFFNET && (dest_gatewayValue+"")!=wangateway)
+				{
+					showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_NetworkpppoeWan"));
+					return false;
+				}
+			}
+			else if(isSameNet(dest_gatewayValue,lanip,lanmask)==ERR_IP_DIFFNET && isSameNet(dest_gatewayValue,wanip,wanmask)==ERR_IP_DIFFNET)//检查是否在lan或wan网段
+			{
+				showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_NetworkLanWanNotSubet"));
+				return false;
+			}
+			else if(isSameNet(dest_gatewayValue,lanip,lanmask)==SAMESUBNET && ERR_HOSTID_INV==checkIpMaskMatch(dest_gatewayValue,lanmask))
+			{
+				showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayHostId"));//用mask检查Lan IP，主机号全0或1
+				return false;
+			}
+			else if(isSameNet(dest_gatewayValue,wanip,wanmask)==SAMESUBNET && ERR_HOSTID_INV==checkIpMaskMatch(dest_gatewayValue,wanmask))
+			{
+				showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayHostId"));//用mask检查Wan IP，主机号全0或1
+				return false;
+			}
+			
+		break;
+		default:
+			showErr("error_3","errorinfo_3",I18N("j","Err_Staticroute_GatewayFormat"));
+			return false;
+	}
+	if(($.inArray(dest_ipValue,ExistNetworkList))!=-1)
+	{
+		showErr("error_1","errorinfo_1",I18N("j","Err_Staticroute_DstIpSame"));
+		return false;
+	}
+	return true;
+}
+
+
+function SaveData()
+{
+
+		$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+				SetXML();
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});	
+	
+}
+	
+	function SetXML() {
+		document.getElementById("CreatePopAlertMessage").style.display = "inline";
+		document.getElementById("waitSettingFinish").style.display = "inline";
+		SetResult_1st();
+	}
+	function SetResult_1st() {
+
+		var soapAction = new SOAPAction();
+		var sOAPSetStaticouteRequest = new SOAPSetStaticrouteRequest();
+		for(var i=0;i<G_List.length;i++)
+		{
+			if(isSameNet(G_List[i][2],lanip,lanmask)==SAMESUBNET)
+			{
+				var obj = {
+					IPAddress:G_List[i][0],
+					SubnetMask:G_List[i][1],
+					Gateway:G_List[i][2],
+					Interface:"lan"
+				};
+				sOAPSetStaticouteRequest.StaticRouteClientInfoLists.push(obj);
+			}else{
+				var obj = {
+					IPAddress:G_List[i][0],
+					SubnetMask:G_List[i][1],
+					Gateway:G_List[i][2],
+					Interface:"wan"
+				};
+				sOAPSetStaticouteRequest.StaticRouteClientInfoLists.push(obj);}
+		}
+
+		if(sOAPSetStaticouteRequest.StaticRouteClientInfoLists.ClientInfo.length==0){
+			soapAction.sendSOAPAction("SetStaticRouteSettings",null,null)
+					.done(function (obj2) {
+						//for compatibility
+						if (obj2.SetStaticRouteSettingsResult != "OK") {
+							if (DebugMode == 1) {
+								alert("[!!SetXML Error!!] Function: SetResult_1st");
+							}
+							document.getElementById("CreatePopAlertMessage").style.display = "none";
+							document.getElementById("waitSettingFinish").style.display = "none";
+							document.getElementById("DetectRouterConnection").style.display = "inline";
+						}
+						else {
+							//setTimeout("waitSettingFinished()", 1000);
+							waitSettingFinished();
+						}
+					})
+					.fail(function(){
+						if (DebugMode == 1)	{
+							alert("[!!SetXML Error!!] Function: SetResult_1st");
+						}
+						document.getElementById("CreatePopAlertMessage").style.display = "none";
+						document.getElementById("waitSettingFinish").style.display = "none";
+						document.getElementById("DetectRouterConnection").style.display = "inline";
+					});
+		}else{
+			soapAction.sendSOAPAction("SetStaticRouteSettings",sOAPSetStaticouteRequest,null)
+					.done(function (obj2) {
+						//for compatibility
+						if (obj2.SetStaticRouteSettingsResult != "OK") {
+							if (DebugMode == 1) {
+								alert("[!!SetXML Error!!] Function: SetResult_1st");
+							}
+							document.getElementById("CreatePopAlertMessage").style.display = "none";
+							document.getElementById("waitSettingFinish").style.display = "none";
+							document.getElementById("DetectRouterConnection").style.display = "inline";
+						}
+						else {
+							setTimeout("waitSettingFinished()", 1000);
+						}
+					})
+					.fail(function(){
+						if (DebugMode == 1)	{
+							alert("[!!SetXML Error!!] Function: SetResult_1st");
+						}
+						document.getElementById("CreatePopAlertMessage").style.display = "none";
+						document.getElementById("waitSettingFinish").style.display = "none";
+						document.getElementById("DetectRouterConnection").style.display = "inline";
+					});
+		}
+		/*var result_xml = new StringDoc();
+		if (result_xml != null) {
+			
+			var ruleliststr="";
+			for(var i=0;i<G_List.length;i++)
+			{
+				if(isSameNet(G_List[i][2],lanip,lanmask)==SAMESUBNET)
+				{
+					if(i==G_List.length-1)
+					{
+						ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+",lan";
+					}
+					else
+					{
+						ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+",lan;";
+					}
+				}	
+				else
+				{
+					if(i==G_List.length-1)
+					{
+						ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+",wan";
+					}
+					else
+					{
+						//ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+";";
+						ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+",wan;";
+					}
+				}
+			}
+
+			result_xml.Set("SetStaticRouteSettings/staticroute_list", ruleliststr);
+			
+	
+			HNAP.SetXMLAsync("SetStaticRouteSettings", result_xml, function(xml)	{	SetResult_2nd(xml);	});
+		} else {	
+			if (DebugMode == 1)	{	
+				alert("[!!SetXML Error!!] Function: SetResult_1st");	
+			}	
+		}*/
+	}
+
+	/*function SetResult_2nd(result_xml) {
+		var SetResult_1st = result_xml.Get("SetStaticRouteSettingsResponse/SetStaticRouteSettingsResult");
+		if (SetResult_1st == "OK") {
+			setTimeout("waitSettingFinished()", 1000);
+		}
+		if (SetResult_1st == "ERROR") {
+			if (DebugMode == 1) {
+			alert("[!!SetXML Error!!] Function: SetResult_2nd");
+			}
+			window.location.reload();
+		}
+	}*/
+	function waitSettingFinished() 
+	{
+		window.location.reload();
+	}		
+
+
+
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container">
+				<script>initialLeftMenu();</script>
+				 </div>
+				<div id="right_content"  class="pull-left" style="display:none; ">
+					<table border="0"  class="clearboth tablemoreheader" cellpadding="0" cellspacing="0" align="left">
+						<tr>
+							<th><script>I18N("h","Commom_Static_Route");</script><!-- 静态路由 --></th>
+						</tr>
+					</table>
+					<div class="clearboth moreline1"></div>
+					<div class="moredescription" style="text-align:justify;"><script>I18N("h","Staticroute_Description");</script><!-- 当您设置了一条静态路由后，路由器将把信息按您指定的路径发送到目的 IP 地址。通过静态路由功能，您可以方便灵活地组建网络。 --></div>
+	
+		  		<table class="clearboth table_list" id="staticroutelist" align="left" cellpadding="0" cellspacing="0" style="margin-top:64px; ">
+					<tbody>
+					<tr class="tableheader">
+						<td colspan="5">
+							<div style="position:relative;height:100%">
+								<span style="text-align:center;"><script>I18N("h","Staticroute_Table");</script><!-- 静态路由列表 --></span>
+								<div onClick="Add();" class="addbutton"></div>
+							</div>
+						</td>
+					</tr>
+					<tr class="tableheader2">
+						<td style="width:68px; "><script>I18N("h","Commom_Sequence_Number");</script><!-- 序号 --></td>
+						<td style="width:188px; "><script>I18N("h","Staticroute_Destination_Address");</script><!-- 目的网络地址 --></td>
+						<td style="width:188px; "><script>I18N("h","Staticroute_Destination_Mask");</script><!-- 目的子网掩码 --></td>
+						<td style="width:188px; "><script>I18N("h","Commom_Default_Gateway");</script><!-- 默认网关 --></td>
+						<td style="width:136px; "><script>I18N("h","Commom_Operation");</script><!-- 操作 --></td>
+					</tr>
+					<tr id="trnull">
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					</tr>
+				
+				
+				</tbody>
+			</table>					 
+
+			<table align="left" style="width:100%; margin-top:36px;" class="clearboth">
+				<!-- <tr><td align="center"><input type="button" value="保存" id="savebutton5" class="styled_button_s" onClick="SaveData();"></td></tr> -->
+				<tr><td align="center"><input type="button" value="" id="savebutton5" class="styled_button_s" onClick="SaveData();"></td></tr>
+			</table>								
+			</div><!--end right_content -->
+			</div>
+	   </div>
+ 	   <div class="footer_placeholder"></div>  
+   </div>
+	
+	<div style=" display:none;" id="createPop">
+	  <div style="width:660px; top:150px;" class="dialogBox2">
+		<div class="advance_row">
+			<span><script>I18N("h","Staticroute_Add");</script><!-- 添加静态路由 --></span>
+		</div>
+		<div align="center" id="error_list_num" class="errorinfo" style="display:none;">
+			<table>
+				<tbody>
+					<tr>
+						<td><div class="ic-sign ic"></div></td>
+						<td id="errorinfo_list_num"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<table cellspacing="0" border="0" id="tblWlanAccess" class="clearboth block" style="width:435px;margin-top:36px; margin-left:130px;" align="left">
+		  <tbody>
+			<tr align="center">
+			  <th>
+			 <script>I18N("h","Staticroute_Destination_Address");</script><!-- 目的网络地址 -->
+			  </th>
+			  <td>
+				<input type="text" maxlength="15" id="dest_ip" size="32" name="dest_ip" class="styled-text">
+			  </td>
+			</tr>
+			 <tr id="error_1" style="display:none; ">
+			  	<td>&nbsp;</td>
+			  	<td class="errorinfo">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+								<div class="ic-sign ic"></div>
+							  </td>
+							  <td id="errorinfo_1" style="line-height:20px;"></td>
+							</tr>
+						</tbody>
+					  </table>
+				</td>
+			 </tr>			
+			 <tr class="space"> </tr>			
+			<tr>
+			  <th>
+			 <script>I18N("h","Staticroute_Destination_Mask");</script><!-- 目的子网掩码 -->
+			  </th>
+			  <td>
+				<input type="text" maxlength="15" id="dest_mask" size="32" name="dest_mask" class="styled-text">
+			  </td>
+			</tr>			
+			 <tr id="error_2" style="display:none; ">
+			  	<td>&nbsp;</td>
+			  	<td class="errorinfo">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+								<div class="ic-sign ic"></div>
+							  </td>
+							  <td id="errorinfo_2"></td>
+							</tr>
+						</tbody>
+					  </table>
+				</td>
+			 </tr>			
+			 <tr class="space"> </tr>			
+			<tr>
+			  <th>
+			 <script>I18N("h","Commom_Default_Gateway");</script><!-- 默认网关 -->
+			  </th>
+			  <td>
+				<input type="text" maxlength="15" id="dest_gateway" size="32" name="dest_gateway" class="styled-text">
+			  </td>
+			</tr>			
+			 <tr id="error_3" style="display:none; ">
+			  	<td>&nbsp;</td>
+			  	<td class="errorinfo">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+								<div class="ic-sign ic"></div>
+							  </td>
+							  <td id="errorinfo_3" style="line-height:20px;"></td>
+							</tr>
+						</tbody>
+					  </table>
+				</td>
+			 </tr>
+			</tbody>
+		</table>
+		<div class="clearboth moreline2"  style="padding-top:36px; "></div>
+		<div align="center" style="margin-top:28px; " class="clearboth">
+		<span>
+			<!-- <input type="button" value="取消" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();"> -->
+			<input type="button" value="" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();">
+		</span>
+		<span style="margin-left:20px; ">
+			<!-- <input type="button" value="确定" id="savebutton" class="styled_button_ss" onClick="closeCreateRulePOP();"> -->
+			<input type="button" value="" id="savebutton" class="styled_button_ss" onClick="closeCreateRulePOP();">
+		</span>
+		</div>
+	  </div>
+	</div>	
+	
+	<div id="footer"></div>
+
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

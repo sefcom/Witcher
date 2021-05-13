@@ -1,0 +1,873 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/AdvWlanAccess.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+<!-- <script type="text/javascript" charset="utf-8" src="js/jquery.ellipsis.js"></script> -->
+<style type="text/css">
+.devicename_show
+{
+	width:310px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+</style>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var G_AccessList = [];
+var G_BfAccessList = [];
+var G_AccessList_Length=0;
+var dhcplist=[];
+var HNAP = new HNAP_XML();
+var lastlistmode;
+var maclistmode;
+//var max_show_width=240;
+var isAddBtnClick=false;//新增规则
+var ExistMacArray=[];//保存已有的MAC
+//var isManualMac=true;//是否选择手动输入MAC,初始为选择
+var MAX_TABLELIST_NUM=16;//最多允许添加的数目
+function Load_HTML()	
+{	
+	MoreContainMiniheight();	
+}
+function CreateAccessTable()
+{
+	if(G_AccessList.length>0)
+	{
+		document.getElementById("trnull").style.display="none";
+	}
+	else
+	{
+		document.getElementById("trnull").style.display="";
+	}
+	ClearTable("accesslist",3);
+	var AccessTableList=[];
+	ExistMacArray=[];
+	for(var i=0;i<G_AccessList.length;i++)
+	{
+		var devicenamehtml="";
+		AccessTableList[i]=[];
+		AccessTableList[i].push(i+1);
+		/*
+		if(G_AccessList[i][0].length>SUB_NAME_INDEX)//设备名称显示...
+		{
+			sub_devicename=G_AccessList[i][0].substring(0,SUB_NAME_INDEX)+"...";
+			AccessTableList[i].push(sub_devicename);
+		}
+		else 
+		{
+			AccessTableList[i].push(G_AccessList[i][0]);
+		}
+		*/
+		devicenamehtml="<div class='devicename_show'>"+G_AccessList[i][0]+"</div>";
+		AccessTableList[i].push(devicenamehtml);
+		AccessTableList[i].push(G_AccessList[i][1]);
+		AccessTableList[i].push("<div class='delimg' onclick='deleteData("+i+")'></div>");
+		ExistMacArray.push((G_AccessList[i][1]).toLowerCase());
+	}
+	CreateTable("accesslist", AccessTableList);
+	//$(".devicename_show").each(function(){$(this).ellipsis({maxWidth:max_show_width,isTextShow:false});});//显示...
+}
+
+function GetXML()	
+{	
+	GetResult_1st();
+}
+function GetResult_1st()
+{
+	var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetMultipleHNAPs/GetWLanACLSettings");
+		result_xml.Set("GetMultipleHNAPs/GetWLanDevInfoSettings");
+		HNAP.SetXMLAsync("GetMultipleHNAPs", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+	}
+	else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}
+}
+function GetResult_2nd(result_xml)
+{
+	var GetResult_2nd = result_xml.Get("GetMultipleHNAPsResponse/GetMultipleHNAPsResult");
+	if (GetResult_2nd == "OK"){
+	
+		maclistmode = result_xml.Get("GetMultipleHNAPsResponse/GetWLanACLSettingsResponse/wl(0).(0)_maclist_mode");
+		var maclistinfo= result_xml.Get("GetMultipleHNAPsResponse/GetWLanACLSettingsResponse/wl(0).(0)_maclist");
+		lastlistmode= result_xml.Get("GetMultipleHNAPsResponse/GetWLanACLSettingsResponse/wl(0).(0)_lasttime_maclist_mode");
+		
+		var dhcpclientinfo = result_xml.Get("GetMultipleHNAPsResponse/GetWLanDevInfoSettingsResponse/wl(0).(0)_associated_sta_info");
+		//dhcpclientinfo="1,11:11:11:11:11:11,192.168.1.11,1200,1;1,11:11:11:11:11:11,192.168.1.11,12000,2;1,11:11:11:11:11:11,192.168.1.11,12000,3;1,11:11:11:11:11:11,192.168.1.11,120000,4;";
+		if(maclistmode=="off")
+		{
+			document.getElementById("access_enable").checked=false;
+			document.getElementById("access_statue").className = "checkbox_off";
+			document.getElementById("accesscontent").style.display = "none";
+		}
+		
+		else if(maclistmode=="deny" )
+		{
+			document.getElementById("access_enable").checked=true;
+			document.getElementById("access_statue").className = "checkbox_on";
+			document.getElementById("accesscontent").style.display = "";
+			document.getElementById("forblack").className = "ic-radio-press";
+			document.getElementById("forwhite").className = "ic-radio";
+			document.getElementById("macaccessblack").checked=true;
+			document.getElementById("macaccesswhite").checked=false;
+			//$("#white_tips").hide();
+		
+		}
+		else if(maclistmode=="allow" )
+		{
+			document.getElementById("access_enable").checked=true;
+			document.getElementById("access_statue").className = "checkbox_on";
+			document.getElementById("accesscontent").style.display = "";
+			document.getElementById("forblack").className = "ic-radio";
+			document.getElementById("forwhite").className = "ic-radio-press";
+			document.getElementById("macaccessblack").checked=false;
+			document.getElementById("macaccesswhite").checked=true;
+			//$("#white_tips").show();
+		}
+		
+		var maclist=[];
+		var macTableList=[];
+		if(""!=maclistinfo)
+		{
+			var maclisttem=maclistinfo.split(";");
+			for(var i=0;i<maclisttem.length;i++)
+			{
+				G_AccessList.push(maclisttem[i].split(","));	
+				G_BfAccessList.push(maclisttem[i].split(","));	
+			}
+		}
+
+		CreateAccessTable();
+		
+
+	  //dhcpclientinfo="1,11:11:11:11:11:11,192.168.1.11,1200,1;1,11:11:11:11:11:11,192.168.1.11,12000,2;1,11:11:11:11:11:11,192.168.1.11,12000,3;1,11:11:11:11:11:11,192.168.1.11,120000,4";
+		if(dhcpclientinfo!="")
+		{
+			var dhcplisttem=dhcpclientinfo.split(";");
+			for(var i=0;i<dhcplisttem.length;i++)
+			{
+				dhcplist[i]=[];
+				dhcplist[i]=dhcplisttem[i].split(",");	
+			}
+			var u = document.getElementById("wlanmac_select");
+			for(var i=0;i<dhcplist.length;i++)
+			{
+				u.options.add(new Option(dhcplist[i][1], dhcplist[i][1]));
+			}
+		}
+		
+		document.getElementById("wlanmac_select").value="0";
+		G_AccessList_Length=G_AccessList.length;
+		if(G_AccessList.length>0)
+		{
+			document.getElementById("trnull").style.display="none";
+		}
+		else
+		{
+			document.getElementById("trnull").style.display="";
+		}
+
+		$("#wlanmac_select").selectbox();
+		
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+	} else {	
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+		if (DebugMode == 1)	{	
+			alert("[!!GetXML Error!!] Function: GetResult_2nd");
+		}
+	}
+}
+
+
+$(document).ready( function() {
+	document.getElementById("right_content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	Load_HTML();
+	GetXML();
+	checkTimeout();
+	document.getElementById("savebutton5").value = I18N("j","Commom_Save");//保存
+	document.getElementById("savebutton").value = I18N("j","Commom_Apply");//确定
+	document.getElementById("cancelbutton").value = I18N("j","Commom_Cancel");//取消
+	document.getElementById("confirm_btn").value = I18N("j","Commom_Confirm");//确认
+	$("#option_manual").html(I18N("j","AdvWlanAccess_Manual_MAC"));//手动输入MAC地址
+});
+
+function IschangeFlag()
+{
+	if(G_AccessList.length!=0 || G_BfAccessList.length!=0)
+	{
+		if(G_AccessList!=G_BfAccessList)
+		{
+			changeFlag=true;
+		}
+	}
+	else
+	{
+		changeFlag=false;
+	}
+	
+}
+	
+function AddCancle()
+{
+	document.getElementById("createPop").style.display = "none";
+	isAddBtnClick=false;
+	hideAllErrorInfo();
+}
+var edit=-1;
+
+function Add()
+{
+edit=-1;
+//点击添加默认为"手动输入MAC地址"
+document.getElementById("wlanmac_select").value="0";
+$("#wlanmac_select").selectbox('detach');
+$("#wlanmac_select").selectbox();
+document.getElementById("space2").style.display="";
+document.getElementById("trmacmanual").style.display="";
+
+document.getElementById("createPop").style.display = "";
+document.getElementById("device_Name").value="";
+document.getElementById("wlan_macmanual").value="";
+isAddBtnClick=true;
+document.getElementById("macformat_tips").style.display="";
+	var row_num=G_AccessList.length;
+	if(row_num >= MAX_TABLELIST_NUM)
+	{
+		showErr("error_list_num","errorinfo_list_num",I18N("j","Err_AdvWlanAccess_MacMaxNum"));
+		document.getElementById("savebutton").disabled=true;
+	}
+}
+
+	function editData(id)
+	{
+		document.getElementById("savebutton").disabled=false;
+		document.getElementById("createPop").style.display = "inline";
+		edit=id;
+		document.getElementById("device_Name").value = G_AccessList[id][0];
+		document.getElementById("wlan_macmanual").value = G_AccessList[id][1];
+		isAddBtnClick=true;
+	}
+	
+	
+function closeCreateRulePOP()
+	{
+		var name = $("#device_Name").val();
+		
+		
+		var type=document.getElementById("wlanmac_select").value;
+		if(type=="0")
+		{
+			var macaddr = $("#wlan_macmanual").val();
+		}
+		else
+		{
+			var macaddr = document.getElementById("wlanmac_select").value;
+		}	
+		if(edit < 0)
+		{
+			G_AccessList.push([name,macaddr]);
+			
+		}
+		else
+		{
+			G_AccessList.splice(edit,1,[name,macaddr])
+		}
+
+		resetRulePOP();
+		
+		CreateAccessTable();
+	}
+	
+	function resetRulePOP()
+	{
+		//$("input").val('');
+		document.getElementById("createPop").style.display = "none";
+		isAddBtnClick=false;
+		$("#wlanmac_select").selectbox('attach');
+	}
+	
+	function  AddList()
+	{
+		var inputResult=verifyWlanAccessInput();
+		if(inputResult)
+		{
+			closeCreateRulePOP();
+			IschangeFlag();
+		}
+		
+	}
+	
+	function deleteData(id)
+	{
+		document.getElementById("savebutton").disabled=false;
+		G_AccessList.splice(id,1);
+		ExistMacArray.splice(id,1);
+		CreateAccessTable();
+		IschangeFlag();
+	}
+	
+	function ChangAccessStatus()
+	{
+		var a = document.getElementById("access_enable").checked;
+		if(a)
+		{
+			document.getElementById("access_statue").className = "checkbox_off";
+			document.getElementById("access_enable").checked=false;	
+			document.getElementById("accesscontent").style.display = "none";
+
+		}
+		else
+		{
+			document.getElementById("access_statue").className = "checkbox_on";
+			document.getElementById("access_enable").checked=true;
+			document.getElementById("accesscontent").style.display = "";
+
+		}
+	}
+	
+	function selectMac()
+	{
+		hideAllErrorInfo();
+		var type=document.getElementById("wlanmac_select").value;
+		if(type=="0")
+		{
+			document.getElementById("trmacmanual").style.display="";
+			document.getElementById("device_Name").value="";
+			document.getElementById("space2").style.display="";
+			//isManualMac=true;
+			document.getElementById("macformat_tips").style.display="";
+		}
+		else
+		{
+			document.getElementById("trmacmanual").style.display="none";
+			document.getElementById("space2").style.display="none";
+			document.getElementById("macformat_tips").style.display="none";
+			for(var i=0;i<dhcplist.length;i++)
+			{
+				if(type==dhcplist[i][1])
+				{
+					document.getElementById("device_Name").value=dhcplist[i][0];
+					break;
+				}
+			
+			}
+			//isManualMac=false;
+		}
+	
+	}
+	
+	function ChangAccessEnable()
+	{
+		ChangAccessStatus();
+		//GetLastResult_1st();
+		$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+				SetXML();
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});		
+	
+	}
+	function SaveDataCheck()
+	{
+		if(document.getElementById("macaccesswhite").checked && G_AccessList.length==0)//当为白名单且为空时提示
+		{
+			document.getElementById("createPop_White_Save_Err").style.display = "inline";
+			return false;
+		}
+		else
+		{
+			SaveData();
+		}
+	}
+	/*
+	function SaveWhiteConfirm()
+	{
+		document.getElementById("createPop_WhiteTips").style.display = "none";
+		SaveData();
+	}
+	*/
+	/*
+	function SaveWhiteCancle()
+	{
+		document.getElementById("createPop_WhiteTips").style.display = "none";
+	}
+	*/
+	function WhiteEmptyConfirm()
+	{
+		document.getElementById("createPop_White_Save_Err").style.display = "none";
+	}
+	function SaveData()
+	{
+		$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+				SetXML();
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});	
+	}
+	
+function SetXML() {
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("waitSettingFinish").style.display = "inline";
+	SetResult_1st();
+}
+function SetResult_1st() {
+	var result_xml = new StringDoc();
+	if (result_xml != null) {
+		
+		var macliststr="";
+		for(var i=0;i<G_AccessList.length;i++)
+		{
+			if(i==G_AccessList.length-1)
+			{
+				macliststr+=G_AccessList[i][0]+","+G_AccessList[i][1];
+			}
+			else
+			{
+				macliststr+=G_AccessList[i][0]+","+G_AccessList[i][1]+";";
+			}
+		
+		
+		}
+
+		if(document.getElementById("access_enable").checked==true)//点击打开时
+		{
+			if(maclistmode=="off")//关闭页面后打开之前，maclistmode为off，如果为打开状态的保存则根据当前所选
+			{
+				if(lastlistmode=="deny")
+				{
+					document.getElementById("macaccessblack").checked=true;
+					document.getElementById("macaccesswhite").checked=false;
+				}
+				else if(lastlistmode=="allow")
+				{
+					document.getElementById("macaccessblack").checked=false;
+					document.getElementById("macaccesswhite").checked=true;
+				}
+			}
+			if(document.getElementById("macaccessblack").checked)
+			result_xml.Set("SetWLanACLSettings/wl(0).(0)_maclist_mode", "deny");
+			else
+			result_xml.Set("SetWLanACLSettings/wl(0).(0)_maclist_mode", "allow");
+		}
+		else//点击关闭时
+		{
+			/*
+			if(maclistmode=="deny")
+			{
+				document.getElementById("macaccessblack").checked=true;
+				document.getElementById("macaccesswhite").checked=false;
+			}
+			else if(maclistmode=="allow")
+			{
+				document.getElementById("macaccessblack").checked=false;
+				document.getElementById("macaccesswhite").checked=true;
+			}
+			*/
+			result_xml.Set("SetWLanACLSettings/wl(0).(0)_maclist_mode", "off");
+		}
+		result_xml.Set("SetWLanACLSettings/wl(0).(0)_maclist", macliststr);
+
+		HNAP.SetXMLAsync("SetWLanACLSettings", result_xml, function(xml)	{	SetResult_2nd(xml);	});
+	} else {	
+		if (DebugMode == 1)	{	
+			alert("[!!SetXML Error!!] Function: SetResult_1st");	
+		}	
+	}
+}
+
+function SetResult_2nd(result_xml) {
+	var SetResult_1st = result_xml.Get("SetWLanACLSettingsResponse/SetWLanACLSettingsResult");
+	if (SetResult_1st == "OK") {
+		setTimeout("waitSettingFinished()", 1000);
+	}
+	if (SetResult_1st == "ERROR") {
+		if (DebugMode == 1) {
+		alert("[!!SetXML Error!!] Function: SetResult_2nd");
+		}
+		window.location.reload();
+	}
+}
+function waitSettingFinished() 
+{
+	window.location.reload();
+}
+
+
+function hideAllErrorInfo()
+{
+	$("#error_1").hide();
+	$("#error_2").hide();
+	$("#error_list_num").hide();
+}
+function verifyWlanAccessInput()
+{
+	hideAllErrorInfo();
+	var deviceNameValue=$("#device_Name").val();
+	var macMannualValue=$("#wlan_macmanual").val();
+	
+	if(isAddBtnClick)
+	{
+		var deviceNameResult=verifyDeviceName(deviceNameValue);
+		switch(deviceNameResult)
+		{
+			case ERR_DEVICE_EMPTY:
+				showErr("error_1","errorinfo_1",I18N("j","Err_AdvWlanAccess_DeviceNameEmpty"));
+				return false;
+			case ERR_DEVICE_SPACE:
+				showErr("error_1","errorinfo_1",I18N("j","Err_AdvWlanAccess_DeviceNameSpace"));
+				return false;
+			case ERR_DEVICE_LEN:
+				showErr("error_1","errorinfo_1",I18N("j","Err_AdvWlanAccess_DeviceNameLength"));
+				return false;
+			case ERR_DEVICE_IVALID:
+				showErr("error_1","errorinfo_1",I18N("j","Err_AdvWlanAccess_DeviceNameInvalid"));
+				return false;
+			default:
+				break;
+		}
+	}
+	var mac_select_input="";//当前将添加的mac
+	var mactype=document.getElementById("wlanmac_select").value;
+	if("0"==mactype)//如果为手动
+	{
+		var MacResult=checkMacAddr(macMannualValue);
+		switch(MacResult)
+		{
+			case ERR_MAC_FORMAT:
+				showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacFormat"));
+				return false;
+			case ERR_MAC_GROUP:
+				showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacGroup"));
+				return false;
+			case ERR_MAC_ZERO:
+				showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacZero"));
+				return false;
+			case ERR_MAC_BROAD:
+				showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacBroad"));
+				return false;
+			case ERR_MAC_EMPTY:
+				showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacEmpty"));
+				return false;
+			default:
+				mac_select_input=macMannualValue;
+				break;
+		}
+	}
+	else
+	{
+		mac_select_input=$("#wlanmac_select").val();
+	}
+	//MAC地址冲突验证
+	if(($.inArray(mac_select_input.toLowerCase(),ExistMacArray))!=-1)
+	{
+		showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacConflict"));
+		return false;
+	}
+	/*
+	var row_num=G_AccessList.length;//$("#accesslist tr[id^='tr']").length
+	if(row_num >= MAX_TABLELIST_NUM)
+	{
+		showErr("error_2","errorinfo_2",I18N("j","Err_AdvWlanAccess_MacMaxNum"));
+		return false;
+	}
+	*/
+	ExistMacArray.push(mac_select_input);
+	return true;
+}
+
+function AccessRadio(tag)
+{
+		if(tag==0)
+		{
+			document.getElementById("forblack").className = "ic-radio-press";
+			document.getElementById("forwhite").className = "ic-radio";
+			document.getElementById("macaccessblack").checked=true;
+			document.getElementById("macaccesswhite").checked=false;
+			//$("#white_tips").hide();
+		}
+		else if(tag==1)
+		{
+			document.getElementById("forblack").className = "ic-radio";
+			document.getElementById("forwhite").className = "ic-radio-press";
+			document.getElementById("macaccessblack").checked=false;
+			document.getElementById("macaccesswhite").checked=true;
+			//$("#white_tips").show();
+		}
+
+
+
+}
+
+	
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container">
+				<script>initialLeftMenu();</script>
+				 </div>
+				<div id="right_content"  class="pull-left" style="display:none; ">
+					<table border="0"  class="tablemoreheader clearboth" cellpadding="0" cellspacing="0" align="left">
+						<tr>
+							<th><script>I18N("h","Commom_Wireless_Access_Control");</script><!-- 无线访问控制 --></th>
+							<td class="tdcheckbox">
+								 <div id="access_statue" class="checkbox_off" onclick="ChangAccessEnable();">
+                       				 <input type="checkbox" id="access_enable" name="access_enable" checked>
+                      			</div>
+							</td>
+						</tr>
+					</table>
+					<div class="moreline1 clearboth"></div>
+					<div id="accesscontent">
+					<div class="description" style="text-align:justify;"><script>I18N("h","AdvWlanAccess_Description");</script><!-- 无线访问控制提供黑白名单两种工作模式，开启黑名单工作模式后，下方设备列表中的无线设备被禁止连接到当前无线网络中；开启白名单工作模式后，只有下方设备列表中的无线设备才能连接到当前无线网络中。 --></div>
+					
+					
+					<div style="margin-top:36px;" class="clearboth">
+					  <div class="control-label">
+						<span>
+						  <script>I18N("h","AdvWlanAccess_Mode");</script><!-- 控制模式 -->
+						</span>
+					  </div>
+					  <div class="controls" style="width:auto;">
+						<div>
+						  <div class="pull-left" style="position:relative; margin-right:14px;">
+							<input style="visibility:hidden;" id="macaccessblack" name="wlanaccess_mode" value="deny" checked="checked" type="radio">
+							<div style="position:absolute; left:0; top:2px;" class="ic-radio-press" onClick="AccessRadio(0);" id="forblack"></div>
+						  </div>
+						  <div class="pull-left words2">
+							<script>I18N("h","AdvWlanAccess_Black_Mode");</script><!-- 黑名单模式（不允许列表中的设备访问） -->
+						  </div>
+						</div>
+						<div class="clearboth" style="padding-top:5px; ">
+						  <div class="pull-left" style="position:relative; margin-right:14px;">
+							<input style="visibility:hidden;" id="macaccesswhite" name="wlanaccess_mode" value="allow" type="radio">
+							<div style="position:absolute; left:0; top:2px;" class="ic-radio" onClick="AccessRadio(1);" id="forwhite"></div>
+						  </div>
+						  <div class="pull-left words2">
+							<script>I18N("h","AdvWlanAccess_White_Mode");</script><!-- 白名单模式（只允许列表中的设备访问） -->
+						  </div>
+						</div>
+					  </div>
+					</div>					
+					
+					<!--  <div class="moreline1 clearboth" style="padding-top:12px; "></div>
+					 <div class="description clearboth">提示：列表中最多允许添加8条规则。<span id="white_tips" style="padding-top:5px;">请把需要上网设备的MAC地址添加到白名单。</span></div>  -->
+		  		<table class="table_list clearboth" id="accesslist" align="left" cellpadding="0" cellspacing="0" style="margin-top:64px; ">
+					<tbody>
+					<tr class="tableheader">
+						<td colspan="4">
+							<div style="position:relative;height:100%">
+								<span style="text-align:center;"><script>I18N("h","AdvWlanAccess_Table");</script><!-- 设备列表 --></span>
+								<div onClick="Add();" class="addbutton"></div>
+							</div>
+						</td>
+					</tr>
+					<tr class="tableheader2">
+						<td style="width:68px; "><script>I18N("h","Commom_Sequence_Number");</script><!-- 序号 --></td>
+						<td style="width:358px; "><script>I18N("h","AdvWlanAccess_Device_Name");</script><!-- 设备名称 --></td>
+						<td style="width:206px; "><script>I18N("h","AdvWlanAccess_Device_MAC");</script><!-- 无线设备MAC地址 --></td>
+						<td style="width:136px; "><script>I18N("h","Commom_Operation");</script><!-- 操作 --></td>
+					</tr>
+					<tr id="trnull">
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					</tr>
+				
+				
+				</tbody>
+			
+			</table>
+					 <table style="width:100%; margin-top:36px;" class="clearboth" align="left">
+					 <tr align="center">
+						<td>
+							<!-- <input type="button" value="保存" id="savebutton5" class="styled_button_s" onClick="SaveDataCheck();"/> -->
+							<input type="button" value="" id="savebutton5" class="styled_button_s" onClick="SaveDataCheck();"/>
+						</td>
+					</tr>
+					 </table>			
+			</div>				 
+
+				</div><!--end right_content -->
+			</div>
+	   </div>
+ 	   <div class="footer_placeholder"></div>  
+   </div>
+	
+	<div style=" display:none;" id="createPop">
+	  <div style="width:628px" class="dialogBox2">
+		<div class="advance_row">
+			<span ><script>I18N("h","AdvWlanAccess_Add_Rule");</script><!-- 添加 Wi-Fi 访问控制 --></span>
+		</div>
+		<div align="center" id="error_list_num" class="errorinfo" style="display:none;">
+			<table>
+				<tbody>
+					<tr>
+						<td><div class="ic-sign ic"></div></td>
+						<td id="errorinfo_list_num"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<table cellspacing="0" border="0" id="tblWlanAccess" class="block clearboth" style="width:428px; margin:0 auto;margin-top:36px;  " align="center">
+		  <tbody>
+			<tr>
+			  <th>
+			 <script>I18N("h","AdvWlanAccess_Device_Name");</script><!-- 设备名称 -->
+			  </th>
+			  <td>
+				<input type="text" maxlength="64" id="device_Name" size="32" name="device_Name" class="styled-text">
+			  </td>
+			</tr>
+			 <tr id="error_1" style="display:none; ">
+			  	<td>&nbsp;</td>
+			  	<td class="errorinfo">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+								<div class="ic-sign ic"></div>
+							  </td>
+							  <td id="errorinfo_1"></td>
+							</tr>
+						</tbody>
+					  </table>
+				</td>
+			 </tr>			
+			 <tr class="space"> </tr>			
+			  <tr>
+			  <th>
+			 <script>I18N("h","AdvWlanAccess_MAC_Address");</script><!-- MAC地址 -->
+			  </th>
+			  <td>
+				<select name="wlanmac_select" id="wlanmac_select" onChange="selectMac();">
+					<!-- <option value="0">手动输入MAC地址</option> -->
+					<option id="option_manual" value="0"></option>
+				</select>
+			  </td>
+			</tr>
+			<tr class="space" id="space2"> </tr>
+			<tr id="trmacmanual">
+			  <th>
+			 <script>I18N("h","AdvWlanAccess_Manual_MAC");</script><!-- 手动输入MAC地址 -->
+			  </th>
+			  <td>
+				<input type="text" maxlength="17" id="wlan_macmanual" size="32" name="wlan_macmanual" class="styled-text">
+			  </td>
+			</tr>			
+			 <tr id="error_2" style="display:none; ">
+			  	<td>&nbsp;</td>
+			  	<td class="errorinfo">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+								<div class="ic-sign ic"></div>
+							  </td>
+							  <td id="errorinfo_2"></td>
+							</tr>
+						</tbody>
+					  </table>
+				</td>
+			 </tr>
+			 <tr id="macformat_tips" style="display:none;">
+				<td>&nbsp;</td>
+				<td><div style="line-height:20px;color:#666666;font-size:14px;margin-top:10px;"><script>I18N("h","AdvWlanAccess_MAC_Format");</script><!-- MAC地址格式请参考XX:XX:XX:XX:XX:XX（X为0-F的16进制字符） --></div></td>
+			 </tr>
+			</tbody>
+		</table>
+		<div class="clearboth moreline2"  style="margin-top:36px; "></div>
+		<div align="center" style="margin-top:28px; ">
+		<span>
+			<!-- <input type="button" value="取消" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();"> -->
+			<input type="button" value="" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();">
+		</span>
+		<span style="margin-left:20px; ">
+			<!-- <input type="button" value="确定" id="savebutton" class="styled_button_ss" onClick="AddList();"> -->
+			<input type="button" value="" id="savebutton" class="styled_button_ss" onClick="AddList();">
+		</span>
+		</div>
+	  </div>
+	</div>
+	<div style=" display:none;" id="createPop_White_Save_Err" class="createPopRecovery">
+		<div class="dialogBoxBackup">
+			<div class="advance_rowBackup">
+				<span><script>I18N("h","AdvWlanAccess_Tips");</script><!-- 提示 --></span>
+			</div>
+			<div align="center" style="margin-bottom:34px;margin-top:36px">
+				<img src="image/icon_peizhi_sb-.png" class="Backup_img">
+				<div class="descriptionBackup" style="margin-bottom:34px;margin-top:26px"><script>I18N("h","AdvWlanAccess_White_Empty");</script><!-- 当前白名单为空，请至少添加一条规则！ --></div>
+			</div>
+			<div class="advance_rowBackup" style="padding-bottom:0px;margin:0"></div>
+			<div align="center" style="margin-top:26px;">
+				<!-- <input type="button" value="确认" style="width:280px" class="styled_button_ss" onClick="WhiteEmptyConfirm();"> -->
+				<input type="button" id="confirm_btn" value="" style="width:280px" class="styled_button_ss" onClick="WhiteEmptyConfirm();">
+			</div>
+		</div>
+	</div>
+	<!-- <div style=" display:none;" id="createPop_WhiteTips" class="createPopRecovery">
+		<div class="dialogBoxBackup">
+			<div class="advance_rowBackup">
+				<span>提示</span>
+			</div>
+			<div class="descriptionBackup"><span>当前白名单为空，所有设备都将无法连上路由器的 Wi-Fi，确认要保存吗？</span></div>
+			<div class="advance_rowBackup" style="margin:0px"></div>
+			<div align="center" style="margin-bottom:48px;margin-top:24px">
+				<input type="button" value="确认" class="styled_button_ss" style="margin-left:45px;" onClick="SaveWhiteConfirm();">
+				<input type="button" value="取消" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="SaveWhiteCancle();">
+			</div>
+		</div>
+	</div> -->
+	<div id="footer"></div>
+
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="/image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

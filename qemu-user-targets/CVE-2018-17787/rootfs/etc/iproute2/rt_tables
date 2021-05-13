@@ -1,0 +1,13 @@
+#
+# reserved values
+#
+255	local
+254	main
+253	default
+25	TR1
+24	TR2
+0	unspec
+#
+# local
+#
+#1	inr.ruhep

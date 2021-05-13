@@ -1,0 +1,677 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPReboot.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<style type="text/css">
+.closedialogbutton{
+    background: url("/image/icon_del02.png");
+    color: #fff;
+    cursor: pointer;
+    height: 16px;
+	width: 16px;
+    line-height: 24px;
+	position:absolute;
+	top:23px;
+	right:25px;
+    text-align: center;
+	background-repeat: no-repeat;
+}
+.closedialogbutton:hover{
+    background: url("/image/icon_quxiao_pre.png");
+    color: #fff;
+    cursor: pointer;
+    height: 16px;
+	width: 16px;
+    line-height: 24px;
+	position:absolute;
+	top:23px;
+	right:25px;
+    text-align: center;
+	background-repeat: no-repeat;
+}
+
+.sbOptions
+{
+	max-height:160px !important;
+}
+
+.timeminute
+{
+	margin-left:20px;
+	color:#333333;
+	font-size:14px;
+}
+
+#CreatePop_Auto_Reboot
+{
+    background:url("../image/black_bg.png") repeat scroll 0 0;
+    height: 100%;
+    left: 0;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    width: 100%;
+    z-index: 500;
+}
+</style>
+<script type="text/javascript">
+
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+//var HNAP = new HNAP_XML();
+var _ReciprocalFactoryDefaultNumber = 80;
+var _ReciprocalRebootNumber = 80;
+var domain_name = "Index.html";
+var G_start_time = 3;
+var G_stop_time = 5;
+var G_system_timmer=null;//定时获取系统时间同步状态
+var Time_step=2;//时间间隔
+var isOpenAutoReboot=false;//是否打开了自动升级功能
+
+$(document).ready( function() {
+	document.getElementById("content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	MoreContainMiniheight();
+	checkTimeout();
+	GetAutoRebootStatus();
+	
+	document.getElementById("btn_reboot_router").value = I18N("j","Reboot_Router_Btn");//重启路由器
+	document.getElementById("btn_recovery").value = I18N("j","Reboot_Factory_Headline");//恢复出厂设置
+	document.getElementById("btn_reboot_confirm").value = I18N("j","Commom_Confirm");//确认
+	document.getElementById("btn_reboot_cancel").value = I18N("j","Commom_Cancel");//取消
+	document.getElementById("btn_recovery_backup").value = I18N("j","Reboot_Backup_Config");//备份路由器设置
+	document.getElementById("btn_recovery_directly").value = I18N("j","Reboot_Factory_Directly");//直接恢复出厂设置
+	document.getElementById("btn_recovery_confirm").value = I18N("j","Commom_Confirm");//确认
+	document.getElementById("btn_recovery_cancel").value = I18N("j","Commom_Cancel");//取消
+	document.getElementById("btn_set_time_cancel").value = I18N("j","Commom_Cancel");//取消
+	document.getElementById("btn_set_time_confirm").value = I18N("j","Commom_Apply");//确定
+	document.getElementById("btn_show_time_confirm").value = I18N("j","Commom_Apply");//确定
+	document.getElementById("btn_show_time_cancel").value = I18N("j","Commom_Cancel");//取消
+	if(G_Language == "en-us")
+	{
+		$("#div_dialogbox").css("height","385px");
+	}
+	//创建时间下拉列表
+	CreateTimeSelect("begin_hour");
+    //暂时没有自动重启，故先放开
+    document.getElementById("content").style.display="";
+    document.getElementById("CreateOnloadMessage").style.display="none";
+});
+
+function Start_reciprocal_Number_Reboot()
+{
+	if (_ReciprocalRebootNumber >= 0)
+	{
+		document.getElementById("reciprocal_Number_Reboot").innerHTML = "";
+		//document.getElementById("reciprocal_Number_Reboot").innerHTML = _ReciprocalRebootNumber + " " + '秒';
+		document.getElementById("reciprocal_Number_Reboot").innerHTML = _ReciprocalRebootNumber + " " + I18N("j","Backup_Second");
+		_ReciprocalRebootNumber --;
+		setTimeout("Start_reciprocal_Number_Reboot()", 1000);
+	}
+	else
+	{
+		document.getElementById("DeviceRebooting").style.display = "none";
+		document.getElementById("DeviceRebootSuccess").style.display = "block";
+		document.getElementById("DeviceRebootHeadLine").style.display = "none";
+		setTimeout("returnToHome()", 3000);
+	}
+}
+
+//点击重启按钮
+function reboot_router()
+{
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("FactoryRcoveryPart").style.display = "none";
+	document.getElementById("DeivceRebootPart").style.display = "block";
+}
+function BtnCancleClick()//点击取消按钮
+{
+	document.getElementById("CreatePopAlertMessage").style.display = "none";
+	document.getElementById("RecoveryBackupSelect").style.display = "inline";
+	document.getElementById("FactoryRecoveryCheck").style.display = "none";
+}
+function Device_RebootConfirm()//点击确认重启按键
+{
+	//提交重启请求
+    var soapAction = new SOAPAction();
+    soapAction.sendSOAPAction("RunReboot", null, null);
+	document.getElementById("DeviceRebootCheck").style.display = "none";
+	document.getElementById("DeviceRebooting").style.display = "block";
+	Start_reciprocal_Number_Reboot();
+}
+
+//选择直接恢复出厂
+function revover_factory_directly()
+{
+	document.getElementById("RecoveryBackupSelect").style.display = "none";
+	document.getElementById("closedialogbutton").style.display = "none";
+	document.getElementById("FactoryRecoveryCheck").style.display = "block";
+}
+function CloseDialog()
+{
+	document.getElementById("CreatePopAlertMessage").style.display = "none";
+}
+//主面板点击恢复出厂设置按钮
+function revover_factory()
+{
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("FactoryRcoveryPart").style.display = "block";
+	document.getElementById("DeivceRebootPart").style.display = "none";
+	document.getElementById("closedialogbutton").style.display = "";
+}
+function Device_FDRebootConfirm()//恢复出厂设置确认
+{	
+	//先获得系统的域名
+	GetDomainName();
+}
+
+function factoryReboot()
+{
+	SendFactoryReboot();
+	document.getElementById("FactoryRecoveryCheck").style.display = "none";
+	document.getElementById("FactoryRecoverying").style.display = "block";
+	Start_reciprocal_Number_FactoryDefault();
+}
+function Start_reciprocal_Number_FactoryDefault()
+{
+	if (_ReciprocalFactoryDefaultNumber >= 0)
+	{
+		document.getElementById("reciprocal_Number_FactoryDefault").innerHTML = "";
+		//document.getElementById("reciprocal_Number_FactoryDefault").innerHTML = _ReciprocalFactoryDefaultNumber + " " + '秒';
+		document.getElementById("reciprocal_Number_FactoryDefault").innerHTML = _ReciprocalFactoryDefaultNumber + " " + I18N("j","Backup_Second");;
+		_ReciprocalFactoryDefaultNumber --;
+		setTimeout("Start_reciprocal_Number_FactoryDefault()", 1000);
+	}
+	else
+	{
+		document.getElementById("FactoryRecoverySuccess").style.display = "block";
+		document.getElementById("FactoryRecoverying").style.display = "none";
+		document.getElementById("FactoryRecoveryHeadLine").style.display = "none";
+		setTimeout("redirectPage()", 3000);
+	}
+}
+
+function redirectPage()
+{
+	//根据之前获得的域名，跳转到页面去
+	location.href = "http://" + domain_name;
+}
+
+function GetDomainName()
+{
+    var getDeviceDomainName = new SOAPGetDeviceDomainNameResponse();
+    var soapAction = new SOAPAction();
+    soapAction.sendSOAPAction("GetDeviceDomainName",null,getDeviceDomainName).done(function(){
+        if (getDeviceDomainName.GetDeviceDomainNameResult == "OK"){
+            domain_name = getDeviceDomainName.DefaultDomainName;
+            factoryReboot();
+        }
+    })
+}
+
+function SendFactoryReboot()
+{
+    var soapAction = new SOAPAction();
+    soapAction.sendSOAPAction("SetFactoryDefault",null,null);
+}
+function returnToHome()	{	self.location.href = "/";	}
+
+//动态创建时间选择下拉列表
+function CreateTimeSelect(id)
+{
+	var u=document.getElementById(id);
+	for(var i=0;i<24;i++)
+	{
+		var value=i;
+		var textvlue=i;
+		if(i<10)
+		{
+		  value="0"+i.toString();
+		  textvlue="0"+i.toString();
+		}
+		u.options.add(new Option(value,textvlue));
+	}
+}
+
+//获取自动升级的状态及时间段
+function GetAutoRebootStatus()
+{
+    var soapAction = new SOAPAction();
+    var getAutoRebootSettings = new SOAPGetAutoRebootSettingsResponse()
+    soapAction.sendSOAPAction("GetAutoRebootSettings",null,getAutoRebootSettings).done(function(obj){
+        GetSNTPStatus();
+        //自动升级开关及时间段
+        if(obj.AutoReboot == "true")
+        {
+            document.getElementById("auto_reboot_statue").className = "checkbox_on";
+            document.getElementById("auto_reboot_enable").checked=true;
+            document.getElementById("div_reboot_time").style.display="";
+            isOpenAutoReboot = true;
+        }
+        else
+        {
+            document.getElementById("auto_reboot_statue").className = "checkbox_off";
+            document.getElementById("auto_reboot_enable").checked = false;
+            document.getElementById("div_reboot_time").style.display = "none";
+            isOpenAutoReboot = false;
+        }
+        G_start_time = parseInt(obj.StartTime);//开始时间
+        G_stop_time = parseInt(obj.StopTime);//结束时间
+        document.getElementById("reboot_time_show").innerHTML = "（"+ changeToSelectString(G_start_time) +":00 — "+ changeToSelectString(G_stop_time) +":00）";
+    });
+}
+
+//系统时间步状态
+function GetSNTPStatus()
+{
+    var GetNTPServerSettingsResponse = new SOAPGetNTPServerSettingsResponse();
+    var soapAction = new SOAPAction();
+    soapAction.sendSOAPAction("GetNTPServerSettings",null,GetNTPServerSettingsResponse).done(function(obj){
+        if(obj.Status=="1")
+        {
+            document.getElementById("error_sntp").style.display = "none";
+        }
+        else
+        {
+            document.getElementById("error_sntp").style.display = "";
+            G_system_timmer = setTimeout("GetSNTPStatus()", 5*1000);
+        }
+        document.getElementById("content").style.display="";
+        document.getElementById("CreateOnloadMessage").style.display="none";
+    });
+}
+
+//清除获取时间同步状态的定时器
+function clearSNTPTimmer()
+{
+	if(G_system_timmer !=null)
+	{
+		clearTimeout(G_system_timmer);
+		G_system_timmer = null;
+	}
+}
+
+//自动升级开关按钮切换
+function ChangeAutoUpdateStatus()
+{
+	var aa = document.getElementById("auto_reboot_enable").checked;
+	if(aa)
+	{
+		document.getElementById("auto_reboot_statue").className = "checkbox_off";
+		document.getElementById("auto_reboot_enable").checked=false;
+	}
+	else
+	{
+		document.getElementById("auto_reboot_statue").className = "checkbox_on";
+		document.getElementById("auto_reboot_enable").checked=true;
+	}
+	
+	SaveAutoReboot();
+}
+
+//初始化下拉列表
+function InitialSelectBox()
+{
+	$("#begin_hour").selectbox("detach");
+	$("#begin_hour").selectbox({width:120,float:"left"});
+}
+
+//将整形转换成字符串(小于10的字符串前面加"0")
+function changeToSelectString(value)
+{
+	if(value<10)
+	{
+		value = "0" + value.toString();
+	}
+	else
+	{
+		value = value.toString();
+	}
+	return value;
+}
+
+//点击自动升级空闲时间段
+function ChooseAutoUpdateTime()
+{
+	$("#begin_hour").val(changeToSelectString(G_start_time));
+	InitialSelectBox();
+	
+	document.getElementById("createPop_Reboot_Auto").style.display="";
+}
+
+//设置空闲时间段 取消
+function SetFreeTimeCancel()
+{
+	document.getElementById("createPop_Reboot_Auto").style.display="none";
+}
+
+//设置空闲时间段 确定
+function SetFreeTimeConfirm()
+{
+	var start_time = $("#begin_hour").val();
+	var stop_time = (parseInt(start_time,10) + Time_step) % 24;
+
+	document.getElementById("same_update_time").innerHTML = start_time +":00 — "+ changeToSelectString(stop_time) +":00";
+	document.getElementById("createPop_Reboot_Auto").style.display="none";
+	document.getElementById("createPop_Reboot_Auto_Time").style.display="";
+}
+
+//显示自动升级时间段 取消
+function ShowFreeTimeCancel()
+{
+	document.getElementById("createPop_Reboot_Auto_Time").style.display="none";
+}
+
+//显示空闲时间段 确定
+function ShowFreeTimeConfirm()
+{
+	G_start_time = parseInt($("#begin_hour").val(),10);
+	G_stop_time = (G_start_time + Time_step) % 24;
+	SaveAutoReboot();
+}
+
+//保存自动升级时间参数
+function SaveAutoReboot()
+{
+	document.getElementById("createPop_Reboot_Auto").style.display = "none";
+	document.getElementById("createPop_Reboot_Auto_Time").style.display = "none";
+	document.getElementById("CreatePop_Auto_Reboot").style.display = "inline";
+	$.ajax({
+		cache: false,
+		url: "./js/CheckConnection",
+		timeout: 5000,
+		type: "GET",
+		success: function(data) {
+			SaveAutoRebootXML();
+		},
+		error: function() {
+			document.getElementById("CreatePop_Auto_Reboot").style.display = "none";
+			document.getElementById("DetectRouterConnection").style.display = "inline";
+		}
+	});
+}
+function SaveAutoRebootXML()
+{
+    var soapAction = new SOAPAction();
+    var autoRebootSettings = new SOAPSetAutoRebootSettings();
+    if(document.getElementById("auto_reboot_enable").checked == true)
+    {
+        autoRebootSettings.AutoReboot = true;
+    }
+    else
+    {
+        autoRebootSettings.AutoReboot = false;
+    }
+    autoRebootSettings.StartTime = G_start_time;
+    soapAction.sendSOAPAction("SetAutoRebootSettings",autoRebootSettings,null).done(function(obj){
+        if(obj.SetAutoRebootSettingsResult == "OK"){
+            //setTimeout("waitSettingFinished()", 1000);
+            waitSettingFinished();
+        }else{
+            document.getElementById("CreatePop_Auto_Reboot").style.display = "none";
+            document.getElementById("DetectRouterConnection").style.display = "inline";
+        }
+    }).fail(function(){
+        document.getElementById("CreatePop_Auto_Reboot").style.display = "none";
+        document.getElementById("DetectRouterConnection").style.display = "inline";
+    });
+}
+
+function waitSettingFinished()
+{
+	window.location.reload();
+}
+
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container"> <script>initialLeftMenu();</script></div>
+				<div id="right_content"  class="pull-left">
+					<table border="0"  class="tablemoreheader clearboth" cellpadding="0" cellspacing="0" align="left">
+						<tr>
+							<th><script>I18N("h","Commom_Reboot_Factory_Reset");</script><!-- 重启与恢复出厂 --></th>
+						</tr>
+					</table>
+					<div class="moreline1 clearboth"></div>
+					<div class="clearboth headerline2" align="left" style="padding-top:64px;margin-bottom:12px;"><span class="inlineblock"><script>I18N("h","Reboot_Router_Btn");</script><!-- 重启路由器 --></span></div>
+					<div class="moreline1"></div>
+					<div class="description clearboth" style="text-align:justify;"><span class="inlineblock"><script>I18N("h","Reboot_Auto_Description");</script></span></div>
+					<div align="left" style="margin-top:24px;max-height:114px;">
+						<table border="0" class="block" cellpadding="0" cellspacing="0" align="left">
+							<tbody>
+								<tr>
+									<th><script>I18N("h","Reboot_Auto");</script></th><!-- 定时重启 -->
+									<td class="tdcheckbox">
+										<div id="auto_reboot_statue" class="checkbox_off" onclick="ChangeAutoUpdateStatus()">
+											<input type="checkbox" id="auto_reboot_enable" name="auto_reboot_enable">
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<div id="div_reboot_time" class="clearboth description" style="padding-top:18px;display:none;">
+							<span style="color:#333333;"><script>I18N("h","Reboot_Auto_Time");</script></span><!-- 每天定时重启的时间段为 -->
+							<span id="reboot_time_show" style="cursor:pointer;color:#4598aa" onClick="ChooseAutoUpdateTime();">3:00-5:00</span>
+						</div>
+						<div id="error_sntp" align="left" class="clearboth description" style="display:none;">
+							<table>
+								<tbody>
+									<tr>
+										<td><div class="ic-sign ic" style="padding:0"></div></td>
+										<td id="errorinfo_sntp"><script>I18N("h","Reboot_Auto_SNTP");</script></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="clearboth" align="left">
+						<!-- <input type="button" value="重启路由器" class="styled_button_s" style="margin-top:24px;" onClick="reboot_router();"> -->
+						<input type="button" id="btn_reboot_router" value="" class="styled_button_ss" style="margin-top:24px;" onClick="reboot_router();">
+					</div>
+					<div class="clearboth headerline2" align="left" style="padding-top:64px;margin-bottom:12px;">
+						<span class="inlineblock"><script>I18N("h","Reboot_Factory_Headline");</script><!-- 恢复出厂设置 --></span>
+					</div>
+					<div class="moreline1 clearboth"></div>
+					<div class="description clearboth" style="text-align:justify;"><span class="inlineblock"><script>I18N("h","Reboot_Factory_Description");</script><!-- 注意：恢复出厂设置将使路由器的所有配置恢复到出厂时的默认状态，所有非预装的应用将被删除，出厂时的预装应用将被全部恢复。 --></span></div>
+					<div align="left">
+						<!-- <input type="button" value="恢复出厂设置" class="styled_button_s" style="margin-top:24px;" onClick="revover_factory();"> -->
+						<input type="button" id="btn_recovery" value="" class="styled_button_ss" style="margin-top:24px;" onClick="revover_factory();">
+					</div>					 				
+				</div><!--end right_content -->
+			</div>
+		</div>
+		<div class="footer_placeholder"></div>
+	</div>
+	
+
+	<div class="createPopRecovery" id="CreatePopAlertMessage" style="display:none;">
+		<div class="dialogBoxBackup" id="div_dialogbox">
+			<!--重启设置部分-->
+			<div id="DeivceRebootPart">
+				<div id="DeviceRebootHeadLine" class="advance_rowBackup">
+					<span><script>I18N("h","Reboot_Router_Btn");</script><!-- 重启路由器 --></span>
+				</div>
+					<div id="DeviceRebootCheck">
+						<div class="descriptionBackup"><span><script>I18N("h","Reboot_Inquiry");</script><!-- 您确定要重新启动设备吗？ --></span></div>
+						<div class="advance_rowBackup" style="margin:0px"></div>
+						<div align="center" style="margin-bottom:48px;margin-top:24px">
+							<!-- <input type="button" value="确认" class="styled_button_ss" style="margin-left:45px;" onClick="Device_RebootConfirm();">
+							<input type="button" value="取消" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="BtnCancleClick();"> -->
+							<input type="button" id="btn_reboot_cancel" value="" class="styled_button_ss" style="margin-left:45px;" onClick="BtnCancleClick();">
+							<input type="button" id="btn_reboot_confirm" value="" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="Device_RebootConfirm();">
+						</div>
+					</div>
+					<div id="DeviceRebooting" style="margin-top:50px;display:none;">
+						<img src="image/submit.gif" style="height:58px;width:58px;"/>
+						<div class="remaining_time" id="reciprocal_Number_Reboot">80<script>I18N("h","Backup_Second");</script><!-- 秒 --></div>
+						<div class="descriptionBackup" style="margin:26px 0px;"><script>I18N("h","Reboot_Rebooting");</script><!-- 设备重启中··· --></div>
+					</div>
+					<div id="DeviceRebootSuccess" align="center" style="margin-top:108px;display:none">
+						<img src="image/icon_peizhi_cg.png" class="Backup_img"/>
+						<div class="descriptionBackup" style="margin:28px 0px;"><script>I18N("h","Reboot_Success");</script><!-- 设备重启成功！ --></div>
+					</div>
+			</div>
+			
+			
+			<!--恢复出厂设置部分 -->
+			<div id="FactoryRcoveryPart" style=" display:none;">
+				<div id="FactoryRecoveryHeadLine" class="advance_rowBackup">
+					<span><script>I18N("h","Reboot_Factory_Headline");</script><!-- 恢复出厂设置 --></span>
+					<div id="closedialogbutton" class="closedialogbutton" onClick="CloseDialog()"></div>
+				</div>
+				<div id="RecoveryBackupSelect">
+					<div class="descriptionBackup" style="margin-bottom:40px;margin-top:70px"><span><script>I18N("h","Reboot_Factory_Clear_Data");</script><!-- 恢复出厂设置操作会抹掉当前路由器的所有设置，</br>建议您先进行配置备份再恢复出厂设置。 --></span></div>
+					<div class="advance_rowBackup" style="margin:0px"></div>
+					<div align="center" style="margin-bottom:48px;margin-top:24px">
+						<form id="dlcfgbin" action="cgi-bin/ExportSettings.sh" method="post">
+                            <input type="hidden" value="Export" name="Export">
+							<!-- <input type="button" value="备份路由器设置" class="styled_button_ss" style="margin-left:45px;" onClick="document.forms['dlcfgbin'].submit();"/>
+							<input type="button" value="直接恢复出厂设置" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="revover_factory_directly();"/> -->
+							<input type="button" id="btn_recovery_backup" value="" class="styled_button_ss" style="margin-left:45px;" onClick="document.forms['dlcfgbin'].submit();"/>
+							<input type="button" id="btn_recovery_directly" value="" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="revover_factory_directly();"/>
+						</form>
+					</div>
+				</div>
+				<div id="FactoryRecoveryCheck" style=" display:none;">
+					<div class="descriptionBackup"><span><script>I18N("h","Reboot_Factory_Confirm");</script><!-- 您确定要将设备恢复到出厂设置吗？这将导致当前设置丢失。 --></span></div>
+					<div class="advance_rowBackup" style="margin:0px"></div>
+					<div align="center" style="margin-bottom:48px;margin-top:24px">
+						<!-- <input type="button" value="确认" class="styled_button_ss" style="margin-left:45px;" onClick="Device_FDRebootConfirm();">
+						<input type="button" value="取消" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="BtnCancleClick();"> -->
+						<input type="button" id="btn_recovery_cancel" value="" class="styled_button_ss" style="margin-left:45px;" onClick="BtnCancleClick();">
+						<input type="button" id="btn_recovery_confirm" value="" class="styled_button_ss" style="margin-left:18px;margin-right:45px;" onClick="Device_FDRebootConfirm();">
+					</div>
+				</div>
+				<div id="FactoryRecoverying" style="margin-top:50px;display:none;">
+					<img src="image/submit.gif" style="height:58px;width:58px;"/>
+					<div class="remaining_time" id="reciprocal_Number_FactoryDefault">80<script>I18N("h","Backup_Second");</script><!-- 秒 --></div>
+					<div class="descriptionBackup" style="margin:26px 0px;"><script>I18N("h","Reboot_Factory_Recovering");</script><!-- 正在为您恢复出厂设置··· --></div>
+				</div>
+				<div id="FactoryRecoverySuccess" align="center" style="margin-top:108px;display:none">
+					<img src="image/icon_peizhi_cg.png" class="Backup_img"/>
+					<div class="descriptionBackup" style="margin:28px 0px;"><script>I18N("h","Reboot_Factory_Success");</script><!-- 恢复出厂设置成功！ --></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 自动重启时间段选择 -->
+	<div style="display:none;" id="createPop_Reboot_Auto" class="createPopRecovery">
+		<div class="dialogBoxBackup" style="width:580px;height:420px;">
+			<div class="advance_rowBackup" style="padding-bottom:26px;margin-top:26px;">
+				<span><script>I18N("h","Reboot_Auto_Time_Set");</script></span>
+			</div>
+			<div align="center" class="errorinfo" style="margin-top:12px;">
+				<table>
+					<tbody>
+						<tr>
+							<td><div class="ic-error ic"></div></td>
+							<td style="font-size:14px;color:#666666;width:450px;"><script>I18N("h","Reboot_Auto_Tips");</script></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div align="center" style="margin-top:54px;">
+				<table cellspacing="0" border="0" align="center" style="width:363px;">
+					<tbody>
+						<tr>
+							<td>
+								<div style="text-align:center;float:left;padding-top:8px;">
+									<span class="timeminute" style="margin-right:10px;margin-left:0px;"><script>I18N("h","Reboot_Auto_Start_Time");</script></span>
+								</div>
+								<div style="float:left;">
+									<select name="begin_hour" id="begin_hour"></select>
+								</div>
+								<div style="text-align:center;float:left;padding-top:8px">
+									<span class="timeminute">:</span>
+									<span class="timeminute" style="margin-left:12px;">00</span>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="advance_rowBackup" style="padding-bottom:56px;margin:0px"></div>
+			<div align="center" style="margin-bottom:48px;margin-top:24px">
+				<input type="button" value="" id="btn_set_time_cancel" class="styled_button_ss" style="margin-left:45px;" onClick="SetFreeTimeCancel();">
+				<input type="button" value="" id="btn_set_time_confirm" class="styled_button_ss" style="margin-left:20px;margin-right:45px;" onClick="SetFreeTimeConfirm();">
+			</div>
+		</div>
+	</div>
+	
+	<!-- 自动重启时间段提示-->
+	<div style="display:none;" id="createPop_Reboot_Auto_Time" class="createPopRecovery">
+		<div class="dialogBoxBackup" style="width:580px;height:394px;">
+			<div class="advance_rowBackup" style="padding-bottom:26px;margin-top:26px;">
+				<span><script>I18N("h","Reboot_Auto_Time_Set");</script></span>
+			</div>
+			<div style="margin:0 auto;width:395px;">
+				<div align="center" style="margin-top:38px">
+					<img src="image/icon_peizhi_sb-.png" style="height:55px;width:55px;">
+					<div style="text-align:left;font-size:14px;color:#82878d;margin-top:30px;height:40px;">
+						<span><script>I18N("h","Reboot_Auto_Same_Update1");</script></span>
+						<span id="same_update_time">03:00 — 05:00</span>
+						<span><script>I18N("h","Reboot_Auto_Same_Update2");</script></span>
+					</div>
+				</div>
+			</div>
+			<div class="advance_rowBackup" style="padding-bottom:39px;margin:0px"></div>
+			<div align="center" style="margin-bottom:48px;margin-top:24px">
+				<input type="button" value="" id="btn_show_time_cancel" class="styled_button_ss" style="margin-left:45px;" onClick="ShowFreeTimeCancel();">
+				<input type="button" value="" id="btn_show_time_confirm" class="styled_button_ss" style="margin-left:20px;margin-right:45px;" onClick="ShowFreeTimeConfirm();">
+			</div>
+		</div>
+	</div>
+	<div id="footer"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;">
+		<div class="OnLoadPopRect"></div>
+	</div>
+	<div id="CreatePop_Auto_Reboot" style=" display:none;">
+		<div class="AlertPopRect">
+			<div id="waitSettingFinish">
+				<div class="pull-left" style="margin-left:48px;margin-top:37px;">
+					<img src="/image/submit.gif" width="48" height="48" />
+				</div>
+				<div class="pull-left" style="margin-left:30px;font-size:14px;color:#82878d;">
+					<table style="height:126px;width:250px;" align="center">
+						<tr align="left">
+							<td id="dialog_msg_black2"><script>I18N("h","Commom_Save_Config");</script><!-- 正在保存配置，请耐心等待... --></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+	  </div>
+	</div>
+</body>
+<script type="text/javascript">
+	LoadHeader();
+	Onloadmenu();
+	LoadFooter();
+	LoadDetectRouter();
+</script>
+</html>
+

@@ -1,0 +1,6 @@
+
+awk  '
+	BEGIN {value = "'$2'"}
+	$1== value {print $2}
+' $1
+	

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=windows-1250">
+  <meta name="generator" content="PSPad editor, www.pspad.com">
+  <link rel="stylesheet" rev="stylesheet" href="style.css" type="text/css">
+  <SCRIPT language=Javascript src="navigation.js"></SCRIPT>
+  <title>test</title>
+  </head>
+  <body style="background-color: #3B9DCC">
+  
+  <table id="topnav_container" border="0" cellspacing="1" summary="" height="100%" width="100%">
+  	<tbody>
+  		<tr height="34">
+
+  <SCRIPT language=Javascript>
+  	var wlan_num = <%getIndex("show_wlan_num")%>;
+	var ipv6 = <%getIndex("ipv6")%>;
+	var isDisplayVOIP = <%getInfo("isDisplayVOIP")%>;
+
+	
+    var userDegreeFlag = <%getIndex("userDegreeFlag");%>;
+
+//wlan	
+	var is8021xClient="<% getInfo("is8021xClient"); %>"*1;
+	var isMeshDefined =  "<% getIndex("isMeshDefined"); %>";
+	var is80211rSupport="<% getIndex("is_80211r_support")%>";
+  	var isAirtimeDefined =  "<% getIndex("isAirtimeDefined"); %>";
+//tcpip
+	var showLanDev = <%getIndex("showLanDevInfoSupport");%>;
+//ipv6
+	var is_mape = <% getIPv6Info("is_mape"); %> + 0;
+//firewall
+	var route_setup_enable = <%getIndex("route_setup_onoff");%>;
+
+//VOIP
+
+
+//management
+	var isDisplayCPU = <% getIndex("isDisplayCPU"); %>;
+	var isEnableBT = <% getIndex("isEnableBT"); %>;
+	var isDisplayTR069 = '<% getIndex("isDisplayTR069"); %>';
+	
+  draw_topnav(wlan_num,ipv6,isDisplayVOIP,userDegreeFlag,
+  			is8021xClient,isMeshDefined, is80211rSupport, isAirtimeDefined,
+  			showLanDev,
+  			is_mape,
+  			route_setup_enable,	
+  			isDisplayCPU,isEnableBT,isDisplayTR069, <%getIndex("DiskWebSupportOnOff")%>);
+  </SCRIPT>
+</tr></tbody>
+</table>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="cbb6a581-5d4d-4a3d-9d6a-b20e40f381e4" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/QuickStartGuide.txt" beforeDir="false" afterPath="$PROJECT_DIR$/QuickStartGuide.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README" beforeDir="false" afterPath="$PROJECT_DIR$/README" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/afl-cmin" beforeDir="false" afterPath="$PROJECT_DIR$/afl-cmin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/afl-fuzz.c" beforeDir="false" afterPath="$PROJECT_DIR$/afl-fuzz.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/afl-plot" beforeDir="false" afterPath="$PROJECT_DIR$/afl-plot" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/afl-showmap.c" beforeDir="false" afterPath="$PROJECT_DIR$/afl-showmap.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/afl-whatsup" beforeDir="false" afterPath="$PROJECT_DIR$/afl-whatsup" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experimental/asan_cgroups/limit_memory.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experimental/asan_cgroups/limit_memory.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experimental/clang_asm_normalize/as" beforeDir="false" afterPath="$PROJECT_DIR$/experimental/clang_asm_normalize/as" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experimental/crash_triage/triage_crashes.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experimental/crash_triage/triage_crashes.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experimental/distributed_fuzzing/sync_script.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experimental/distributed_fuzzing/sync_script.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/qemu_mode/build_qemu_support.sh" beforeDir="false" afterPath="$PROJECT_DIR$/qemu_mode/build_qemu_support.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/qemu_mode/patches/afl-qemu-cpu-inl.h" beforeDir="false" afterPath="$PROJECT_DIR$/qemu_mode/patches/afl-qemu-cpu-inl.h" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="TicVPdYZ" />
+  </component>
+  <component name="ProjectId" id="1aqmo2acBG0BSAC6NpnCkGkozcM" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/qemu_mode/patches" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="web.server" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\erik\Dropbox (ASU)\p\afl-out\qemu_mode\patches" />
+    </key>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cbb6a581-5d4d-4a3d-9d6a-b20e40f381e4" name="Default Changelist" comment="" />
+      <created>1587470867908</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1587470867908</updated>
+      <workItem from="1587470869279" duration="27000" />
+      <workItem from="1587471671852" duration="44992000" />
+      <workItem from="1587999565233" duration="1176000" />
+      <workItem from="1588012173257" duration="601000" />
+      <workItem from="1588026262726" duration="18000" />
+      <workItem from="1588121680425" duration="13704000" />
+      <workItem from="1588342835333" duration="169663000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1029" y="451" key="#C/C++" timestamp="1589208017834">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1029" y="451" key="#C/C++/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1589208017834" />
+    <state x="1280" y="732" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1588254636360">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1280" y="732" key="#com.intellij.fileTypes.FileTypeChooser/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588254636360" />
+    <state x="1247" y="677" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1587472106294">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1247" y="677" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1587472106294" />
+    <state x="1297" y="685" key="FileChooserDialogImpl" timestamp="1588000151612">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1297" y="685" key="FileChooserDialogImpl/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588000151612" />
+    <state x="1137" y="583" key="SettingsEditor" timestamp="1589464713071">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1137" y="583" key="SettingsEditor/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1589464713071" />
+    <state x="338" y="126" width="2198" height="1422" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog" timestamp="1588888999760">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="338" y="126" width="2198" height="1422" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588888999760" />
+    <state x="464" y="342" width="2040" height="1236" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589220644684">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="464" y="342" width="2040" height="1236" key="com.intellij.history.integration.ui.views.FileHistoryDialog/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1589220644684" />
+    <state x="702" y="465" width="1103" height="730" key="find.popup" timestamp="1588883491510">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="702" y="465" width="1103" height="730" key="find.popup/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588883491510" />
+    <state x="1402" y="660" key="ftp.server.browser" timestamp="1588971801071">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1402" y="660" key="ftp.server.browser/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588971801071" />
+    <state x="1173" y="448" key="run.anything.popup" timestamp="1588439106629">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1173" y="448" key="run.anything.popup/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588439106629" />
+    <state x="1179" y="540" width="672" height="678" key="search.everywhere.popup" timestamp="1588538943416">
+      <screen x="0" y="0" width="3072" height="1698" />
+    </state>
+    <state x="1179" y="540" width="672" height="678" key="search.everywhere.popup/-3840.0.2194.1212/0.0.3072.1698/3840.563.1080.1890@0.0.3072.1698" timestamp="1588538943416" />
+  </component>
+</project>

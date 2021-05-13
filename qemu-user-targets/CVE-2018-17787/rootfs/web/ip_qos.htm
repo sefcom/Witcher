@@ -1,0 +1,856 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>QoS</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<script type="text/javascript" src="util_qos.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+
+var is_l7_qos_support=<% getIndex("is_l7_qos_support");%> ;	
+var advanced_qos_enable=<%getIndex("advancedIpqosEnable")%>;
+var hw_qos=<%getIndex("hwQosSupport")%>;
+var vlan_support=<%getIndex("vlanSupport")%>;
+var static_ip_support=<%getIndex("staticIpSupport")%>;
+
+function checkClientRange(start,end)
+{
+  var start_d, end_d;
+  start_d = getDigit(start,4);
+  start_d += getDigit(start,3)*256;
+  start_d += getDigit(start,2)*256;
+  start_d += getDigit(start,1)*256;
+
+  end_d = getDigit(end,4);
+  end_d += getDigit(end,3)*256;
+  end_d += getDigit(end,2)*256;
+  end_d += getDigit(end,1)*256;
+
+  if ( start_d <= end_d )
+	return true;
+
+  return false;
+}
+
+function addRuleClick()
+{
+  if (!document.formQosAdd.enabled.checked)
+  	return true;
+
+  if (!document.formQosAdd.automaticUplinkSpeed.checked && (document.formQosAdd.manualUplinkSpeed.value=="" || document.formQosAdd.manualUplinkSpeed.value < 100)) {
+	alert("Manual Uplink Speed cannot be empty or less then 100 when Automatic Uplink Speed is disabled.");
+	document.formQosAdd.manualUplinkSpeed.focus();
+	return false;
+  }
+ 
+  if(!document.formQosAdd.automaticUplinkSpeed.checked && validateKey(document.formQosAdd.manualUplinkSpeed.value) == 0)
+  {
+  	alert("Invalid input! It should be the decimal number (0-9).");
+	document.formQosAdd.manualUplinkSpeed.focus();
+	return false;
+  }
+ 
+  if (!document.formQosAdd.automaticDownlinkSpeed.checked && (document.formQosAdd.manualDownlinkSpeed.value=="" || document.formQosAdd.manualDownlinkSpeed.value<100)) {
+	alert("Manual Downlink Speed cannot be empty or less then 100 when Automatic Downlink Speed is disabled.");
+	document.formQosAdd.manualDownlinkSpeed.focus();
+	return false;
+  }
+  
+  if(!document.formQosAdd.automaticDownlinkSpeed.checked && validateKey(document.formQosAdd.manualDownlinkSpeed.value) == 0)
+  {
+  	alert("Invalid input! It should be the decimal number (0-9).");
+	document.formQosAdd.manualDownlinkSpeed.focus();
+	return false;
+  }
+
+  if (!advanced_qos_enable && document.formQosAdd.ipStart.value=="" && document.formQosAdd.ipEnd.value=="" &&
+  	document.formQosAdd.mac.value=="" &&
+	document.formQosAdd.bandwidth.value=="" && document.formQosAdd.bandwidth_downlink.value=="" && 
+		document.formQosAdd.comment.value=="")
+	return true;
+
+  if (!advanced_qos_enable && document.formQosAdd.addressType[0].checked==true) {
+
+	if ( checkIpAddr(document.formQosAdd.ipStart, 'Invalid IP address') == false )
+	    return false;
+	if ( checkIpAddr(document.formQosAdd.ipEnd, 'Invalid IP address') == false )
+	    return false;
+	if ( checkIpAddr(document.formQosAdd.rmt_ipStart, 'Invalid remote IP address') == false )
+	    return false;
+	if ( checkIpAddr(document.formQosAdd.rmt_ipEnd, 'Invalid remote IP address') == false )
+	    return false;
+
+    if ( !checkClientRange(document.formQosAdd.ipStart.value,document.formQosAdd.ipEnd.value) ) {
+		alert('Invalid IP address range!\nEnding address should be greater than starting address.');
+		document.formQosAdd.ipStart.focus();
+		return false;
+    }
+
+	if ( !checkClientRange(document.formQosAdd.rmt_ipStart.value,document.formQosAdd.rmt_ipEnd.value) ) {
+		alert('Invalid remote IP address range!\nEnding address should be greater than starting address.');
+		document.formQosAdd.rmt_ipStart.focus();
+		return false;
+    }
+
+	var LAN_IP = ipv4_to_unsigned_integer("<% getInfo("ip"); %>");
+	var LAN_MASK = ipv4_to_unsigned_integer("<% getInfo("mask"); %>");			
+
+	var tarIp = ipv4_to_unsigned_integer(document.formQosAdd.ipStart.value);
+
+	if ((tarIp & LAN_MASK) != (LAN_IP & LAN_MASK))
+	{
+		alert("Invalid start IP address! It should be set within the current subnet.");
+		return false;
+	}
+	tarIp = ipv4_to_unsigned_integer(document.formQosAdd.ipEnd.value);
+
+	if ((tarIp & LAN_MASK) != (LAN_IP & LAN_MASK))
+	{
+		alert("Invalid end IP address! It should be set within the current subnet.");
+		return false;
+	}
+		
+  }
+  else if (!advanced_qos_enable && document.formQosAdd.addressType[1].checked==true) {
+	  var str = document.formQosAdd.mac.value;
+	  if(static_ip_support)
+	 	 var strtmp = document.formQosAdd.dst_mac.value;
+	  
+	  if (str.length < 12) {
+		alert("Input MAC address is not complete. It should be 12 digits in hex.");
+		document.formQosAdd.mac.focus();
+		return false;
+	  }
+
+	if(static_ip_support){
+	  if (strtmp.length < 12) {
+		alert("Input remote MAC address is not complete. It should be 12 digits in hex.");
+		document.formQosAdd.dst_mac.focus();
+		return false;
+	  }
+	}
+
+	  // add for "All MAC Address field can't reject 00:00:00:00:00:00/ff:ff:ff:ff:ff:ff MAC Address" issue
+	with(document.formQosAdd)
+	{
+		if(!checkMacAddr(mac,"mac address invalid!"))
+			return false;
+	} 
+
+	  if(static_ip_support){
+		with(document.formQosAdd)
+		{
+			if(!checkMacAddr(dst_mac,"remote mac address invalid!"))
+				return false;
+		} 
+	 }
+  }
+  /*
+  if ( (document.formQosAdd.bandwidth.value == "" || document.formQosAdd.bandwidth.value == 0)
+   	&& (document.formQosAdd.bandwidth_downlink.value == "" || document.formQosAdd.bandwidth_downlink.value == 0) ) {
+	alert("Uplink Bandwidth or Downlink Bandwidth cannot be empty.");
+	document.formQosAdd.bandwidth.focus();
+	return false;
+  }*/
+  
+  if (document.formQosAdd.bandwidth.value!="") {
+  	if ( validateKey( document.formQosAdd.bandwidth.value ) == 0 ) {
+		alert("Invalid input! It should be the decimal number (0-9).");
+		document.formQosAdd.bandwidth.focus();
+		return false;
+  	}
+   }
+   
+   if (document.formQosAdd.bandwidth_downlink.value!="") {
+  	if ( validateKey( document.formQosAdd.bandwidth_downlink.value ) == 0 ) {
+		alert("Invalid input! It should be the decimal number (0-9).");
+		document.formQosAdd.bandwidth_downlink.focus();
+		return false;
+  	}
+   }
+   if(advanced_qos_enable)
+   {
+   		with(document.formQosAdd)
+   		{
+			if(ipversion.value==0){
+				//ipv4
+				if ( ipStart.value && checkIpAddr(ipStart, 'Invalid IP address') == false )
+				    return false;
+				if ( ipEnd.value &&checkIpAddr(ipEnd, 'Invalid IP address') == false )
+				    return false;
+				if ( rmt_ipStart.value &&checkIpAddr(rmt_ipStart, 'Invalid remote IP address') == false )
+				    return false;
+				if ( rmt_ipEnd.value &&checkIpAddr(rmt_ipEnd, 'Invalid remote IP address') == false )
+				    return false;
+			}
+			else
+			{
+				//ipv6
+				if ( ipStart.value && checkIPv6(ipStar) == false ){
+					alert(" IP address invalid!");
+					document.formQosAdd.ipStart.focus();
+			   		 return false;
+				}	
+				if ( ipEnd.value &&checkIPv6(ipEnd) == false )
+				{
+					alert(" IP address invalid!");
+					document.formQosAdd.ipEnd.focus();
+			   		 return false;
+				}
+				if ( rmt_ipStart.value &&checkIPv6(rmt_ipStart) == false )
+				{
+					alert(" IP address invalid!");
+					document.formQosAdd.rmt_ipStart.focus();
+			   		 return false;
+				}
+				if ( rmt_ipEnd.value &&checkIPv6(rmt_ipEnd) == false )
+				{
+					alert(" IP address invalid!");
+					document.formQosAdd.rmt_ipEnd.focus();
+			   		 return false;
+				}
+			}
+			if(localPortStart.value &&!checkFieldDigitRange(localPortStart,1,65535,"invalid port!"))
+  				return false;
+			if(localPortEnd.value &&!checkFieldDigitRange(localPortEnd,1,65535,"invalid port!"))
+  				return false;
+			
+			if(rmt_portStart.value &&!checkFieldDigitRange(rmt_portStart,1,65535,"invalid port!"))
+  				return false;
+			if(rmt_portEnd.value &&!checkFieldDigitRange(rmt_portEnd,1,65535,"invalid port!"))
+  				return false;
+
+			if(mac.value &&!checkMacAddr(mac,"mac address invalid!"))
+				return false;
+
+			if(static_ip_support){
+				if(dst_mac.value &&!checkMacAddr(dst_mac,"mac address invalid!"))
+					return false;
+
+				if(mac.value && dst_mac.value){
+					alert(" Can't input mac and remote mac at the same time!");
+					document.formQosAdd.mac.focus();
+			   		return false;
+				}
+			}
+			if((ipStart.value || localPortStart.value) && (rmt_ipStart.value || rmt_portStart.value)){
+				alert(" Can't input local and remote ip/port at the same time!");
+				document.formQosAdd.ipStart.focus();
+		   		return false;
+			}
+			
+			if(!checkSetBothOrNone(ipStart,ipEnd))	return false;
+			if(!checkSetBothOrNone(localPortStart,localPortEnd))	return false;
+			if(!checkSetBothOrNone(rmt_ipStart,rmt_ipEnd))	return false;
+			if(!checkSetBothOrNone(rmt_portStart,rmt_portEnd))	return false;
+
+			if(phyport.value && bandwidth.value && !checkFieldDigitRange(phyport,0,3,"uplink phyport invalid!"))
+				return false;
+			if(phyport.value && bandwidth_downlink.value && !checkFieldDigitRange(phyport,4,4,"downlink phyport invalid!"))
+  				return false;
+			if(dscp.value &&!checkFieldDigitRange(dscp,0,63,"invalid number!"))
+  				return false;
+			if(vlan_support){
+				if(vlan_pri.value &&!checkFieldDigitRange(vlan_pri,0,7,"invalid number!"))
+	  				return false;
+			}
+
+			if(hw_qos){
+				if(priority.value &&!checkFieldDigitRange(priority,0,7,"invalid number!"))
+  					return false;
+			}
+			
+			if(remark_dscp.value &&!checkFieldDigitRange(remark_dscp,0,63,"invalid number!"))
+  				return false;
+
+			if(vlan_support){
+				if(remark_vlan_pri.value &&!checkFieldDigitRange(remark_vlan_pri,0,7,"invalid number!"))
+  					return false;
+			}
+   		}
+   }
+   return true;
+}
+
+function deleteClick()
+{
+  if ( !confirm('Do you really want to delete the selected entry?') ) {
+	return false;
+  }
+  else
+	return true;
+}
+
+function deleteAllClick()
+{
+   if ( !confirm('Do you really want to delete the all entries?') ) {
+	return false;
+  }
+  else
+	return true;
+}
+
+function disableQosDelButton()
+{
+	disableButton(document.formQosDel.deleteSel);
+	disableButton(document.formQosDel.deleteAll);
+}
+
+function ipAddrClicked()
+{
+ 	enableTextField(document.formQosAdd.ipStart);
+ 	enableTextField(document.formQosAdd.ipEnd);
+	enableTextField(document.formQosAdd.rmt_ipStart);
+ 	enableTextField(document.formQosAdd.rmt_ipEnd);
+	enableTextField(document.formQosAdd.localPortStart);
+ 	enableTextField(document.formQosAdd.localPortEnd);
+	enableTextField(document.formQosAdd.rmt_portStart);
+ 	enableTextField(document.formQosAdd.rmt_portEnd);
+	
+	disableTextField(document.formQosAdd.mac);
+	if(static_ip_support)
+		disableTextField(document.formQosAdd.dst_mac);
+	disableTextField(document.formQosAdd.phyport);
+	disableTextField(document.formQosAdd.dscp);
+	if(vlan_support)
+		disableTextField(document.formQosAdd.vlan_pri);
+}
+
+function macAddrClicked()
+{
+	enableTextField(document.formQosAdd.mac);
+	if(static_ip_support)
+	enableTextField(document.formQosAdd.dst_mac);
+	
+ 	disableTextField(document.formQosAdd.ipStart);
+ 	disableTextField(document.formQosAdd.ipEnd);
+	disableTextField(document.formQosAdd.rmt_ipStart);
+ 	disableTextField(document.formQosAdd.rmt_ipEnd);
+	disableTextField(document.formQosAdd.localPortStart);
+ 	disableTextField(document.formQosAdd.localPortEnd);
+	disableTextField(document.formQosAdd.rmt_portStart);
+ 	disableTextField(document.formQosAdd.rmt_portEnd);
+	disableTextField(document.formQosAdd.phyport);
+ 	disableTextField(document.formQosAdd.dscp);
+	if(vlan_support)
+		disableTextField(document.formQosAdd.vlan_pri);
+}
+
+function phyportClicked()
+{
+	enableTextField(document.formQosAdd.phyport);
+
+	disableTextField(document.formQosAdd.ipStart);
+ 	disableTextField(document.formQosAdd.ipEnd);
+	disableTextField(document.formQosAdd.rmt_ipStart);
+ 	disableTextField(document.formQosAdd.rmt_ipEnd);
+	disableTextField(document.formQosAdd.localPortStart);
+ 	disableTextField(document.formQosAdd.localPortEnd);
+	disableTextField(document.formQosAdd.rmt_portStart);
+ 	disableTextField(document.formQosAdd.rmt_portEnd);
+	disableTextField(document.formQosAdd.mac);
+	if(static_ip_support)
+		disableTextField(document.formQosAdd.dst_mac);
+	disableTextField(document.formQosAdd.dscp);
+	if(vlan_support)
+		disableTextField(document.formQosAdd.vlan_pri);
+}
+
+function dscpAddrClicked()
+{
+	enableTextField(document.formQosAdd.dscp);
+
+	disableTextField(document.formQosAdd.ipStart);
+ 	disableTextField(document.formQosAdd.ipEnd);
+	disableTextField(document.formQosAdd.rmt_ipStart);
+ 	disableTextField(document.formQosAdd.rmt_ipEnd);
+	disableTextField(document.formQosAdd.localPortStart);
+ 	disableTextField(document.formQosAdd.localPortEnd);
+	disableTextField(document.formQosAdd.rmt_portStart);
+ 	disableTextField(document.formQosAdd.rmt_portEnd);
+	disableTextField(document.formQosAdd.mac);
+	if(static_ip_support)	
+		disableTextField(document.formQosAdd.dst_mac);
+	disableTextField(document.formQosAdd.phyport);
+	if(vlan_support)
+		disableTextField(document.formQosAdd.vlan_pri);
+}
+
+function onePAddrClicked()
+{
+	if(vlan_support){
+		enableTextField(document.formQosAdd.vlan_pri);
+
+		disableTextField(document.formQosAdd.ipStart);
+	 	disableTextField(document.formQosAdd.ipEnd);
+		disableTextField(document.formQosAdd.rmt_ipStart);
+	 	disableTextField(document.formQosAdd.rmt_ipEnd);
+		disableTextField(document.formQosAdd.localPortStart);
+	 	disableTextField(document.formQosAdd.localPortEnd);
+		disableTextField(document.formQosAdd.rmt_portStart);
+	 	disableTextField(document.formQosAdd.rmt_portEnd);
+		disableTextField(document.formQosAdd.mac);
+		if(static_ip_support)
+			disableTextField(document.formQosAdd.dst_mac);
+		disableTextField(document.formQosAdd.phyport);
+		disableTextField(document.formQosAdd.dscp);
+	}
+}
+
+function priorityClicked()
+{
+	if(hw_qos){
+		disableTextField(document.formQosAdd.weight);
+	
+		enableTextField(document.formQosAdd.priority);
+	}
+}
+function wrrClicked()
+{
+	if(hw_qos){
+		disableTextField(document.formQosAdd.priority);
+	
+		enableTextField(document.formQosAdd.weight);
+	}
+}
+
+function updateQosState()
+{
+  if (document.formQosAdd.enabled.checked) {  	
+ 	enableTextField(document.formQosAdd.automaticUplinkSpeed);
+ 	enableTextField(document.formQosAdd.automaticDownlinkSpeed);
+	enableTextField(document.formQosAdd.protocol);
+	enableTextField(document.formQosAdd.ipversion);
+	
+	if(!advanced_qos_enable)
+	{
+	 	enableTextField(document.formQosAdd.addressType[0]);
+	 	enableTextField(document.formQosAdd.addressType[1]);
+	}
+	else{
+		enableTextField(document.formQosAdd.addressType[0]);
+	 	enableTextField(document.formQosAdd.addressType[1]);
+		enableTextField(document.formQosAdd.addressType[2]);
+	 	enableTextField(document.formQosAdd.addressType[3]);
+		if(vlan_support)	
+			enableTextField(document.formQosAdd.addressType[4]);
+	}
+	enableTextField(document.formQosAdd.mode);
+	enableTextField(document.formQosAdd.bandwidth);
+	enableTextField(document.formQosAdd.bandwidth_downlink);
+	
+	if(advanced_qos_enable)
+	{
+		enableTextField(document.formQosAdd.entry_name);	
+		if(hw_qos){
+			enableTextField(document.formQosAdd.policyType[0]);
+			enableTextField(document.formQosAdd.policyType[1]);
+		}
+		enableTextField(document.formQosAdd.remark_dscp);
+		if(vlan_support)
+			enableTextField(document.formQosAdd.remark_vlan_pri);
+		enableTextField(document.formQosAdd.ipversion);	
+	}
+	else
+		enableTextField(document.formQosAdd.comment);
+	
+	updateLinkState();
+
+	if(advanced_qos_enable)
+	{
+		if (document.formQosAdd.addressType[0].checked==true)
+			ipAddrClicked();
+		else if (document.formQosAdd.addressType[1].checked==true)
+			macAddrClicked();
+		else if (document.formQosAdd.addressType[2].checked==true)
+			phyportClicked();
+		else if (document.formQosAdd.addressType[3].checked==true)
+			dscpAddrClicked();	
+		else
+			if(vlan_support)
+				onePAddrClicked();
+	}
+	else
+	{
+		if (document.formQosAdd.addressType[0].checked==true)
+			ipAddrClicked();
+		else
+			macAddrClicked();
+	}
+	if(advanced_qos_enable)
+	{
+		if(hw_qos){
+			if(document.formQosAdd.policyType[0].checked==true)
+				priorityClicked();
+			else
+				wrrClicked();
+		}
+	}
+  }
+  else {
+  	if(advanced_qos_enable)
+	{
+	  	disableTextField(document.formQosAdd.entry_name);
+		disableTextField(document.formQosAdd.protocol);
+		disableTextField(document.formQosAdd.localPortStart);
+		disableTextField(document.formQosAdd.localPortEnd);
+		disableTextField(document.formQosAdd.rmt_ipStart);
+		disableTextField(document.formQosAdd.rmt_ipEnd);
+		disableTextField(document.formQosAdd.rmt_portStart);
+		disableTextField(document.formQosAdd.rmt_portEnd);
+		
+		if(static_ip_support)
+			disableTextField(document.formQosAdd.dst_mac);
+		disableTextField(document.formQosAdd.dscp);
+		disableTextField(document.formQosAdd.phyport);
+		if(vlan_support)
+			disableTextField(document.formQosAdd.vlan_pri);	
+
+		if(hw_qos){
+			disableTextField(document.formQosAdd.policyType[0]);
+			disableTextField(document.formQosAdd.policyType[1]);
+			disableTextField(document.formQosAdd.priority);
+			disableTextField(document.formQosAdd.weight);
+		}
+		disableTextField(document.formQosAdd.remark_dscp);
+		if(vlan_support)
+			disableTextField(document.formQosAdd.remark_vlan_pri);
+		disableTextField(document.formQosAdd.ipversion);	
+	}
+	else
+	{
+		disableTextField(document.formQosAdd.comment);
+		disableTextField(document.formQosAdd.addressType[0]);
+ 		disableTextField(document.formQosAdd.addressType[1]);
+	}
+	
+ 	disableTextField(document.formQosAdd.automaticUplinkSpeed);
+ 	disableTextField(document.formQosAdd.automaticDownlinkSpeed);
+ 	disableTextField(document.formQosAdd.manualUplinkSpeed);
+ 	disableTextField(document.formQosAdd.manualDownlinkSpeed);
+ 	
+ 	disableTextField(document.formQosAdd.ipStart);
+ 	disableTextField(document.formQosAdd.ipEnd);
+	disableTextField(document.formQosAdd.mac);
+	disableTextField(document.formQosAdd.mode);
+	disableTextField(document.formQosAdd.bandwidth);
+	disableTextField(document.formQosAdd.bandwidth_downlink);
+	
+  }
+}
+
+function updateLinkState()
+{
+  if (document.formQosAdd.automaticUplinkSpeed.checked) {  	
+ 	disableTextField(document.formQosAdd.manualUplinkSpeed);
+  }
+  else {
+ 	enableTextField(document.formQosAdd.manualUplinkSpeed);
+  }
+  
+  if (document.formQosAdd.automaticDownlinkSpeed.checked) {  	
+ 	disableTextField(document.formQosAdd.manualDownlinkSpeed);
+  }
+  else {
+ 	enableTextField(document.formQosAdd.manualDownlinkSpeed);
+  }
+}
+
+function Load_Setting()
+{
+	if ( <% getIndex("qosEnabled"); %> )
+		document.formQosAdd.enabled.checked = true;
+
+	if ( <% getIndex("qosAutoUplinkSpeed"); %> )
+		document.formQosAdd.automaticUplinkSpeed.checked = true;
+
+	updateQosState();
+	
+	
+	if(is_l7_qos_support == 1)
+	{				
+ 		document.getElementById("l7_qos_div").style.display = ""; 
+	}
+	else
+	{
+		document.getElementById("l7_qos_div").style.display = "none";
+	}
+	//
+}
+</script>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<h2>QoS</h2>
+
+<table border=0 width="550" cellspacing=4 cellpadding=0>
+<tr><td><font size=2>
+ Entries in this table improve your online gaming experience by ensuring that your 
+ game traffic is prioritized over other network traffic, such as FTP or Web. 
+</font></td></tr>
+
+
+<table border=0 width=500>
+  <tr><td><hr size=1 noshade align=top></td></tr>
+
+<form action=/boafrm/formIpQoS method=POST name="formQosAdd">
+<INPUT type=hidden name="lan_mask" value="<% getInfo("mask-rom"); %>">
+<input type="hidden" value="/ip_qos.htm" name="submit-url">
+<tr><td><font size=2><b>
+	<input type="checkbox" name="enabled" value="ON" ONCLICK=updateQosState()>&nbsp;&nbsp;Enable QoS</b><br>
+ </td></tr>
+
+<tr><td><font size=2><b>
+	<input type="checkbox" name="automaticUplinkSpeed" value="ON" ONCLICK=updateLinkState()>&nbsp;&nbsp;Automatic Uplink Speed</b><br>
+ </td></tr>
+
+<tr><td><font size=2><b>
+	<b>Manual Uplink Speed (Kbps):</b> <input type="text" name="manualUplinkSpeed" size="8" maxlength="8" value="<% getInfo("qosManualUplinkSpeed"); %>">
+	<br><br>
+</td></tr>
+
+<tr><td><font size=2><b>
+   	<input type="checkbox" name="automaticDownlinkSpeed" value="ON" <% getIndex("qosAutoDownlinkSpeed");%> ONCLICK=updateLinkState()>&nbsp;&nbsp;Automatic Downlink Speed</b><br>
+ </td></tr>
+
+<tr><td><font size=2><b>
+	<b>Manual Downlink Speed (Kbps):</b> <input type="text" name="manualDownlinkSpeed" size="8" maxlength="8" value="<% getInfo("qosManualDownlinkSpeed"); %>">
+	<br><br><br>
+</td></tr>
+
+</table>
+
+<table border=0 width=600>
+
+	<tr>
+      <td width="45%"><font size=2><font color="#0000FF"><b>QoS Rule Setting:</b></font></font></td>
+      <td>&nbsp;</td>
+  </tr>
+<%getIndex("advancedIpqosComment_start")%>
+	<tr>
+		<td width="45%"><font size=2><b>Name:</b></font></td>
+		<td><input type="text" name="entry_name" size="15" maxlength="15"></td>
+	</tr>
+<%getIndex("advancedIpqosComment_end")%>
+
+	<tr>
+		<td width="45%"><font size=2><b>QoS Type:</b></font></td>
+		<td>
+      <input type="radio" name="addressType" value="0" checked ONCLICK=ipAddrClicked()>IP&nbsp;&nbsp;
+      <input type="radio" name="addressType" value="1" ONCLICK=macAddrClicked()>MAC&nbsp;&nbsp;
+<%getIndex("advancedIpqosComment_start")%>     
+      <input type="radio" name="addressType" value="2" ONCLICK=phyportClicked()>PHYPORT&nbsp;&nbsp;
+      <input type="radio" name="addressType" value="3" ONCLICK=dscpAddrClicked()>DSCP&nbsp;&nbsp;
+<%getIndex("advancedIpqosComment_end")%>
+<%getIndex("vlanSupport_start")%>  
+      <input type="radio" name="addressType" value="4" ONCLICK=onePAddrClicked()>1P&nbsp;&nbsp;
+<%getIndex("vlanSupport_end")%>  
+		</td>
+	</tr>
+
+<%getIndex("advancedIpqosComment_start")%>
+	<tr>
+		<td width="45%"><font size=2><b>ipversion:</b></font></td>
+		<td>
+			<select name="ipversion">
+    		<option select value="0">ipv4</option>
+       		</select></font>&nbsp;&nbsp
+    	</td>
+	</tr>
+	<tr>
+		<td width="45%"><font size=2><b>protocol:</b></font></td>
+		<td>
+			<select name="protocol">
+    		<option select value="0">Both</option>
+    		<option value="1">TCP</option>
+    		<option value="2">UDP</option>
+    		</select></font>&nbsp;&nbsp
+    	</td>
+	</tr>
+<%getIndex("advancedIpqosComment_end")%>
+	<tr>
+		<td width="45%"><font size=2><b>Local IP Address:</b></font></td>
+		<td>
+			<input type="text" name="ipStart" size="12" maxlength="15" value="">
+      <font face="Arial" size="5">-</font>
+      <input type="text" name="ipEnd" size="12" maxlength="15" value="">
+    </td>
+  </tr>
+<%getIndex("advancedIpqosComment_start")%>
+	<tr>
+		<td width="45%"><font size=2><b>Local Port:</b></font></td>
+		<td>
+			<input type="text" name="localPortStart" size="12" maxlength="15" value="">
+      <font face="Arial" size="5">-</font>
+      <input type="text" name="localPortEnd" size="12" maxlength="15" value="">
+    </td>
+  </tr>
+	<tr>
+		<td width="45%"><font size=2><b>Remot IP Address:</b></font></td>
+		<td>
+			<input type="text" name="rmt_ipStart" size="12" maxlength="15" value="">
+      <font face="Arial" size="5">-</font>
+      <input type="text" name="rmt_ipEnd" size="12" maxlength="15" value="">
+    </td>
+  </tr>
+  <tr>
+		<td width="45%"><font size=2><b>Remote Port:</b></font></td>
+		<td>
+			<input type="text" name="rmt_portStart" size="12" maxlength="15" value="">
+      <font face="Arial" size="5">-</font>
+      <input type="text" name="rmt_portEnd" size="12" maxlength="15" value="">
+    </td>
+  </tr>
+ <%getIndex("advancedIpqosComment_end")%>
+  <tr>
+		<td width="45%"><font size=2><b>MAC Address:</b></font></td>
+		<td><input type="text" name="mac" size="12" maxlength="12"></td>
+	</tr>
+
+<%getIndex("staticIp_start")%>  
+    <tr>
+		<td width="45%"><font size=2><b>remote MAC Address:</b></font></td>
+		<td><input type="text" name="dst_mac" size="12" maxlength="12"></td>
+	</tr> 
+<%getIndex("staticIp_end")%>
+<%getIndex("advancedIpqosComment_start")%>
+	 <tr>
+		<td width="45%"><font size=2><b>phyport:</b></font></td>
+		<td><input type="text" name="phyport" size="5" maxlength="2">&nbsp;(0-4)</td>
+	</tr> 
+	 <tr>
+		<td width="45%"><font size=2><b>dscp:</b></font></td>
+		<td><input type="text" name="dscp" size="5" maxlength="2">&nbsp;(0-63)</td>
+	</tr>
+<%getIndex("advancedIpqosComment_end")%>
+<%getIndex("vlanSupport_start")%>  
+<tr>
+	<td width="45%"><font size=2><b>802.1p:</b></font></td>
+	<td><input type="text" name="vlan_pri" size="5" maxlength="2">&nbsp;(0-7)</td>
+</tr> 
+<%getIndex("vlanSupport_end")%>  
+
+	<tr id="l7_qos_div" style="display:">
+		<td width="45%"><font size=2><b>Layer 7:</b></font></td>
+		<td>
+			<select size="1" name="l7_protocol">
+				<% l7QosList(); %>
+      </select>
+		</td>
+	</tr>
+<tr>
+      <td width="45%"><font size=2><font color="#0000FF"><b>Mode</b></font></font></td>
+      <td>&nbsp;</td>
+</tr>    
+	<tr>
+		<td width="45%"><font size=2><b>Mode:</b></font></td>
+		<td>
+			<select size="1" name="mode">
+      <option selected value="1">Guaranteed minimum bandwidth</option>
+      	<option value="2">Restricted maximum bandwidth</option>
+      </select>
+    </td>
+  </tr>
+  
+  <tr>
+		<td width="45%"><font size=2><b>Uplink Bandwidth (Kbps):</b></font></td>
+		<td><input type="text" name="bandwidth" size="8"></td>
+	</tr>
+	
+	<tr>
+		<td width="45%"><font size=2><b>Downlink Bandwidth (Kbps):</b></font></td>
+		<td><input type="text" name="bandwidth_downlink" size="8"></td>
+	</tr>
+<%getIndex("hwQosSupport_start")%>
+<tr>
+      <td width="45%"><font size=2><font color="#0000FF"><b>Policy</b></font></font></td>
+      <td>&nbsp;</td>
+</tr>
+	<tr>
+		<td width="45%"><font size=2><b>policy:</b></font></td>
+		<td>
+      		<input type="radio" name="policyType" value="0" checked ONCLICK=priorityClicked()>PRIO&nbsp;&nbsp;
+      		<input type="radio" name="policyType" value="1" ONCLICK=wrrClicked()>WRR&nbsp;&nbsp;
+		</td>
+	</tr>
+
+	<tr>
+		<td width="45%"><font size=2><b>priority:</b></font></td>
+		<td><input type="text" name="priority" size="5" maxlength="2">&nbsp;(0-7)</td>
+	</tr>
+	<tr>
+		<td width="45%"><font size=2><b>weight:</b></font></td>
+		<td><input type="text" name="weight" size="10"></td>
+	</tr>	
+<%getIndex("hwQosSupport_end")%>
+	
+	
+<%getIndex("advancedIpqosComment_start")%>
+	<tr>
+      <td width="45%"><font size=2><font color="#0000FF"><b>remark</b></font></font></td>
+      <td>&nbsp;</td>
+  </tr>
+	<tr>
+		<td width="45%"><font size=2><b>remark dscp:</b></font></td>
+		<td><input type="text" name="remark_dscp" size="5" maxlength="2">&nbsp;(0-63)</td>
+	</tr>
+<%getIndex("advancedIpqosComment_end")%>
+
+<%getIndex("vlanSupport_start")%>
+	<tr>
+		<td width="45%"><font size=2><b>remark 802.1p:</b></font></td>
+		<td><input type="text" name="remark_vlan_pri" size="5" maxlength="2">&nbsp;(0-7)</td>
+	</tr>
+<%getIndex("vlanSupport_end")%>
+	
+<%getIndex("noAdvancedIpqosComment_start")%>
+	<tr>
+		<td width="45%"><font size=2><b>Comment:</b></font></td>
+		<td><input type="text" name="comment" size="10" maxlength="15"></td>
+	</tr>
+<%getIndex("noAdvancedIpqosComment_end")%>
+</table>
+
+<table border=0 width=220>
+	<tr>
+<% getInfo("apply_prompt_comment_start");%>	
+		<td><input type="submit" value="Apply Changes" name="addQos" onClick="return addRuleClick()">&nbsp;&nbsp;</td>
+<td><input type="reset" value="Reset" name="reset"></td>
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+<td><input type="submit" value="Save" name="addQos" onClick="return addRuleClick()">&nbsp;&nbsp;</td>
+<td><input type="submit" value="Save & Apply" name="save_apply" onClick="return addRuleClick()">&nbsp;&nbsp;</td>
+<td><input type="reset" value="Reset" name="reset"></td>
+<td><input type="hidden" value="1" name="addQosFlag"></td>
+<% getInfo("apply_direct_comment_end");%>
+  </tr>
+	<script> updateQosState(); </script>
+</form>
+</table>
+
+
+<br>
+<form action=/boafrm/formIpQoS method=POST name="formQosDel">
+<table border=0 width=730>
+  <tr><font size=2><b>Current QoS Rules Table:</b></font></tr>
+  <% ipQosList(); %>
+</table>
+
+ <br><input type="submit" value="Delete Selected" name="deleteSel" onClick="return deleteClick()">&nbsp;&nbsp;
+     <input type="submit" value="Delete All" name="deleteAll" onClick="return deleteAllClick()">&nbsp;&nbsp;&nbsp;
+     <input type="reset" value="Reset" name="reset">
+ <script>
+	if ( <% getIndex("qosRuleNum"); %> == 0 )
+		disableQosDelButton();
+ </script>
+     <input type="hidden" value="/ip_qos.htm" name="submit-url">
+</form>
+
+
+</blockquote>
+</body>
+</html>
+

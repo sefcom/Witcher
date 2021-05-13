@@ -1,0 +1,1238 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<style>
+.styled-text1 {
+    border: 1px solid #e1e6ec;
+    color: #333333;
+    font-size: 14px;
+    height: 34px;
+    line-height: 34px;
+    padding-left: 10px;
+    width: 230px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 240px;
+}
+.devicename_show
+{
+	width:160px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+.sbOptions a
+{
+	width:267px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+</style>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/AdvWlanAccess.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAdvMacBindIp.js"></script>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var G_List = [];
+var edit=-1;
+//var HNAP = new HNAP_XML();
+var G_serviceList=[];
+var lanip="";
+var lanmask="";
+var lanmac="";
+var G_ListData="";
+var rowid=0;
+var ExistTableMacArray=[];//获取已设置的MAC
+var ExistTableIPArray=[];//获取已设置的IP
+var ExistInputMac=[];//获取当前输入的所有mac
+var ExistInputIp=[];//获取当前输入的所有ip
+var TABLE_LIST_NUM=16;//列表中最多的条目限制
+var ADDROWNUM=4;//一次性允许添加的数目
+
+$(document).ready( function() {
+	document.getElementById("right_content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	$(" input[id^='macaddr']").live("keyup",function () {
+		macInput(this);
+	});
+	$(" input[id^='ipaddr']").live("keyup",function () {
+		ipInput(this);
+	});
+	MoreContainMiniheight();
+	GetXML();
+	checkTimeout();
+	document.getElementById("cancelbutton").value = I18N("j","Commom_Cancel");
+	document.getElementById("savebutton").value = I18N("j","IPMAC_OneKey_Save");
+
+});
+function ipInput(label){
+	var num;
+	num = $(label).attr("id").replace(/[^0-9]/ig,"");
+	$("#Tableaddlist table[id^='error_tips"+num+"2']").hide();
+	var ipErrorNum=0;
+	var ip=$(label).val();
+	var IpResult=checkIpAddr(ip);
+	switch(IpResult)//检查IP输入
+	{
+		case ERR_IP_EMPTY:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrEmpty"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_NOTNUMBER:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpNotNUMBER"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_FORMAT:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrFormat"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_ALLZERO:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrAllZero"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_ALLONE:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrAllOne"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_INVALID:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrNet"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_FIRSTZERO:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrFirstZero"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_LOOP:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrLoop"));
+			ipErrorNum++;
+			return true;
+		case ERR_IP_GROUP:
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrGroup"));
+			ipErrorNum++;
+			return true;
+	}
+
+	var IpMaskResult=checkIpMaskMatch(ip,lanmask);
+	if(ERR_NETID_INV == IpMaskResult)//用mask检查IP，网络号全0或1
+	{
+		showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrNetId"));
+		ipErrorNum++;
+		return true;
+	}
+	if(ERR_HOSTID_INV == IpMaskResult)//用mask检查IP，主机号全0或1
+	{
+		showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrHostId"));
+		ipErrorNum++;
+		return true;
+	}
+	//验证IP和lan网关是否在同一子网
+	if(SAMESUBNET != isSameNet(ip,lanip,lanmask))
+	{
+		showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrNotLanNet"));
+		ipErrorNum++;
+		return true;
+	}
+	/*
+	 //和Lan侧mac冲突验证
+	 if(mac.toLowerCase()==lanmac)
+	 {
+	 showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacLanSame"));
+	 macErrorNum++;
+	 }
+	 */
+	//验证IP和lan网关是否相同，只能绑定和路由器的mac
+	if(ip == lanip && mac.toLowerCase()!=lanmac.toLowerCase())
+	{
+		showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrLanipSame"));
+		ipErrorNum++;
+		return true;
+	}
+	//IP地址冲突验证，和已存列表
+	if(($.inArray(ip,ExistTableIPArray))!=-1)
+	{
+		showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrConflict"));
+		ipErrorNum++;
+		return true;
+	}
+	/*//IP地址冲突验证，和已输入
+	if(($.inArray(ip,ExistInputIp))!=-1)
+	{
+		showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrInputSame"));
+		ipErrorNum++;
+		return true;
+	}*/
+	if(0==ipErrorNum)
+	{
+		var existIP=[];
+		var nnum = -1;
+		$("#Tableaddlist tr[id^='tr']").each(function(){
+			nnum = $(this).attr("id").replace(/[^0-9]/ig,"");
+			var ipMore=$("#ipaddr"+nnum).val();
+			if(nnum!=num){
+				existIP.push(ipMore.toLowerCase());
+			}
+		});
+		if(($.inArray(ip.toLowerCase(),existIP))!=-1)
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrInputSame"));
+			//return true;
+		}
+	}
+
+}
+function macInput(label){
+	var num;
+	num = $(label).attr("id").replace(/[^0-9]/ig,"");
+	$("#Tableaddlist table[id^='error_tips"+num+"1']").hide();
+	//hideAllErrorInfo();
+	var macErrorNum=0;
+	//ExistInputMac=[];
+	var mac=$(label).val();
+	var MacResult=checkMacAddr(mac);
+	switch(MacResult)
+	{
+		case ERR_MAC_FORMAT:
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacFormat"));
+			macErrorNum++;
+			break;//进入下一次循环
+		case ERR_MAC_GROUP:
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacGroup"));
+			macErrorNum++;
+			break;
+		case ERR_MAC_ZERO:
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacZero"));
+			macErrorNum++;
+			break;
+		case ERR_MAC_BROAD:
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacBroad"));
+			macErrorNum++;
+			break;
+		case ERR_MAC_EMPTY:
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacEmpty"));
+			macErrorNum++;
+			break;
+	}
+	//MAC地址冲突验证，和已存列表
+	if(($.inArray(mac.toLowerCase(),ExistTableMacArray))!=-1)
+	{
+		showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacConflict"));
+		macErrorNum++;
+		//return true;
+	}
+	//MAC地址冲突验证，和已输入
+	if(($.inArray(mac.toLowerCase(),ExistInputMac))!=-1)
+	{
+		showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacInputSame"));
+		macErrorNum++;
+		//return true;
+	}
+	if(0==macErrorNum)
+	{
+		var existMac=[];
+		var nnum = -1;
+		$("#Tableaddlist tr[id^='tr']").each(function(){
+			nnum = $(this).attr("id").replace(/[^0-9]/ig,"");
+			var macMore=$("#macaddr"+nnum).val();
+			if(nnum!=num){
+				existMac.push(macMore.toLowerCase());
+			}
+		});
+		if(($.inArray(mac.toLowerCase(),existMac))!=-1)
+		{
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacInputSame"));
+			macErrorNum++;
+			//return true;
+		}
+	}
+}
+function GetXML()	
+	{	
+		GetResult_1st();
+	}
+	function GetResult_1st() {
+		var soapAction = new SOAPAction();
+		var sOAPGetDHCPClientInfoResponse = new SOAPGetDHCPClientInfoResponse();
+		var sOAPGetnetworksResponse = new SOAPGetnetworksResponse();
+		var sOAPGetSTATICClientInfoResponse = new SOAPGetSTATICClientInfoResponse();
+		//获取动态用户列表
+		var dhcpClientInfo = soapAction.sendSOAPAction("GetDHCPClientInfo", null, sOAPGetDHCPClientInfoResponse);
+		//LAN口相关
+		var lanMessage = soapAction.sendSOAPAction("GetNetworkSettings", null, sOAPGetnetworksResponse);
+		//静态用户列表
+		var staticClientInfo = soapAction.sendSOAPAction("GetStaticClientInfo", null, sOAPGetSTATICClientInfoResponse);
+		$.when(dhcpClientInfo, lanMessage, staticClientInfo).done(function (r1, r2, r3) {
+			GetResult_2nd(r1, r2, r3);
+		})
+				.fail(function () {
+					document.getElementById("right_content").style.display = "";
+					document.getElementById("CreateOnloadMessage").style.display = "none";
+					if (DebugMode == 1) {
+						alert("[!!GetXML Error!!] Function: GetResult_2nd");
+					}
+				});
+		/*var result_xml = new StringDoc();
+		if (result_xml != null)
+		{
+			result_xml.Set("GetMultipleHNAPs/GetNetworkSettings");
+			result_xml.Set("GetMultipleHNAPs/GetIpMacBindSettings");
+		   result_xml.Set("GetMultipleHNAPs/GetDhcpClientInfo");
+			HNAP.SetXMLAsync("GetMultipleHNAPs", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+		}
+		else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}
+	}*/
+	}
+	function GetResult_2nd(dhcpClientInfo,lanMessage,staticClientInfo)
+	{	var listindex=0;
+		for(var i = 0;i<dhcpClientInfo.DHCPClientInfoLists.ClientInfo.length;i++){
+		var dhcplist = [];
+			G_serviceList[listindex]=[];
+			dhcplist[0]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].DeviceName;
+			dhcplist[1]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].MacAddress;
+			dhcplist[2]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].IPv4Address;
+			/*dhcplist[3]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].NickName;
+			if(dhcplist[0]==""&&dhcplist[3]==""){
+				dhcplist[0]==dhcplist[2];
+			}else if(dhcplist[0]==""){
+				dhcplist[0]==dhcplist[3];
+			}*/
+			if(dhcplist[0]==""){
+				dhcplist[0] = dhcplist[2];
+			}
+			G_serviceList[listindex].push(dhcplist[0]);//主机名
+			G_serviceList[listindex].push(dhcplist[1]);//mac地址
+			G_serviceList[listindex].push(dhcplist[2]);//IP地址
+			listindex++;
+	}
+
+		lanip=lanMessage.IPAddress;
+		lanmask=lanMessage.SubnetMask;
+		lanmac=lanMessage.MACAddress;
+		G_ListData=staticClientInfo;
+		for(var i = 0;i<staticClientInfo.StaticClientInfoLists.ClientInfo.length;i++){
+			var staticlist = [];
+			G_List[i] = [];
+			staticlist[0]=staticClientInfo.StaticClientInfoLists.ClientInfo[i].DeviceName;
+			staticlist[1]=staticClientInfo.StaticClientInfoLists.ClientInfo[i].MacAddress;
+			staticlist[2]=staticClientInfo.StaticClientInfoLists.ClientInfo[i].IPv4Address;
+			/*staticlist[3]=staticClientInfo.StaticClientInfoLists.ClientInfo[i].NickName;
+			if(staticlist[0]==""&&staticlist[3]==""){
+				staticlist[0]==staticlist[2];
+			}else if(staticlist[0]==""){
+				staticlist[0]==staticlist[3];
+			}*/
+			/*if(staticlist[0]==""){
+				staticlist[0] = staticlist[2];
+			}*/
+			G_List[i].push(staticlist[0]);//主机名
+			G_List[i].push(staticlist[1]);//mac地址
+			G_List[i].push(staticlist[2]);//IP地址
+		}
+		CreateBindTable();
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+
+	}
+		/*var stad_info;
+		var stad_info_item = [];
+		var stad_info_array = new Array(); //定义一维数组
+	
+		var GetResult_2nd = result_xml.Get("GetMultipleHNAPsResponse/GetMultipleHNAPsResult");
+		//var GetResult_2nd="OK";
+		if (GetResult_2nd == "OK"){
+		
+		dhcpclientinfo = result_xml.Get("GetMultipleHNAPsResponse/GetDhcpClientInfoResponse/lan(0)_dhcps_clientinfo");
+		lanip=result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_ipaddr");
+		lanmask=result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_netmask");
+		lanmac=result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_mac");
+       // G_serviceList=[["aaaaa,12:12:12:12:12,192.168.1.1"],["bbbbbb,12:12:12:12:12,192.168.1.1"],["ccccc,12:12:12:12:12,192.168.1.1"],["dddddd,12:12:12:12:12,192.168.1.1"]];
+		//dhcpclientinfo="aaaaa,12:12:12:12:12,192.168.1.1;bbb,12:12:12:12:12,192.168.1.1;cccc,12:12:12:12:12,192.168.1.1";
+		var dhcplisttem=[];
+		if(dhcpclientinfo!="")
+		{
+			dhcplisttem=dhcpclientinfo.split(";");
+			
+			//stad info
+			stad_info = result_xml.Get("GetMultipleHNAPsResponse/GetDhcpClientInfoResponse/stad_info");
+			stad_info_item = stad_info.split(";");
+			for(var j = 0; j < stad_info_item.length; j++) {
+				stad_info_array[j] = new Array(); //将每一个子元素又定义为数组 
+				stad_info_array[j][0] = stad_info_item[j].split(",")[0];
+				stad_info_array[j][1] = stad_info_item[j].split(",")[1];
+			}
+		}
+		var dhcplist=[];
+		for(var i=0;i<dhcplisttem.length;i++)
+		{
+			dhcplist[i]=[];
+			dhcplist[i]=dhcplisttem[i].split(",");	
+		}
+			var listindex=0;
+			for(var i=0;i<dhcplist.length;i++)
+			{
+				var ext_name = 0;
+				if(isSameSubNet(lanip,lanmask,dhcplist[i][2],lanmask))
+				{
+					G_serviceList[listindex]=[];
+					
+					for (var k = 0; k < stad_info_array.length; k++) {
+					//如果MAC地址相同
+						if (dhcplist[i][1] == stad_info_array[k][0]) {
+							if (stad_info_array[k][1] != "") {
+								dhcplist[i][0] = stad_info_array[k][1];
+								ext_name = 1;
+							} 
+							break;
+						}
+					}
+					//如果别名不存在并且主机名为*,则显示为IP地址
+					if (ext_name == 0 && dhcplist[i][0] == "*") {
+						dhcplist[i][0] = dhcplist[i][2];
+					}
+					G_serviceList[listindex].push(dhcplist[i][0]);//主机名
+					G_serviceList[listindex].push(dhcplist[i][1]);//mac地址
+					G_serviceList[listindex].push(dhcplist[i][2]);//IP地址
+					listindex++;
+				}
+			}
+
+			var ruleinfo= result_xml.Get("GetMultipleHNAPsResponse/GetIpMacBindSettingsResponse/lan(0)_dhcps_staticlist");
+			G_ListData=ruleinfo;
+			var rulelist=[];
+			var ruletem=[];
+			if(ruleinfo!="")
+			{
+				ruletem=ruleinfo.split(";");
+			}
+			for(var i=0;i<ruletem.length;i++)
+			{
+				G_List.push(ruletem[i].split(","));	
+			}
+			
+			CreateBindTable();
+			document.getElementById("right_content").style.display="";
+			document.getElementById("CreateOnloadMessage").style.display="none";			
+		} else {	
+			document.getElementById("right_content").style.display="";
+			document.getElementById("CreateOnloadMessage").style.display="none";
+			if (DebugMode == 1)	{	
+				alert("[!!GetXML Error!!] Function: GetResult_2nd");
+			}
+		}
+	}*/
+	
+
+
+function CreateBindTable()
+{
+	if(G_List.length>0)
+	{
+		document.getElementById("trnull").style.display="none";
+	}
+	else
+	{
+		document.getElementById("trnull").style.display="";
+	}
+	ClearTable("bindlist",3);
+	var TableList=[];
+	ExistTableMacArray=[];
+	ExistTableIPArray=[];
+	for(var i=0;i<G_List.length;i++)
+	{
+		var deviceNamehtml="";
+		TableList[i]=[];
+		TableList[i].push(i+1);
+		if(G_List[i][0].length==0)
+		{
+			var flag=false;
+			for(var j=0;j<G_serviceList.length;j++)//在dhcp列表中寻找是否存在当前mac
+			{
+				if(G_List[i][1].toLowerCase() == G_serviceList[j][1].toLowerCase())
+				{
+					TableList[i].push(G_serviceList[j][0]);
+					flag = true;
+					break;
+				}
+			}
+			if(flag == false)
+			{
+				//TableList[i].push("未知设备");
+				TableList[i].push(I18N("j","IPMAC_Undefined_Device"));
+			}
+		}
+		else
+		{
+			//TableList[i].push(G_List[i][1]); //name
+			deviceNamehtml="<div class='devicename_show'>"+G_List[i][0]+"</div>";
+			TableList[i].push(deviceNamehtml);
+		}
+		TableList[i].push(G_List[i][1]); //mac
+		TableList[i].push(G_List[i][2]); //ip
+		
+		ExistTableMacArray.push(G_List[i][1].toLowerCase());//存入已有mac
+		ExistTableIPArray.push(G_List[i][2]);//存入已有IP
+		
+		TableList[i].push("<div class='delimg' onclick='deleteData("+i+")'></div>");
+	}
+	CreateTable("bindlist", TableList);
+}
+
+	
+	function AddCancle()
+	{
+
+		$("#Tableaddlist tr[id][id^='tr']").remove();
+		$("#Tableaddlist tr[id][id^='error_row']").remove();
+		rowid=0;
+		document.getElementById("createPop").style.display = "none";
+		ClearTable("Tableaddlist",1);
+		$("#macipaddbutton").show();
+		$("#error_list_num").hide();
+	}
+	
+	
+	
+	function Add()
+	{
+      document.getElementById("createPop").style.display = "";
+	  rowid=0;
+	  ClearTable("Tableaddlist",1);
+	  AddataToRow();
+	  var listnum=G_List.length;//已有条目数量
+	  if(listnum>=TABLE_LIST_NUM)//列表中最多的条目限制，16条
+	  {
+		$("#macipaddbutton").hide();
+		showErr("error_list_num","errorinfo_list_num",I18N("j","Err_AdvMacBindIp_ListNumRange"));
+		document.getElementById("savebutton").disabled=true;
+	  }
+	}
+	
+
+
+	function deleteData(id)
+	{
+		document.getElementById("savebutton").disabled=false;
+		G_List.splice(id,1);
+				$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+				SetXMLDel();
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});	
+	}
+	
+	function SetXMLDel() {
+		document.getElementById("CreatePopAlertMessage").style.display = "inline";
+		document.getElementById("waitSettingFinish").style.display = "inline";
+		SetResult_2st();
+	}
+	function SetResult_2st() {
+
+		var soapAction = new SOAPAction();
+		var sOAPSetSTATICClientInfoRequest = new SOAPSetSTATICClientInfoRequest();
+		for(var i=0;i<G_List.length;i++)
+		{	var obj = {
+			DeviceName:G_List[i][0],
+			MacAddress:G_List[i][1],
+			IPv4Address:G_List[i][2]
+		};
+			sOAPSetSTATICClientInfoRequest.StaticClientInfoLists.push(obj);
+
+		}
+		if(G_List.length==0){
+			soapAction.sendSOAPAction("SetStaticClientInfo",null,null)
+					.done(function (obj2) {
+						//for compatibility
+						if (obj2.SetStaticClientInfoResult != "OK") {
+							if (DebugMode == 1) {
+								alert("[!!SetXML Error!!] Function: SetResult_1st");
+							}
+							document.getElementById("CreatePopAlertMessage").style.display = "none";
+							document.getElementById("waitSettingFinish").style.display = "none";
+							document.getElementById("DetectRouterConnection").style.display = "inline";
+						}
+						else {
+							setTimeout("waitSettingFinished()", 20000);
+						}
+					})
+					.fail(function(){
+						if (DebugMode == 1)	{
+							alert("[!!SetXML Error!!] Function: SetResult_3st");
+						}
+						document.getElementById("CreatePopAlertMessage").style.display = "none";
+						document.getElementById("waitSettingFinish").style.display = "none";
+						document.getElementById("DetectRouterConnection").style.display = "inline";
+					});
+		}else{
+			soapAction.sendSOAPAction("SetStaticClientInfo",sOAPSetSTATICClientInfoRequest,null)
+					.done(function (obj2) {
+						//for compatibility
+						if (obj2.SetStaticClientInfoResult != "OK") {
+							if (DebugMode == 1) {
+								alert("[!!SetXML Error!!] Function: SetResult_1st");
+							}
+							document.getElementById("CreatePopAlertMessage").style.display = "none";
+							document.getElementById("waitSettingFinish").style.display = "none";
+							document.getElementById("DetectRouterConnection").style.display = "inline";
+						}
+						else {
+							setTimeout("waitSettingFinished()", 20000);
+						}
+					})
+					.fail(function(){
+						if (DebugMode == 1)	{
+							alert("[!!SetXML Error!!] Function: SetResult_3st");
+						}
+						document.getElementById("CreatePopAlertMessage").style.display = "none";
+						document.getElementById("waitSettingFinish").style.display = "none";
+						document.getElementById("DetectRouterConnection").style.display = "inline";
+					});
+		}
+
+	/*	var result_xml = new StringDoc();
+		if (result_xml != null) {
+			
+			var ruleliststr=[];
+			for(var i=0;i<G_List.length;i++)
+			{
+				sOAPSetSTATICClientInfoRequest.ClientInfoLists.ClientInfo[i].DeviceName=G_List[i][0];
+				sOAPSetSTATICClientInfoRequest.ClientInfoLists.ClientInfo[i].MacAddress=G_List[i][1];
+				sOAPSetSTATICClientInfoRequest.ClientInfoLists.ClientInfo[i].IPv4Address=G_List[i][2];
+				/!*if(i==G_List.length-1)
+				{
+					ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+","+G_List[i][3];
+				}
+				else
+				{
+					ruleliststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+","+G_List[i][3]+";";
+				}*!/
+			
+			}
+			result_xml.Set("SetIpMacBindSettings/lan_unit", "0");
+			result_xml.Set("SetIpMacBindSettings/lan(0)_dhcps_staticlist", ruleliststr);
+			
+	
+			HNAP.SetXMLAsync("SetIpMacBindSettings", result_xml, function(xml)	{	SetResult_2nd(xml);	});
+		} else {	
+			if (DebugMode == 1)	{	
+				alert("[!!SetXML Error!!] Function: SetResult_1st");	
+			}	
+		}*/
+	}	
+	
+function hideAllErrorInfo()
+{
+	$("#Tableaddlist table[id^='error_tips']").hide();
+	$("#error_list_num").hide();
+}	
+
+function checkSetValues()
+{	
+	hideAllErrorInfo();
+	var num;
+	var macErrorNum=0;
+	var ipErrorNum=0;
+	ExistInputMac=[];
+	ExistInputIp=[];
+	$("#Tableaddlist tr[id^='tr']").each(function(){
+		num = $(this).attr("id").replace(/[^0-9]/ig,"");
+		var mac=$("#macaddr"+num).val();
+		var ip=$("#ipaddr"+num).val();
+		var MacResult=checkMacAddr(mac);
+		switch(MacResult)
+		{
+			case ERR_MAC_FORMAT:
+				showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacFormat"));
+				macErrorNum++;
+				break;//进入下一次循环
+			case ERR_MAC_GROUP:
+				showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacGroup"));
+				macErrorNum++;
+				break;
+			case ERR_MAC_ZERO:
+				showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacZero"));
+				macErrorNum++;
+				break;
+			case ERR_MAC_BROAD:
+				showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacBroad"));
+				macErrorNum++;
+				break;
+			case ERR_MAC_EMPTY:
+				showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacEmpty"));
+				macErrorNum++;
+				break;
+		}
+		//MAC地址冲突验证，和已存列表
+		if(($.inArray(mac.toLowerCase(),ExistTableMacArray))!=-1)
+		{
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacConflict"));
+			macErrorNum++;
+			//return true;
+		}
+		//MAC地址冲突验证，和已输入
+		if(($.inArray(mac.toLowerCase(),ExistInputMac))!=-1)
+		{
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacInputSame"));
+			macErrorNum++;
+			//return true;
+		}
+		if(0==macErrorNum)
+		{
+			ExistInputMac.push(mac);
+		}
+		
+		var IpResult=checkIpAddr(ip);
+		switch(IpResult)//检查IP输入
+		{
+			case ERR_IP_EMPTY:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrEmpty"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_NOTNUMBER:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpNotNUMBER"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_FORMAT:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrFormat"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_ALLZERO:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrAllZero"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_ALLONE:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrAllOne"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_INVALID:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrNet"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_FIRSTZERO:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrFirstZero"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_LOOP:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrLoop"));
+				ipErrorNum++;
+				return true;
+			case ERR_IP_GROUP:
+				showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrGroup"));
+				ipErrorNum++;
+				return true;
+		}
+		
+		var IpMaskResult=checkIpMaskMatch(ip,lanmask);
+		if(ERR_NETID_INV == IpMaskResult)//用mask检查IP，网络号全0或1
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrNetId"));
+			ipErrorNum++;
+			return true;
+		}
+		if(ERR_HOSTID_INV == IpMaskResult)//用mask检查IP，主机号全0或1
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrHostId"));
+			ipErrorNum++;
+			return true;
+		}
+		//验证IP和lan网关是否在同一子网
+		if(SAMESUBNET != isSameNet(ip,lanip,lanmask))
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrNotLanNet"));
+			ipErrorNum++;
+			return true;
+		}
+		/*
+		//和Lan侧mac冲突验证
+		if(mac.toLowerCase()==lanmac)
+		{
+			showErr("error_tips"+num+"1","errorinfo_"+num+"1",I18N("j","Err_AdvMacBindIp_MacLanSame"));
+			macErrorNum++;
+		}
+		*/
+		//验证IP和lan网关是否相同，只能绑定和路由器的mac
+		if(ip == lanip && mac.toLowerCase()!=lanmac.toLowerCase())
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrLanipSame"));
+			ipErrorNum++;
+			return true;
+		}
+		//IP地址冲突验证，和已存列表
+		if(($.inArray(ip,ExistTableIPArray))!=-1)
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrConflict"));
+			ipErrorNum++;
+			return true;
+		}
+		//IP地址冲突验证，和已输入
+		if(($.inArray(ip,ExistInputIp))!=-1)
+		{
+			showErr("error_tips"+num+"2","errorinfo_"+num+"2",I18N("j","Err_AdvMacBindIp_IpAddrInputSame"));
+			ipErrorNum++;
+			return true;
+		}
+		if(0==ipErrorNum)
+		{
+			ExistInputIp.push(ip);
+		}
+		
+	});//end of $.each()
+	
+	if(macErrorNum!=0 || ipErrorNum!=0)
+	{
+		return false;
+	}
+	else
+	{	
+		var listnum=G_List.length+$("#Tableaddlist tr[id^='tr']").length;//已有条目数量+添加行数
+		if(listnum>TABLE_LIST_NUM)//列表中最多的条目限制，16条
+		{
+			$("#macipaddbutton").hide();
+			showErr("error_list_num","errorinfo_list_num",I18N("j","Err_AdvMacBindIp_ListNumRange"));
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+var AddTableList=[];
+
+function AddTableListData()
+{
+
+	var n=0;
+	for(var i=0;i<rowid;i++)
+	{
+		var trid="tr"+i;
+		var obj=document.getElementById(trid);
+		if(obj!=undefined)
+		{
+			AddTableList[n]=[];
+			var deviceid="devicename"+i;
+			var macid="macaddr"+i;
+			var ipid="ipaddr"+i;
+			var devicevalue=document.getElementById(deviceid).value;
+			var macvalue=document.getElementById(macid).value;
+			var ipvalue=document.getElementById(ipid).value;
+			
+			AddTableList[n].push("1");
+			AddTableList[n].push(devicevalue);
+			AddTableList[n].push(macvalue);
+			AddTableList[n].push(ipvalue);
+			n++;
+		}
+	}
+	
+	
+}
+
+
+function SaveData()
+{
+	var result=checkSetValues();
+	if(result)
+	{
+		document.getElementById("createPop").style.display = "none";
+		AddTableListData();
+		$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+				SetXML();
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});	
+	}
+}
+	
+	function SetXML() {
+		document.getElementById("CreatePopAlertMessage").style.display = "inline";
+		document.getElementById("waitSettingFinish").style.display = "inline";
+		SetResult_1st();
+	}
+	function SetResult_1st() {
+
+		var soapAction = new SOAPAction();
+		var sOAPSetSTATICClientInfoRequest = new SOAPSetSTATICClientInfoRequest();
+		sOAPSetSTATICClientInfoRequest.StaticClientInfoLists.push();
+		sOAPSetSTATICClientInfoRequest.StaticClientInfoLists.ClientInfo=G_ListData.StaticClientInfoLists.ClientInfo;
+		for(var i=0;i<AddTableList.length;i++)
+		{
+			var obj = {
+				DeviceName:AddTableList[i][1],
+				MacAddress:AddTableList[i][2],
+				IPv4Address:AddTableList[i][3]
+			};
+			sOAPSetSTATICClientInfoRequest.StaticClientInfoLists.push(obj);
+			}
+		if(sOAPSetSTATICClientInfoRequest.StaticClientInfoLists.ClientInfo.length==0){
+			soapAction.sendSOAPAction("SetStaticClientInfo",null,null)
+					.done(function (obj2) {
+						//for compatibility
+						if (obj2.SetStaticClientInfoResult != "OK") {
+							if (DebugMode == 1) {
+								alert("[!!SetXML Error!!] Function: SetResult_1st");
+							}
+							document.getElementById("CreatePopAlertMessage").style.display = "none";
+							document.getElementById("waitSettingFinish").style.display = "none";
+							document.getElementById("DetectRouterConnection").style.display = "inline";
+						}
+						else {
+							setTimeout("waitSettingFinished()", 20000);
+						}
+					})
+					.fail(function(){
+						if (DebugMode == 1)	{
+							alert("[!!SetXML Error!!] Function: SetResult_3st");
+						}
+						document.getElementById("CreatePopAlertMessage").style.display = "none";
+						document.getElementById("waitSettingFinish").style.display = "none";
+						document.getElementById("DetectRouterConnection").style.display = "inline";
+					});
+		}else{
+			soapAction.sendSOAPAction("SetStaticClientInfo",sOAPSetSTATICClientInfoRequest,null)
+					.done(function (obj2) {
+						//for compatibility
+						if (obj2.SetStaticClientInfoResult != "OK") {
+							if (DebugMode == 1) {
+								alert("[!!SetXML Error!!] Function: SetResult_1st");
+							}
+							document.getElementById("CreatePopAlertMessage").style.display = "none";
+							document.getElementById("waitSettingFinish").style.display = "none";
+							document.getElementById("DetectRouterConnection").style.display = "inline";
+						}
+						else {
+							setTimeout("waitSettingFinished()", 20000);
+							//waitSettingFinished();
+						}
+					})
+					.fail(function(){
+						if (DebugMode == 1)	{
+							alert("[!!SetXML Error!!] Function: SetResult_3st");
+						}
+						document.getElementById("CreatePopAlertMessage").style.display = "none";
+						document.getElementById("waitSettingFinish").style.display = "none";
+						document.getElementById("DetectRouterConnection").style.display = "inline";
+					});
+		}
+
+
+
+
+		/*var result_xml = new StringDoc();
+		if (result_xml != null) {
+			
+			var ruleliststr=G_ListData;
+			var addlist="";
+
+			for(var i=0;i<AddTableList.length;i++)
+			{
+				if(i==AddTableList.length-1)
+				{
+					addlist+=AddTableList[i][0]+","+AddTableList[i][1]+","+AddTableList[i][2]+","+AddTableList[i][3];
+				}
+				else
+				{
+					addlist+=AddTableList[i][0]+","+AddTableList[i][1]+","+AddTableList[i][2]+","+AddTableList[i][3]+";";
+				}
+			
+			}
+			if(ruleliststr.length>0)
+			{
+			  ruleliststr+=";"+addlist;
+			}
+			else
+			{
+			 ruleliststr+=addlist;
+			}
+			result_xml.Set("SetIpMacBindSettings/lan_unit", "0");
+			result_xml.Set("SetIpMacBindSettings/lan(0)_dhcps_staticlist", ruleliststr);
+			
+	
+			HNAP.SetXMLAsync("SetIpMacBindSettings", result_xml, function(xml)	{	SetResult_2nd(xml);	});
+		} else {	
+			if (DebugMode == 1)	{	
+				alert("[!!SetXML Error!!] Function: SetResult_1st");	
+			}	
+		}*/
+	}
+
+	/*function SetResult_2nd(result_xml) {
+		var SetResult_1st = result_xml.Get("SetIpMacBindSettingsResponse/SetIpMacBindSettingsResult");
+		if (SetResult_1st == "OK") {
+			setTimeout("waitSettingFinished()", 1000);
+		}
+		if (SetResult_1st == "ERROR") {
+			if (DebugMode == 1) {
+			alert("[!!SetXML Error!!] Function: SetResult_2nd");
+			}
+			window.location.reload();
+		}
+	}*/
+	function waitSettingFinished() 
+	{
+		window.location.reload();
+	}	
+	
+function AddataToRow()
+{
+		
+
+		var outputString;
+	   // var str="<div  class='sbHolder' style='width:240px'>";
+		//str+="<input type='text' maxlength='32' id='devicename"+rowid+"' name='devicename"+rowid+"' onfocus='showdevicelist("+rowid+")' onblur='hidedevicelist("+rowid+")' class='styled-text' style='position:absolute; top:0; left:0;'>";
+		//str+="<ul class='sbOptions' style='width: 240px;display:none;' id='ul"+rowid+"'>";
+		var str="<select name='devicename"+rowid+"' id='devicename"+rowid+"' onChange='setDevicedata("+rowid+")'>";
+        //str+="<option value='' selected='selected'>手动输入</option>";
+        str+="<option value='' selected='selected'>"+I18N("j","IPMAC_Manual_Input")+"</option>";
+		for(var i=0;i<G_serviceList.length;i++)
+		{
+			str+="<option value='"+G_serviceList[i][0]+"'>"+G_serviceList[i][0]+"</option>";
+		}
+        str+="</select>";
+		outputString = "<td>" + str + "</td>";
+		outputString += "<td><input type='text' maxlength='17' class='styled-texts' id='macaddr"+rowid+"' name='macaddr"+rowid+"'></td>";
+		outputString += "<td><input type='text' maxlength='15' class='styled-texts' id='ipaddr"+rowid+"' name='ipaddr"+rowid+"'></td>";
+		outputString +="<td><img id='delrow"+rowid+"' src='image/icon_del01.png' width=24 height=24 style='cursor:pointer;margin-top:6px;display:none;' onclick='DeleteRow("+rowid+")'/></td>";
+
+		var troutputString;
+		
+		troutputString = "<tr id='tr"+rowid+"'></tr>";
+		troutputString+="<tr id='error_row"+rowid+"'><td></td>"+
+				"<td><table class='errorinfo' style='display:none;' id='error_tips"+rowid+"1'><tbody><tr><td><div class='ic-sign ic'></div></td><td id='errorinfo_"+rowid+"1' style='width:205px;text-align:justify;'></td></tr></tbody></table></td>"+
+				"<td><table class='errorinfo' style='display:none;' id='error_tips"+rowid+"2'><tbody><tr><td><div class='ic-sign ic'></div></td><td id='errorinfo_"+rowid+"2' style='width:205px;text-align:justify;'></td></tr></tbody></table></td>"+
+			"</tr>"
+
+		var selector = "#Tableaddlist"+"> tbody";
+		$(selector).append(troutputString);
+
+		$("#tr"+rowid).html(outputString);
+		var selectid="#devicename"+rowid;
+		$(selectid).selectbox({width:282});
+        rowid++;
+		
+		return;
+
+
+}
+function showdevicelist(id)
+{
+var objid="ul"+id;
+if(G_serviceList.length>0)
+document.getElementById(objid).style.display="";
+}
+function hidedevicelist(id)
+{
+ setTimeout("hidelist("+id+")",200);
+}	
+function setDevicedata(n)
+{
+	var deviceid="devicename"+n;
+	var macid="macaddr"+n;
+	var ipid="ipaddr"+n;
+	//if(document.getElementById(deviceid).value)
+
+	var m=document.getElementById(deviceid).selectedIndex;
+	if(m==0)
+	{
+		document.getElementById(deviceid).value="";
+		document.getElementById(macid).value="";
+		document.getElementById(ipid).value="";	
+	}
+	else
+	{
+		$("#tr"+n).find($("a[id^=sbSelector]")).each(function(){
+			$(this).empty();
+			$(this).children().remove();
+			$(this).append("<div>"+G_serviceList[m-1][0]+"</div>");
+			$(this).children().css({
+				"width":"230px",
+				"overflow":"hidden",
+				"text-overflow":"ellipsis",
+				"white-space":"nowrap"
+			});
+		});
+		//document.getElementById(deviceid).value=G_serviceList[m-1][0];
+		document.getElementById(macid).value=G_serviceList[m-1][1];
+		document.getElementById(ipid).value=G_serviceList[m-1][2];
+	}
+}
+
+function hidelist(id)
+{
+var objid="ul"+id;
+document.getElementById(objid).style.display="none";
+}
+
+
+
+function AddRow()
+{
+	//var addRowNum=$("#Tableaddlist tr[id^='tr']").length;//当前的行数
+	if($("#Tableaddlist tr[id^='tr']").length>=ADDROWNUM)//限制增加8条
+	{
+		$("#macipaddbutton").hide();
+		return false;
+	}
+	AddataToRow();
+	$("#Tableaddlist img[id^='delrow']").show();
+}
+
+function DeleteRow(id)
+{
+	$("#tr"+id).remove();
+	$("#error_row"+id).remove();
+	$("#macipaddbutton").show();
+	$("#error_list_num").hide();
+	var RowNum=$("#Tableaddlist tr[id^='tr']").length;
+	if(RowNum<=1)
+	{
+		$("#Tableaddlist img[id^='delrow']").hide();
+	}
+}
+
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container">
+					<script>initialLeftMenu();</script>
+				 </div>
+				<div id="right_content"  class="pull-left" style="display:none; ">
+					<table border="0"  class="clearboth tablemoreheader" cellpadding="0" cellspacing="0" align="left">
+						<tr>
+							<th><script>I18N("h","Commom_IPMAC_Binding");</script><!-- IP/MAC绑定 --></th>
+						</tr>
+					</table>
+					<div class="clearboth moreline1"></div>
+					<div class="moredescription"><script>I18N("h","IPMAC_Description");</script><!-- 开启此功能可以为上网设备设置固定的IP地址，同时将IP地址和MAC地址进行ARP绑定，使设备可以免遭ARP攻击。 --></div>		
+		  		<table class="table_list" id="bindlist" align="left" cellpadding="0" cellspacing="0" style="margin-top:64px; width:100%; ">
+					<tbody>
+					<tr class="tableheader">
+						<td colspan="6">
+							<div style="position:relative;height:100%">
+								<span style="text-align:center;"><script>I18N("h","IPMAC_Table");</script><!-- IP/MAC地址绑定列表 --></span>
+								<div onClick="Add();" class="addbutton"></div>
+							</div>
+						</td>
+					</tr>
+					<tr class="tableheader2">
+						<td style="width:68px; "><script>I18N("h","Commom_Sequence_Number");</script><!-- 序号 --></td>
+						<td style="width:198px; "><script>I18N("h","DHCP_Hosts");</script><!-- 主机 --></td>
+						<td style="width:198px; "><script>I18N("h","Commom_MAC_Address");</script><!-- MAC地址 --></td>
+						<td style="width:168px; "><script>I18N("h","Commom_IP_Address");</script><!-- IP地址 --></td>
+						<td style="width:136px; "><script>I18N("h","Commom_Operation");</script><!-- 操作 --></td>
+					</tr>
+					<tr id="trnull">
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					</tr>
+				</tbody>
+			</table>					 
+
+			<!--table align="center" style="width:100%; padding-top:32px;">
+				<tr><td style="padding-left:200px; "><input type="button" value="保存" id="savebutton5" class="styled_button_s" onClick="SaveData();"></td></tr>
+			</table-->								
+				</div><!--end right_content -->
+			</div>
+	   </div>
+ 	  
+	
+	<div style="display:none;" id="createPop">
+	  <div style="width:880px" class="dialogBox2">
+		<div class="advance_row">
+			<span ><script>I18N("h","IPMAC_Static_Binding");</script><!-- 静态 IP 地址绑定 --></span>
+			<div onClick="AddRow();" class="macipaddbutton" id="macipaddbutton"></div>	
+			</div>
+			<div align="center" id="error_list_num" class="errorinfo" style="display:none;">
+				<table>
+					<tbody>
+						<tr>
+							<td>
+							<div class="ic-sign ic"></div>
+						  </td>
+						  <td id="errorinfo_list_num"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+	  <table cellspacing="10" border="0" style=" display:block; padding-top:10px; margin-left:30px;" id="Tableaddlist">
+	  	<tbody>
+			<tr class="macipheader">
+			<td style="text-align:center; "><script>I18N("h","DHCP_Hosts");</script><!-- 主机 --></td>
+			<td style="text-align:center; "><script>I18N("h","Commom_MAC_Address");</script><!-- MAC地址 --></td>
+			<td style="text-align:center; "><script>I18N("h","Commom_IP_Address");</script><!-- IP地址 --></td>
+			</tr>
+		</tbody>
+	  </table>
+		
+	 <table style="width:100%; padding-top:8px;">
+		 <tr>
+		 <td><div class="moreline2"></div></td>
+		 </tr>
+	</table>
+		<div align="center" style="margin-top:26px; ">
+		<span>
+			<!-- <input type="button" value="取消" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();"> -->
+			<input type="button" value="" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();">
+		</span>
+		<span style="margin-left:20px; ">
+			<!-- <input type="button" value="一键保存" id="savebutton" class="styled_button_ss" onClick="SaveData();"> -->
+			<input type="button" value="" id="savebutton" class="styled_button_ss" onClick="SaveData();">
+		</span>
+		</div>	
+	
+	  </div>
+	</div>		  
+	  
+	   <div class="footer_placeholder"></div>  
+   </div>
+	
+	<div id="footer"></div>
+
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

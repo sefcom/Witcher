@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+
+iwpriv wlan1 set_mib crc_dump=$1
+

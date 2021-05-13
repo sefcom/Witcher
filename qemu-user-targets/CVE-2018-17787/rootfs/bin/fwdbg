@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+
+echo fw_dbg 3 1 0 0 > /proc/wlan0/cmd
+ob 453 80
+

@@ -1,0 +1,80 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Disk Setup </title>
+<script language="javascript" type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+function init()
+{
+	
+}
+function Close()
+{
+	window.close();
+}
+function addClick()
+{
+  if (confirm("Are you sure to format?"))
+  	return true;
+  else 
+  	return false;
+
+}
+
+
+</script>
+</head>
+
+<blockquote>
+<h2>Disk Format</h2>
+
+<body onload="init();">
+
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><td><font size=2>
+Format operation will erase all the data in the hard disk, 
+please backup the data before format.
+</font></td></tr>
+
+<tr><td><hr size=1 noshade align=top></td></tr>
+</table>
+
+<form action=/boafrm/formDiskFormat method=POST name="formDiskFormat">
+ <table border=0 width=500>
+ 
+	<tr>
+	 <td width="10%"><font size=2><b>Partitions:</b></td>
+	 <td width="50%">
+	 <% PartitionsList(); %>
+	 </td>
+	</tr>
+
+	<tr>
+	  <td width="10%"><font size=2><b>File System Type:</b></td>
+	  <td width="50%">
+	   <select size="1" name="systype">
+	    <option value="ext2" selected>ext2</option>
+	    <option value="ext3" >ext3</option>
+	    <option value="ext4" >ext4</option> 
+	    <option value="ntfs" >ntfs</option>
+	    <option value="fat32" >fat32</option>
+	    <option value="fat16" >fat16</option>
+	   </select>
+	  </td>
+	</tr>
+
+  <tr>
+ 	<td width="40%"><font size=2><b><input type="submit" value="Format" name="Apply Changes"  onClick="return addClick()"></b></td>
+	<!--<td width="20%"><font size=2><b><input type="reset" value="Reset" name="reset"></b></td>-->
+	<input type="hidden" value="/diskmanagement.htm" name="submit_url">
+  </tr>
+ 
+ </table>
+</form>
+
+</body>
+
+</html>

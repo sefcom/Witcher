@@ -1,0 +1,12 @@
+# Copyright (C) 2005 Atheros Communications, Inc., All Rights Reserved
+# DO NOT EDIT -- This file is will be overwritten by CLI.
+
+set dualap Enable
+set ipaddr 192.168.0.1
+set ipmask 255.255.255.0
+set radiusname 192.168.0.10
+set radiusport 1812
+set radiussecret Atheros
+
+export IP_ADDR=192.168.0.1
+export IP_MASK=255.255.255.0

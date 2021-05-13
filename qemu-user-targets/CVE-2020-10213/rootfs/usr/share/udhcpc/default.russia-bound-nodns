@@ -1,0 +1,24 @@
+#!/bin/sh
+# Sample udhcpc renew script
+
+RESOLV_CONF="/etc/resolv.conf"
+
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+
+/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+
+virtual_if=`/sbin/ifconfig | grep ppp0`
+
+if [ -z "$virtual_if" ]
+then
+	echo "deleting routers"
+	while /sbin/route del default gw 0.0.0.0 dev $interface
+	do :
+	done
+
+	for i in $router
+	do
+		/sbin/route add default gw $i dev $interface
+	done
+fi

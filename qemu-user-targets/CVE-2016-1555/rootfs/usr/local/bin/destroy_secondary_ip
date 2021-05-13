@@ -1,0 +1,14 @@
+DHCPC_INTERFACE=$1
+
+WIFIDOG_PID=`/bin/pidof wifidog | /usr/bin/awk '{print $1}'`
+IF_ADDR=`/sbin/ifconfig $DHCPC_INTERFACE:1 | /bin/grep inet | /usr/bin/cut -d: -f2 | /usr/bin/awk '{print $1}'`
+
+sleep 30
+
+if [ $WIFIDOG_PID ]; then
+	/usr/sbin/iptables -t nat -D WiFiDog_Outgoing -d $IF_ADDR -j WiFiDog_WIFI2Router
+fi
+
+ifconfig $DHCPC_INTERFACE:1 down
+
+/usr/local/bin/restart-nmbd

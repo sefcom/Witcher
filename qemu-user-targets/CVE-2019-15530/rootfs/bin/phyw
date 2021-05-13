@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+
+if [ $# -lt 4 ]; then echo "Usage: $0 <phyId> <pagId> <regId> <regData>";  exit 1 ; fi
+
+echo extWrite $1 $2 $3 $4 > /proc/rtl865x/phyReg
+

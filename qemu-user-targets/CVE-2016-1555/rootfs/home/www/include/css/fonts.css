@@ -1,0 +1,103 @@
+.headline1 {
+    font-family: Verdana , Arial, Helvetica, sans-serif;
+	font-size: 15px;
+	font-weight: bold;
+	color: #46008F;
+}
+
+.headline2 {
+    font-family: Verdana , Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #46008F;
+}
+
+.MainBody1{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #000000;
+}
+
+.MainBody2 {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	color: #000000;
+}
+
+.TertiaryNavActive {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #FFA400;
+}
+
+.TertiaryNav {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #46008f;
+	text-decoration: none;
+}
+
+.FourthLevelNav {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	color: #46008f;
+}
+.FourthLevelNavActive {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	color: #FFA400;
+}
+
+.InstructionalText {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	color: #666f74;
+}
+
+.CopyrightLine {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	color: #46008f;
+}
+
+.TableHeaders {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.TableBody {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	color: #000000;
+}
+
+.LayerHeadline{
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #46008f;
+}
+
+.UtilityLinkActive{
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #ffa400;
+}
+.UtilityLink {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #46008f;
+}

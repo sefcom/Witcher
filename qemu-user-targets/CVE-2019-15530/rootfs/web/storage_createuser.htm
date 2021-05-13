@@ -1,0 +1,55 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Disk Setup </title>
+<script language="javascript" type="text/javascript" src="util_gw.js"> </script>
+<script>
+function Close()
+{
+	window.close();
+}
+
+</script>
+</head>
+
+<blockquote>
+<h2><font color="#0000FF">Create User</font></h2>
+
+<body onload="init();">
+
+<form action=/boafrm/formDiskCreateUser method=POST name="formDiskCreateUser">
+ <table border=0 width=500>
+  <tr>
+  <font size=2><b>User Account</b></font>
+  </tr>
+  <tr>
+    <td width="20%"><font size=2><b>Name:</b></td>
+    <td width="50%"><font size=2><input type="text" name="username" size="20" maxlength="30"></td>
+  </tr>
+  <tr>
+    <td width="20%"><font size=2><b>New Password:</b></td>
+    <td width="50%"><font size=2><input type="password" name="newpass" size="20" maxlength="30"></td>
+  </tr>
+  <tr>
+    <td width="20%"><font size=2><b>Confirmed Password:</b></td>
+    <td width="50%"><font size=2><input type="password" name="confpass" size="20" maxlength="30"></td>
+  </tr>
+  <tr>
+    <td width="20%"><font size=2><b>Group Member:</b></td>
+    <td width="50%">
+    <% Storage_GetGroupMember(); %>
+    </td>
+  </tr>
+  <tr>
+    <td width="30%"><font size=2><input type="submit" name="CreateUser" value="CreateUser"></td>
+    <td width="30%"><font size=2><input type="button" name="Close" value="Close" onClick="Close()"></td>
+    <input type="hidden" value="/administration.htm" name="submit-url">
+  </tr>
+</table>
+</form>
+
+</body>
+
+</html>

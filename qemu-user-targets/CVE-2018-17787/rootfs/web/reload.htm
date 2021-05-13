@@ -1,0 +1,94 @@
+<html>
+<head>
+	<script type="text/javascript" src="mtmcode.js"></script>
+	<script type="text/javascript" src="util_gw.js"></script>
+	<style>
+	.on {display:on}
+	.off {display:none}
+	</style>
+	<script language=JavaScript>
+
+function get_by_id(id)
+{
+	with(document)
+	{
+		return getElementById(id);
+	}
+}
+
+function reloadWindow()
+{
+	var browser=eval ( '"' + top.location + '"' );
+	var domainName = "<% getInfo("domainName"); %>";
+	var connect_url;
+	var redirect_ip = "<% getInfo("redirect_ip"); %>";
+	var lastUrl="<% getInfo("lastUrl"); %>";
+
+	connect_url=redirect_ip;
+
+//alert("browser="+browser);
+					domainName = domainName.toLowerCase();
+//alert("domainName="+domainName);
+
+					if (browser.indexOf(redirect_ip) > -1 )
+					{
+						connect_url=redirect_ip;
+						
+					}
+					else if (browser.indexOf("www."+domainName+".com.tw") > -1 )
+					{
+						connect_url = "www."+domainName+".com";
+					}
+					else if(browser.indexOf("www."+domainName+".com") > -1 )
+					{
+						connect_url = "www."+domainName+".com.tw";
+					}
+					else if (browser.indexOf(domainName+".com.tw") > -1 )
+					{
+						connect_url = domainName+".com";
+					}
+					else if(browser.indexOf(domainName+".com") > -1 )
+					{
+						connect_url = domainName+".com.tw";
+					}
+					else if (browser.indexOf(domainName) > -1 )
+					{
+						connect_url = domainName+".com";
+					}
+					else
+					{
+						connect_url = domainName+".com";
+					}
+
+				var lastUrl="<% getInfo("lastUrl"); %>";
+				
+				if(lastUrl == "/wizard.htm")
+				{
+					parent.location.href = 'http://'+connect_url;
+				}
+				else
+				{
+//alert("connect_url="+connect_url);
+					var location_href = 'http://'+connect_url+lastUrl+'?t='+new Date().getTime();				
+//alert("location_href="+location_href);				
+					parent.location.href = 'http://'+connect_url;
+					//parent.frames[3].location.href=location_href;
+				}
+				
+	return false;
+}
+
+	</script>
+</head>
+<body>
+	<blockquote>
+ 	<h4>Change setting successfully!</h4>
+ 	Your changes have been saved. The router must be rebooted for the changes to take effect.<br> You can reboot now, or you can continue to make other changes and reboot later.
+	<form action=/boafrm/formRebootCheck method=POST name='rebootForm'>
+	<input type='hidden' value='%s' name='submit-url'>
+	<input id='restartNow' type='submit' value='Reboot Now' onclick=\"return true\" />&nbsp;&nbsp;
+	<input id='restartLater' type='button' value='Reboot Later' OnClick=reloadWindow() >
+	</form></blockquote></body></html>
+	</blockquote>
+</body>
+</html>

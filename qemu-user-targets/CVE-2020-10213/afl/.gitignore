@@ -1,0 +1,12 @@
+qemu_mode
+afl-analyze
+afl-as
+afl-clang
+afl-clang++
+afl-fuzz
+afl-g++
+afl-gcc
+afl-gotcpu
+afl-showmap
+afl-tmin
+as

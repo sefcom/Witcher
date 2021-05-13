@@ -1,0 +1,43 @@
+#!/bin/sh
+#########################################################################
+##  Network Configuration
+##
+##  This script sets up the WAN/LAN ports to the appropriate configuration
+##
+#########################################################################
+
+. /etc/ath/apcfg
+
+##
+# Enable the loopback interface
+##
+
+ifconfig lo 127.0.0.1 up
+
+##
+## Check the WAN mode.  If not bridged, check for DHCP client, else
+## simply set the address
+##
+
+if [ "${WAN_MODE}" != "bridged" ]; then
+    if [ "${WAN_MODE}" = "dhcp" ]; then
+        ##
+        ## Run the DHCP client on this interface
+        ##
+
+        udhcpc -b -i $ETH0 -s /etc/udhcpc.script
+    else
+        ##
+        ## Static IP address
+        ##
+
+        ifconfig $ETH0 $WAN_IPADDR netmask $WAN_NETMASK up
+    fi
+fi
+
+##
+## Bring up the 4 port interface
+##
+
+ifconfig $ETH1 up
+

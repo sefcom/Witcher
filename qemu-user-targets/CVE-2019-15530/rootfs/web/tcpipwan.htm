@@ -1,0 +1,2034 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>WAN Interface Setup </title>
+<% getInfo("include_css"); %>
+<style>
+.on {display:on}
+.off {display:none}
+</style>
+<% language=javascript %>
+<script type="text/javascript" src="util_gw.js"> </script>
+<SCRIPT>
+var initialDnsMode, pppConnectStatus=0;
+var ppp2ConnectStatus=0,ppp3ConnectStatus=0,ppp4ConnectStatus=0;
+var MultiPppoeEnable= <% getIndex("multiPppoe"); %>;
+var wan_connection_type=0;
+var dynamicWanIP=1;
+
+var wan_access_port_en = <%getIndex("wanAccessPortEnable");%>;
+
+function load_web_access_port_info()
+{
+	if (wan_access_port_en)
+	{
+		document.write("<tr>");
+		document.write("<td width='100%' colspan='2'><font size=2>");
+		document.write("<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Web Accessed port: <input type='text' name='webAccessPort' size='5' maxlength='5' value='<% getIndex("webAccessPort"); %>'>&nbsp</b></td>");
+		document.write("</tr>");
+	}
+}
+
+function update_web_access_port_state()
+{
+	if (wan_access_port_en){
+		if (document.tcpip.webWanAccess.checked){
+			enableTextField(document.tcpip.webAccessPort);
+		}
+		else{
+			disableTextField(document.tcpip.webAccessPort);		
+		}
+	}
+}
+function check_web_access_port_valid()
+{
+	if (wan_access_port_en){
+		if (document.tcpip.webWanAccess.checked){
+		   if (document.tcpip.webAccessPort.value=="") {
+				alert("Port cannot be empty! You should set a value between 1-65535.");
+				document.tcpip.webAccessPort.focus();
+				return false;
+			  }
+
+			  if ((validateKey( document.tcpip.webAccessPort.value ) == 0) ) {
+				alert("Invalid port number! It should be the decimal number (0-9).");
+				document.tcpip.webAccessPort.focus();
+				return false;
+			  }
+			  d1 = getDigit(document.tcpip.webAccessPort.value, 1);
+			  if (d1 > 65535 || d1 < 1) {
+				alert("Invalid port number! You should set a value between 1-65535.");
+				document.tcpip.webAccessPort.focus();
+				return false;
+			  }	
+		}
+	}
+	return true;
+}
+
+function setPPPConnected()
+{
+   pppConnectStatus = 1;
+}
+function setPPP2Connected()
+{
+   ppp2ConnectStatus = 1;
+}
+
+function setPPP3Connected()
+{
+   ppp3ConnectStatus = 1;
+}
+
+function setPPP4Connected()
+{
+   ppp4ConnectStatus = 1;
+}
+function resetClicked()
+{
+   if(document.tcpip.wanType.selectedIndex != 0){
+	   if(document.tcpip.dnsMode[0].checked)
+	      disableDNSinput();
+	   else
+	      enableDNSinput();
+   }
+
+   document.tcpip.reset;
+
+	location=location;
+}
+
+function disableDNSinput()
+{
+   disableTextField(document.tcpip.dns1);
+   disableTextField(document.tcpip.dns2);
+   disableTextField(document.tcpip.dns3);
+}
+
+function enableDNSinput()
+{
+   enableTextField(document.tcpip.dns1);
+   enableTextField(document.tcpip.dns2);
+   enableTextField(document.tcpip.dns3);
+}
+
+function autoDNSclicked()
+{
+  disableDNSinput();
+}
+
+function manualDNSclicked()
+{
+  enableDNSinput();
+}
+function pptpConnectClick(connect)
+{
+  if( saveChanges_wan(document.tcpip,MultiPppoeEnable,dynamicWanIP) == false)
+	return false;
+  
+  if (document.tcpip.pptpConnectType.selectedIndex == 2 && pppConnectStatus==connect) {
+      if (document.tcpip.pptpUserName.value=="") {
+          alert('PPTP user name cannot be empty!');
+	  document.tcpip.pptpUserName.value = document.tcpip.pptpUserName.defaultValue;
+	  document.tcpip.pptpUserName.focus();
+	  return false;
+      }
+      if (document.tcpip.pptpPassword.value=="") {
+          alert('PPTP password cannot be empty!');
+	  document.tcpip.pptpPassword.value = document.tcpip.pptpPassword.defaultValue;
+	  document.tcpip.pptpPassword.focus();
+	  return false;
+      }
+      return true;
+  }
+  return false;
+}
+function l2tpConnectClick(connect)
+{
+  if( saveChanges_wan(document.tcpip,MultiPppoeEnable,dynamicWanIP) == false)
+	return false;
+  
+  if (document.tcpip.l2tpConnectType.selectedIndex == 2 && pppConnectStatus==connect) {
+      if (document.tcpip.l2tpUserName.value=="") {
+          alert('L2TP user name cannot be empty!');
+	  document.tcpip.l2tpUserName.value = document.tcpip.l2tpUserName.defaultValue;
+	  document.tcpip.l2tpUserName.focus();
+	  return false;
+      }
+      if (document.tcpip.l2tpPassword.value=="") {
+          alert('L2TP password cannot be empty!');
+	  document.tcpip.l2tpPassword.value = document.tcpip.l2tpPassword.defaultValue;
+	  document.tcpip.l2tpPassword.focus();
+	  return false;
+      }
+      return true;
+  }
+  return false;
+}
+function USB3GConnectClick(connect)
+{
+    if (document.tcpip.USB3GConnectType.selectedIndex == 2 && pppConnectStatus==connect) {
+        return true;
+    }
+    return false;
+}
+function pppConnectClick(connect)
+{
+  if( saveChanges_wan(document.tcpip,MultiPppoeEnable,dynamicWanIP) == false)
+  	return false;
+  
+  if (document.tcpip.pppConnectType.selectedIndex == 2 && pppConnectStatus==connect) {
+      if (document.tcpip.pppUserName.value=="") {
+          alert('PPP user name cannot be empty!');
+	  document.tcpip.pppUserName.value = document.tcpip.pppUserName.defaultValue;
+	  document.tcpip.pppUserName.focus();
+	  return false;
+      }
+      if (document.tcpip.pppPassword.value=="") {
+          alert('PPP password cannot be empty!');
+	  document.tcpip.pppPassword.value = document.tcpip.pppPassword.defaultValue;
+	  document.tcpip.pppPassword.focus();
+	  return false;
+      }
+      return true;
+  }
+  return false;
+}
+//dzh add
+function pppConnectClick2(connect)
+{
+  if (document.tcpip.pppConnectType2.selectedIndex == 2 && ppp2ConnectStatus==connect) {
+      if (document.tcpip.pppUserName2.value=="") {
+          alert('PPP user name cannot be empty!');
+	  document.tcpip.pppUserName2.value = document.tcpip.pppUserName2.defaultValue;
+	  document.tcpip.pppUserName2.focus();
+	  return false;
+      }
+      if (document.tcpip.pppPassword2.value=="") {
+          alert('PPP password cannot be empty!');
+	  document.tcpip.pppPassword2.value = document.tcpip.pppPassword2.defaultValue;
+	  document.tcpip.pppPassword2.focus();
+	  return false;
+      }
+      return true;
+  }
+  return false;
+}
+
+function pppConnectClick3(connect)
+{
+  if (document.tcpip.pppConnectType3.selectedIndex == 2 && ppp3ConnectStatus==connect) {
+      if (document.tcpip.pppUserName3.value=="") {
+          alert('PPP user name cannot be empty!');
+	  document.tcpip.pppUserName3.value = document.tcpip.pppUserName3.defaultValue;
+	  document.tcpip.pppUserName3.focus();
+	  return false;
+      }
+      if (document.tcpip.pppPassword3.value=="") {
+          alert('PPP password cannot be empty!');
+	  document.tcpip.pppPassword3.value = document.tcpip.pppPassword3.defaultValue;
+	  document.tcpip.pppPassword3.focus();
+	  return false;
+      }
+      return true;
+  }
+  return false;
+}
+
+function pppConnectClick4(connect)
+{
+  if (document.tcpip.pppConnectType4.selectedIndex == 2 && ppp4ConnectStatus==connect) {
+      if (document.tcpip.pppUserName4.value=="") {
+          alert('PPP user name cannot be empty!');
+	  document.tcpip.pppUserName4.value = document.tcpip.pppUserName4.defaultValue;
+	  document.tcpip.pppUserName4.focus();
+	  return false;
+      }
+      if (document.tcpip.pppPassword4.value=="") {
+          alert('PPP password cannot be empty!');
+	  document.tcpip.pppPassword4.value = document.tcpip.pppPassword4.defaultValue;
+	  document.tcpip.pppPassword4.focus();
+	  return false;
+      }
+      return true;
+  }
+  return false;
+}
+//End
+function pppConnection_Init()
+{
+	disableButton(document.tcpip.pppConnect);
+	disableButton(document.tcpip.pppDisconnect);
+	disableTextField(document.tcpip.pppIdleTime);
+	disableButton(document.tcpip.pptpConnect);
+	disableButton(document.tcpip.pptpDisconnect);
+	disableTextField(document.tcpip.pptpIdleTime);
+//for dynamic wan IP
+	disableTextField(document.tcpip.pptpIpAddr);
+	disableTextField(document.tcpip.pptpSubnetMask);
+	disableTextField(document.tcpip.pptpDefGw);
+//end	
+	disableButton(document.tcpip.l2tpConnect);
+	disableButton(document.tcpip.l2tpDisconnect);
+	disableTextField(document.tcpip.l2tpIdleTime);
+//for dynamic wan IP
+	disableTextField(document.tcpip.l2tpIpAddr);
+	disableTextField(document.tcpip.l2tpSubnetMask);
+	disableTextField(document.tcpip.l2tpDefGw);
+//end
+    /* USB3G */
+    disableButton(document.tcpip.USB3GConnect);
+    disableButton(document.tcpip.USB3GDisconnect);
+    disableTextField(document.tcpip.USB3GIdleTime);
+}
+function pppTypeSelection(wan_type)
+{
+	if(wan_type == 0){
+		  if ( document.tcpip.pppConnectType.selectedIndex == 2) {
+		  	if (pppConnectStatus==0) {
+		  		enableButton(document.tcpip.pppConnect);
+				disableButton(document.tcpip.pppDisconnect);
+			}
+			else {
+		 		disableButton(document.tcpip.pppConnect);
+				enableButton(document.tcpip.pppDisconnect);
+			}
+			disableTextField(document.tcpip.pppIdleTime);
+		  }
+		  else {
+			disableButton(document.tcpip.pppConnect);
+			disableButton(document.tcpip.pppDisconnect);
+			if (document.tcpip.pppConnectType.selectedIndex == 1)
+				enableTextField(document.tcpip.pppIdleTime);
+			else
+				disableTextField(document.tcpip.pppIdleTime);
+		  }
+/*
+		  ////////////////////////////////////////////////////////
+		  if ( document.tcpip.pppConnectType2.selectedIndex == 2) {
+		  	if (ppp2ConnectStatus==0) {
+		  		enableButton(document.tcpip.pppConnect2);
+				disableButton(document.tcpip.pppDisconnect2);
+			}
+			else {
+		 		disableButton(document.tcpip.pppConnect2);
+				enableButton(document.tcpip.pppDisconnect2);
+			}
+			disableTextField(document.tcpip.pppIdleTime2);
+		  }
+		  else {
+			disableButton(document.tcpip.pppConnect2);
+			disableButton(document.tcpip.pppDisconnect2);
+			if (document.tcpip.pppConnectType2.selectedIndex == 1)
+				enableTextField(document.tcpip.pppIdleTime2);
+			else
+				disableTextField(document.tcpip.pppIdleTime2);
+		  }		  
+		  ////////////////////////////////////////////////////////
+		  if ( document.tcpip.pppConnectType3.selectedIndex == 2) {
+		  	if (ppp3ConnectStatus==0) {
+		  		enableButton(document.tcpip.pppConnect3);
+				disableButton(document.tcpip.pppDisconnect3);
+			}
+			else {
+		 		disableButton(document.tcpip.pppConnect3);
+				enableButton(document.tcpip.pppDisconnect3);
+			}
+			disableTextField(document.tcpip.pppIdleTime3);
+		  }
+		  else {
+			disableButton(document.tcpip.pppConnect3);
+			disableButton(document.tcpip.pppDisconnect3);
+			if (document.tcpip.pppConnectType3.selectedIndex == 1)
+				enableTextField(document.tcpip.pppIdleTime3);
+			else
+				disableTextField(document.tcpip.pppIdleTime3);
+		  }			  
+		  ////////////////////////////////////////////////////////		  
+		  if ( document.tcpip.pppConnectType4.selectedIndex == 2) {
+		  	if (ppp4ConnectStatus==0) {
+		  		enableButton(document.tcpip.pppConnect4);
+				disableButton(document.tcpip.pppDisconnect4);
+			}
+			else {
+		 		disableButton(document.tcpip.pppConnect4);
+				enableButton(document.tcpip.pppDisconnect4);
+			}
+			disableTextField(document.tcpip.pppIdleTime4);
+		  }
+		  else {
+			disableButton(document.tcpip.pppConnect4);
+			disableButton(document.tcpip.pppDisconnect4);
+			if (document.tcpip.pppConnectType4.selectedIndex == 1)
+				enableTextField(document.tcpip.pppIdleTime4);
+			else
+				disableTextField(document.tcpip.pppIdleTime4);
+		  }	
+*/		  
+	}
+	if(wan_type == 1){
+//for dynamic wan IP
+		if(document.tcpip.wan_pptp_use_dynamic_carrier_radio[0].checked == true){	//Use dynamic wan ip
+			disableTextField(document.tcpip.pptpIpAddr);
+			disableTextField(document.tcpip.pptpSubnetMask);
+			disableTextField(document.tcpip.pptpDefGw);
+		}
+		else{	//Use static wan ip
+			enableTextField(document.tcpip.pptpIpAddr);
+			enableTextField(document.tcpip.pptpSubnetMask);
+			enableTextField(document.tcpip.pptpDefGw);
+		}
+
+//end
+		  if ( document.tcpip.pptpConnectType.selectedIndex == 2) {
+		  	if (pppConnectStatus==0) {
+		  		enableButton(document.tcpip.pptpConnect);
+				disableButton(document.tcpip.pptpDisconnect);
+			}
+			else {
+		 		disableButton(document.tcpip.pptpConnect);
+				enableButton(document.tcpip.pptpDisconnect);
+			}
+			disableTextField(document.tcpip.pptpIdleTime);
+		  }
+		  else {
+			disableButton(document.tcpip.pptpConnect);
+			disableButton(document.tcpip.pptpDisconnect);
+			if (document.tcpip.pptpConnectType.selectedIndex == 1)
+				enableTextField(document.tcpip.pptpIdleTime);
+			else
+				disableTextField(document.tcpip.pptpIdleTime);
+		  }
+	}
+	if(wan_type == 2){
+	//for dynamic wan IP
+		if(document.tcpip.wan_l2tp_use_dynamic_carrier_radio[0].checked == true){	//Use dynamic wan ip
+			disableTextField(document.tcpip.l2tpIpAddr);
+			disableTextField(document.tcpip.l2tpSubnetMask);
+			disableTextField(document.tcpip.l2tpDefGw);
+		}
+		else{	//Use static wan ip
+			enableTextField(document.tcpip.l2tpIpAddr);
+			enableTextField(document.tcpip.l2tpSubnetMask);
+			enableTextField(document.tcpip.l2tpDefGw);
+		}
+	//end
+		
+		  if ( document.tcpip.l2tpConnectType.selectedIndex == 2) {
+		  	if (pppConnectStatus==0) {
+		  		enableButton(document.tcpip.l2tpConnect);
+				disableButton(document.tcpip.l2tpDisconnect);
+			}
+			else {
+		 		disableButton(document.tcpip.l2tpConnect);
+				enableButton(document.tcpip.l2tpDisconnect);
+			}
+			disableTextField(document.tcpip.l2tpIdleTime);
+		  }
+		  else {
+			disableButton(document.tcpip.l2tpConnect);
+			disableButton(document.tcpip.l2tpDisconnect);
+			if (document.tcpip.l2tpConnectType.selectedIndex == 1)
+				enableTextField(document.tcpip.l2tpIdleTime);
+			else
+				disableTextField(document.tcpip.l2tpIdleTime);
+		  }
+	}
+	/* USB3G connect type */
+    if(wan_type == 3){
+          if ( document.tcpip.USB3GConnectType.selectedIndex == 2) {
+            if (pppConnectStatus==0) {
+                enableButton(document.tcpip.USB3GConnect);
+                disableButton(document.tcpip.USB3GDisconnect);
+            }
+            else {
+                disableButton(document.tcpip.USB3GConnect);
+                enableButton(document.tcpip.USB3GDisconnect);
+            }
+            disableTextField(document.tcpip.USB3GIdleTime);
+          }
+          else {
+            disableButton(document.tcpip.USB3GConnect);
+            disableButton(document.tcpip.USB3GDisconnect);
+            if (document.tcpip.USB3GConnectType.selectedIndex == 1)
+                enableTextField(document.tcpip.USB3GIdleTime);
+            else
+                disableTextField(document.tcpip.USB3GIdleTime);
+          }
+    }
+}
+
+function DisableAllPPPoE()
+{		
+
+		show_div(0,"multiPppoeSelect_div");		
+		show_div(0,"pppoe_div_display");		
+		//first		
+		show_div(0,"pppoe_div");			
+		
+
+		//second
+		show_div(0,"pppoe2_div");
+
+		//third
+		show_div(0,"pppoe3_div");	
+	
+		//forth
+		show_div(0,"pppoe4_div");	
+		
+}		
+function pppoeNoSelection(field)
+{
+	DisableAllPPPoE();
+	show_div(1,"multiPppoeSelect_div");
+	show_div(1,"pppoe_div_display");	//the first head
+
+
+	if(field.selectedIndex >= 0)
+	{
+		show_div(1,"pppoe_div");		
+			
+	}
+	if(field.selectedIndex >= 1)
+	{
+		show_div(1,"pppoe2_div");
+		
+	}	
+	if(field.selectedIndex >= 2)
+	{
+		show_div(1,"pppoe3_div");
+	
+	}
+	if(field.selectedIndex >= 3)		
+	{
+		show_div(1,"pppoe4_div");
+		
+	}
+}
+function wanTypeSelection(field)
+{
+	var wantype = document.getElementById("wanType_id");
+	var optval = wantype.options[wantype.selectedIndex].value;
+
+  //dzh   	
+  	//DisableAllPPPoE();
+  //dzh 
+  //document.tcpip.submit();
+  if(!document.getElementById){
+  	alert('Error! Your browser must have CSS support !');
+  	return;
+  }
+
+  /* add for ds-lite */
+  show_div(1, "always_div");
+  show_div(0, "dslite_div");
+  /* end add for ds-lite*/
+  
+  /* # keith: add l2tp support. 20080515 */
+  if(field.selectedIndex == 0){	//static ip
+  	wanShowDiv(0 ,1, 0, 0, 1, 0, 0); //pptp, dns, dnsMode, pppoe, static (div), l2tp, USB3G
+	enableDNSinput();	
+	document.tcpip.dnsMode[1].checked = true ; // dns change to manual mode
+  }
+  else if(field.selectedIndex == 1 || optval == "LTE4G"){ //Dhcp
+  	document.tcpip.dnsMode[0].disabled = false;
+	document.tcpip.dnsMode[1].disabled = false;
+  	wanShowDiv(0 ,1, 1, 0, 0, 0, 0);   
+	if(document.tcpip.dnsMode[0].checked)
+		disableDNSinput();	
+
+  }else if(field.selectedIndex == 2){ //pppoe
+/*
+  	if(MultiPppoeEnable == 1)
+  	{
+		pppoeNoSelection(document.tcpip.pppoeNumber);
+
+  	}
+*/
+	document.tcpip.dnsMode[0].disabled = false;
+	document.tcpip.dnsMode[1].disabled = false;
+  	wanShowDiv(0 ,1, 1, 1, 0, 0, 0); 
+/*
+	if(MultiPppoeEnable == 0)	//old mode
+	{
+		show_div(0,"pppoe_div_display");
+		show_div(0,"firstSubNet");
+//		show_div(0,"pppoe_div_subnet1");
+	}
+*/
+	if(document.tcpip.dnsMode[0].checked)
+		disableDNSinput();
+  }else if(field.selectedIndex == 3){ //pptp
+  	wanShowDiv(1, 1, 1, 0, 0, 0, 0); 
+	if(document.tcpip.dnsMode[0].checked)
+		disableDNSinput();	
+
+	if(<%getIndex("enableGetServIpByDomainName")%>)
+	{
+		if(<%getIndex("pptpGetServIpByDomainName")%>)
+		{
+			document.tcpip.pptpGetServMode[0].checked = true;
+			pptpGetServByDomainNameClicked();
+			
+			if(document.tcpip.wan_pptp_use_dynamic_carrier_radio[1].checked)
+			{
+				document.tcpip.elements["dnsMode"][0].disabled = true;	
+				document.tcpip.elements["dnsMode"][1].checked = true;	
+				manualDNSclicked();
+			}
+			else
+			{
+				document.tcpip.elements["dnsMode"][0].disabled = false;	
+				document.tcpip.elements["dnsMode"][1].disabled = false;
+			}
+		}
+		else
+		{
+			document.tcpip.pptpGetServMode[1].checked = true;
+			pptpGetServByIpClicked();			
+			
+			document.tcpip.elements["dnsMode"][0].disabled = false;	
+			document.tcpip.elements["dnsMode"][1].disabled = false;
+		}
+	}
+	/*
+	if(document.tcpip.wan_pptp_use_dynamic_carrier_radio[1].checked)
+	{
+		document.tcpip.elements["dnsMode"][0].disabled = true;
+		document.tcpip.elements["dnsMode"][1].checked = true;
+		manualDNSclicked();
+	}
+	else
+		document.tcpip.elements["dnsMode"][0].disabled = false;
+	*/
+  }else if(field.selectedIndex == 4){ //l2tp
+  	wanShowDiv(0, 1, 1, 0, 0, 1, 0); 
+	if(document.tcpip.dnsMode[0].checked)
+		disableDNSinput();
+
+	if(<%getIndex("enableGetServIpByDomainName")%>)
+	{
+		if(<%getIndex("l2tpGetServIpByDomainName")%>)
+		{
+			document.tcpip.l2tpGetServMode[0].checked = true;
+			l2tpGetServByDomainNameClicked();
+
+			if(document.tcpip.wan_l2tp_use_dynamic_carrier_radio[1].checked)
+			{
+				document.tcpip.elements["dnsMode"][0].disabled = true;	
+				document.tcpip.elements["dnsMode"][1].checked = true;	
+				manualDNSclicked();
+			}
+			else
+			{
+				document.tcpip.elements["dnsMode"][0].disabled = false;	
+				document.tcpip.elements["dnsMode"][1].disabled = false;
+			}
+		}
+		else
+		{
+			document.tcpip.l2tpGetServMode[1].checked = true;
+			l2tpGetServByIpClicked();			
+			
+			document.tcpip.elements["dnsMode"][0].disabled = false;	
+			document.tcpip.elements["dnsMode"][1].disabled = false;
+		}
+	}
+	
+	/*
+	if(document.tcpip.wan_l2tp_use_dynamic_carrier_radio[1].checked)
+	{
+		document.tcpip.elements["dnsMode"][0].disabled = true;
+		document.tcpip.elements["dnsMode"][1].checked = true;
+		manualDNSclicked();
+	}
+	else
+		document.tcpip.elements["dnsMode"][0].disabled = false;
+	*/
+  }else if(field.selectedIndex == 5){ //USB3G
+  	var usb3g_enable = <% getIndex("usb3g");%>;
+  	if(usb3g_enable == 0)
+  	{
+  		wanShowDiv(0, 0, 0, 0, 0, 0, 0); 
+  		show_div(0, "always_div");
+		show_div(1, "dslite_div");
+  	}
+	else
+	{
+	  	wanShowDiv(0, 1, 1, 0, 0, 0, 1);
+		if(document.tcpip.dnsMode[0].checked)
+			disableDNSinput();	
+	}
+  }
+  else if(field.selectedIndex == 6)
+  {
+  	wanShowDiv(0, 0, 0, 0, 0, 0, 0); 
+  	show_div(0, "always_div");
+	show_div(1, "dslite_div");
+  }
+  wan_connection_type=document.tcpip.wanType.selectedIndex;
+   if(wan_connection_type == 2 || optval == "LTE4G")
+   		pppTypeSelection(0);
+   	else if(wan_connection_type == 3)
+   		pppTypeSelection(1);
+   	else if(wan_connection_type == 4)
+   		pppTypeSelection(2);
+   	else if(wan_connection_type == 5) //USB3G
+	{
+		var usb3g_enable = <% getIndex("usb3g");%>;
+		if(usb3g_enable == 1)
+ 			pppTypeSelection(3);
+	}
+   	else
+   		pppConnection_Init();
+}
+
+function checkSubnet(ip, mask, client)
+{
+  ip_d = getDigit(ip, 1);
+  mask_d = getDigit(mask, 1);
+  client_d = getDigit(client, 1);
+  if ( (ip_d & mask_d) != (client_d & mask_d ) )
+	return false;
+
+  ip_d = getDigit(ip, 2);
+  mask_d = getDigit(mask, 2);
+  client_d = getDigit(client, 2);
+  if ( (ip_d & mask_d) != (client_d & mask_d ) )
+	return false;
+
+  ip_d = getDigit(ip, 3);
+  mask_d = getDigit(mask, 3);
+  client_d = getDigit(client, 3);
+  if ( (ip_d & mask_d) != (client_d & mask_d ) )
+	return false;
+
+  ip_d = getDigit(ip, 4);
+  mask_d = getDigit(mask, 4);
+  client_d = getDigit(client, 4);
+  if ( (ip_d & mask_d) != (client_d & mask_d ) )
+	return false;
+
+  return true;
+}
+
+function checkDynamicDfGw(form , MultiPppoeFlag)
+{
+	if(wan_connection_type == 3) //pptp
+	{
+		if(form.pptpDefGw.disabled == false)
+		{
+			if ( !checkSubnet(form.pptpIpAddr.value,form.pptpSubnetMask.value,form.pptpDefGw.value)) {
+			  alert('Invalid pptp default gateway IP address!\nIt should be located in the same subnet of local IP address.');
+			  form.pptpDefGw.value = form.pptpDefGw.defaultValue;
+			  form.pptpDefGw.focus();
+			  return false;
+			}
+		}	
+	}
+	else if(wan_connection_type == 4)
+	{
+		if(form.l2tpDefGw.disabled == false)
+		{
+			if ( !checkSubnet(form.pptpIpAddr.value,form.pptpSubnetMask.value,form.l2tpDefGw.value)) {
+			  alert('Invalid pptp default gateway IP address!\nIt should be located in the same subnet of local IP address.');
+			  form.l2tpDefGw.value = form.l2tpDefGw.defaultValue;
+			  form.l2tpDefGw.focus();
+			  return false;
+			}
+		}	
+	}
+}
+<% getInfo("eth1xclient_jscomment_start");%>
+function change_1x_eap_type_settings()
+{
+	var index;
+	var insideIndex;
+
+	index=document.tcpip.elements["eapType"].selectedIndex;
+	if(index ==0){//eap-md5
+		disableTextField(document.tcpip.elements["eapInsideType"]);	
+		enableTextField(document.tcpip.elements["eapUserId"]);
+		enableTextField(document.tcpip.elements["radiusUserName"]);
+		enableTextField(document.tcpip.elements["radiusUserPass"]);
+		disableTextField(document.tcpip.elements["radiusUserCertPass"]);
+		get_by_id("show_wan_8021x_phase2_type").style.display = "none";
+		get_by_id("show_wan_8021x_inside_type").style.display = "none";
+	}
+	else if(index ==1){//eap-tls
+		disableTextField(document.tcpip.elements["eapInsideType"]);	
+		enableTextField(document.tcpip.elements["eapUserId"]);
+		disableTextField(document.tcpip.elements["radiusUserName"]);
+		disableTextField(document.tcpip.elements["radiusUserPass"]);
+		enableTextField(document.tcpip.elements["radiusUserCertPass"]);
+		get_by_id("show_wan_8021x_phase2_type").style.display = "none";
+		get_by_id("show_wan_8021x_inside_type").style.display = "none";
+	}
+	else if(index ==2){//eap-peap
+		enableTextField(document.tcpip.elements["eapInsideType"]);
+		enableTextField(document.tcpip.elements["eapUserId"]);
+		get_by_id("show_wan_8021x_phase2_type").style.display = "none";
+		get_by_id("show_wan_8021x_inside_type").style.display = "";
+		insideIndex=document.tcpip.elements["eapInsideType"].selectedIndex;
+		if(insideIndex==0){//eap-peap-mschapv2
+			enableTextField(document.tcpip.elements["radiusUserName"]);
+			enableTextField(document.tcpip.elements["radiusUserPass"]);
+			enableTextField(document.tcpip.elements["radiusUserCertPass"]);
+		}
+		else{//to add more.
+			alert("This inside type is not supported.");
+		}
+	}
+	else if(index ==3){//eap-ttls
+		enableTextField(document.tcpip.elements["eapPhase2Type"]);
+		enableTextField(document.tcpip.elements["eapUserId"]);
+		get_by_id("show_wan_8021x_phase2_type").style.display = "";
+		get_by_id("show_wan_8021x_inside_type").style.display = "none";
+		insideIndex=document.tcpip.elements["eapPhase2Type"].selectedIndex;
+		if(insideIndex==0){//eap-ttls-eap-md5
+			enableTextField(document.tcpip.elements["radiusUserName"]);
+			enableTextField(document.tcpip.elements["radiusUserPass"]);
+		}
+		else{//to add more.
+			alert("This phase2 type is not supported.");
+		}
+	}
+	else{//to add more.
+		alert("This EAP type is not supported.");
+	}
+}
+function check_wan_dot1x_enabled()
+{
+	if(document.tcpip.WANDot1xEnabled.checked == true){
+		show_div(1,"show_wan_8021x_eap");
+	}else{
+		show_div(0,"show_wan_8021x_eap");
+	}
+	change_1x_eap_type_settings();
+}
+<% getInfo("eth1xclient_jscomment_end");%>
+function Load_Setting()
+{
+	var wanDhcp_ = <% getIndex("wanDhcp"); %>;
+	var wanDhcp_selidx = 0;
+	var dF=document.tcpip;
+	var lte_idx = -1;
+
+	var s = document.getElementById("wanType_id")
+	for (var i=0; i<s.options.length; i++) {
+		if (s.options[i].value == "LTE4G") {
+			lte_idx = i;
+			if (<% getIndex("lte4g_build"); %> == "1" && 
+				<% getIndex("lte4g_enable"); %> == "1")
+				wanDhcp_ = -1;
+			break;
+		}
+	}
+	
+	if ( wanDhcp_ == 0 )
+		wanDhcp_selidx = 0;
+	else if ( wanDhcp_ == 1 )
+		wanDhcp_selidx = 1;
+	else if ( wanDhcp_ == 3 )
+		wanDhcp_selidx = 2;
+	else if ( wanDhcp_ == 4 )
+		wanDhcp_selidx = 3;
+	else if ( wanDhcp_ == 6 )
+		wanDhcp_selidx = 4;
+<% getInfo("usb3g_jscomment_start");%>
+	else if ( wanDhcp_ == 16 )
+		wanDhcp_selidx = 5;
+<% getInfo("usb3g_jscomment_end");%>
+<% getInfo("ipv6_jscomment_start");%>
+	else if (wanDhcp_ == 17)
+	{
+		var usb3g_enable = <% getIndex("usb3g");%>;
+		if(usb3g_enable == 0)
+		{
+			wanDhcp_selidx = 5;
+		}
+		else
+		{
+			wanDhcp_selidx = 6;
+		}
+	}
+<% getInfo("ipv6_jscomment_end");%>
+	else if (lte_idx > 0)
+	{
+		//alert("lte_idx="+lte_idx);
+		wanDhcp_selidx = lte_idx;
+		wanDhcp_ = 1;
+	}
+
+	document.tcpip.wanType.selectedIndex = wanDhcp_selidx;
+//	wanTypeSelection(document.tcpip.wanType);
+
+//	if ( <% getIndex("wanDNS"); %> == 0) {
+//		document.tcpip.elements["dnsMode"][0].checked = true;
+//		autoDNSclicked();
+//	}
+	
+//	if ( <% getIndex("wanDNS"); %> == 1) {
+//		document.tcpip.elements["dnsMode"][1].checked = true;
+//		manualDNSclicked();
+//	}
+
+	if ( <% getIndex("upnpEnabled"); %> )
+		document.tcpip.upnpEnabled.checked = true;
+
+	if ( <% getIndex("igmpproxyDisabled"); %> == 0 )
+		document.tcpip.igmpproxyEnabled.checked = true;
+
+	if ( <% getIndex("pingWanAccess"); %> )
+		document.tcpip.pingWanAccess.checked = true;
+
+	if ( <% getIndex("webWanAccess"); %> )
+		document.tcpip.webWanAccess.checked = true;
+
+		update_web_access_port_state();
+	
+	if ( <% getIndex("VPNPassThruIPsec"); %> )
+		document.tcpip.WANPassThru1.checked = true;
+
+	if ( <% getIndex("VPNPassThruPPTP"); %> )
+		document.tcpip.WANPassThru2.checked = true;
+
+	if ( <% getIndex("VPNPassThruL2TP"); %> )
+		document.tcpip.WANPassThru3.checked = true;
+
+<% getInfo("ipv6_passthrough_js_start");%>
+	if ( <% getIndex("ipv6passthrouh"); %> )
+		document.tcpip.ipv6_passthru_enabled.checked = true;
+<% getInfo("ipv6_passthrough_js_end");%>
+	
+	if (<% getIndex("pptpSecurity"); %>)
+		document.tcpip.pptpSecurity.checked = true;
+
+	if (<% getIndex("pptpCompress"); %>)
+		document.tcpip.pptpCompress.checked = true;
+<% getInfo("eth1xclient_jscomment_start");%>
+	var op_mode = <% getIndex("opMode"); %>;
+		if(op_mode == 0){
+			if (<% getIndex("wan_eth_dot1x_enabled"); %>){
+				
+				document.tcpip.eapType.selectedIndex = <% getIndex("wan_eth_dot1x_eap_type"); %>;;
+				document.tcpip.WANDot1xEnabled.checked = true;
+				change_1x_eap_type_settings();
+				check_wan_dot1x_enabled();
+			}
+		}else
+			document.tcpip.WANDot1xEnabled.disabled = true;
+<% getInfo("eth1xclient_jscomment_end");%>
+	//for dynamic wan IP
+	if(<% getIndex("pptp_wan_ip_mode"); %>)
+	{//static ip
+		dF.wan_pptp_use_dynamic_carrier_radio[1].checked = true;
+		dF.pptpIpAddr.disabled = false;
+		dF.pptpSubnetMask.disabled = false;
+		dF.pptpDefGw.disabled = false;
+		//dF.elements["dnsMode"][0].disabled = true;
+		//dF.elements["dnsMode"][1].checked = true;
+		//manualDNSclicked();
+	}
+	else
+	{
+		dF.wan_pptp_use_dynamic_carrier_radio[0].checked = true;
+		dF.pptpIpAddr.disabled = true;
+		dF.pptpSubnetMask.disabled = true;
+		dF.pptpDefGw.disabled = true;
+		//dF.elements["dnsMode"][0].disabled = false;
+	}
+
+	if(<% getIndex("l2tp_wan_ip_mode"); %>)
+	{//static ip
+		dF.wan_l2tp_use_dynamic_carrier_radio[1].checked = true;
+		dF.l2tpIpAddr.disabled = false;
+		dF.l2tpSubnetMask.disabled = false;
+		dF.l2tpDefGw.disabled = false;
+		//dF.elements["dnsMode"][0].disabled = true;
+		//dF.elements["dnsMode"][1].checked = true;
+		//manualDNSclicked();
+	}
+	else
+	{
+		dF.wan_l2tp_use_dynamic_carrier_radio[0].checked = true;
+		dF.l2tpIpAddr.disabled = true;
+		dF.l2tpSubnetMask.disabled = true;
+		dF.l2tpDefGw.disabled = true;
+		//dF.elements["dnsMode"][0].disabled = false;
+	}
+	
+	if ( <% getIndex("wanDNS"); %> == 0) {		
+		document.tcpip.elements["dnsMode"][0].checked = true;
+		autoDNSclicked();
+	}
+	
+	if ( <% getIndex("wanDNS"); %> == 1) {
+		document.tcpip.elements["dnsMode"][1].checked = true;
+		manualDNSclicked();
+	}
+	//end
+	
+// add for ds-lite
+	if ( <% getIndex("dsliteMode"); %> == 0) {
+		document.tcpip.elements["dsliteMode"][0].checked = true;
+		autoDsliteclicked();
+	}
+	
+	if ( <% getIndex("dsliteMode"); %> == 1) {
+		document.tcpip.elements["dsliteMode"][1].checked = true;
+		manualDsliteclicked();
+	}
+// end ds-lite
+
+	wanTypeSelection(document.tcpip.wanType);
+	
+	//move the follow to wanTypeSelection()
+	/*
+	if(<%getIndex("enableGetServIpByDomainName")%>)
+	{
+		if(<%getIndex("pptpGetServIpByDomainName")%>)
+		{
+			dF.pptpGetServMode[0].checked = true;
+			pptpGetServByDomainNameClicked();
+		}else
+		{
+			dF.pptpGetServMode[1].checked = true;
+			pptpGetServByIpClicked();
+		}
+		
+		if(<%getIndex("l2tpGetServIpByDomainName")%>)
+		{
+			dF.l2tpGetServMode[0].checked = true;
+			l2tpGetServByDomainNameClicked();
+		}else
+		{
+			dF.l2tpGetServMode[1].checked = true;
+			l2tpGetServByIpClicked();
+		}
+	}
+	*/
+
+	if(wanDhcp_==1 || wanDhcp_==3)
+	{
+		document.tcpip.dnsMode[0].disabled = false;
+		document.tcpip.dnsMode[1].disabled = false;
+	}
+}
+
+//for dynamic wan IP
+function wan_pptp_use_dynamic_carrier_selector(index, mode){
+	var dF=document.tcpip;
+
+	if(mode == "dynamicIP") {
+		dF.wan_pptp_use_dynamic_carrier_radio[index].checked = true;
+		dF.pptpIpAddr.disabled = true;
+		dF.pptpSubnetMask.disabled = true;
+		dF.pptpDefGw.disabled = true;
+		dynamicWanIP = 1;
+		
+		dF.elements["dnsMode"][0].disabled = false;
+		dF.elements["dnsMode"][1].disabled = false;
+	} else {
+		dF.wan_pptp_use_dynamic_carrier_radio[index].checked = true;
+		dF.pptpIpAddr.disabled = false;
+		dF.pptpSubnetMask.disabled = false;
+		dF.pptpDefGw.disabled = false;
+		dynamicWanIP = 0;
+		
+		if(dF.pptpGetServMode[0].checked)
+		{
+			dF.elements["dnsMode"][0].disabled = true;
+			dF.elements["dnsMode"][1].checked = true;
+			manualDNSclicked();
+		}
+		else
+		{
+			dF.elements["dnsMode"][0].disabled = false;
+			dF.elements["dnsMode"][1].disabled = false;
+		}		
+	}
+}
+function pptpGetServByIpClicked()
+{
+	disableTextField(document.tcpip.pptpServerDomainName);
+	enableTextField(document.tcpip.pptpServerIpAddr);
+
+	document.tcpip.elements["dnsMode"][0].disabled = false;	
+	document.tcpip.elements["dnsMode"][1].disabled = false;
+}
+function pptpGetServByDomainNameClicked()
+{
+	disableTextField(document.tcpip.pptpServerIpAddr);
+	enableTextField(document.tcpip.pptpServerDomainName);
+
+	if(document.tcpip.wan_pptp_use_dynamic_carrier_radio[1].checked)
+	{
+		document.tcpip.elements["dnsMode"][0].disabled = true;	
+		document.tcpip.elements["dnsMode"][1].checked = true;	
+		manualDNSclicked();
+	}
+	else
+	{
+		document.tcpip.elements["dnsMode"][0].disabled = false;	
+		document.tcpip.elements["dnsMode"][1].disabled = false;
+	}
+}
+function l2tpGetServByIpClicked()
+{
+	disableTextField(document.tcpip.l2tpServerDomainName);
+	enableTextField(document.tcpip.l2tpServerIpAddr);
+
+	document.tcpip.elements["dnsMode"][0].disabled = false;	
+	document.tcpip.elements["dnsMode"][1].disabled = false;
+}
+function l2tpGetServByDomainNameClicked()
+{
+	disableTextField(document.tcpip.l2tpServerIpAddr);
+	enableTextField(document.tcpip.l2tpServerDomainName);
+
+	if(document.tcpip.wan_l2tp_use_dynamic_carrier_radio[1].checked)
+	{
+		document.tcpip.elements["dnsMode"][0].disabled = true;	
+		document.tcpip.elements["dnsMode"][1].checked = true;	
+		manualDNSclicked();
+	}
+	else
+	{
+		document.tcpip.elements["dnsMode"][0].disabled = false;	
+		document.tcpip.elements["dnsMode"][1].disabled = false;
+	}	
+}
+function wan_l2tp_use_dynamic_carrier_selector(index, mode){
+	var dF=document.tcpip;
+
+	if(mode == "dynamicIP") {
+		dF.wan_l2tp_use_dynamic_carrier_radio[index].checked = true;
+		dF.l2tpIpAddr.disabled = true;
+		dF.l2tpSubnetMask.disabled = true;
+		dF.l2tpDefGw.disabled = true;
+		dynamicWanIP = 1;
+		
+		dF.elements["dnsMode"][0].disabled = false;
+		dF.elements["dnsMode"][1].disabled = false;
+	} else {
+		dF.wan_l2tp_use_dynamic_carrier_radio[index].checked = true;
+		dF.l2tpIpAddr.disabled = false;
+		dF.l2tpSubnetMask.disabled = false;
+		dF.l2tpDefGw.disabled = false;
+		dynamicWanIP = 0;
+		
+		if(dF.l2tpGetServMode[0].checked)
+		{
+			dF.elements["dnsMode"][0].disabled = true;
+			dF.elements["dnsMode"][1].checked = true;
+			manualDNSclicked();
+		}
+		else
+		{
+			dF.elements["dnsMode"][0].disabled = false;
+			dF.elements["dnsMode"][1].disabled = false;
+		}
+	}
+}
+function autoDsliteclicked()
+{
+	document.tcpip.dsliteAftrIpAddr6.disabled = true;
+}
+
+function manualDsliteclicked()
+{
+	document.tcpip.dsliteAftrIpAddr6.disabled = false;
+}
+function clone_wan_mac()
+{	
+	document.tcpip.wan_macAddr.value="<% getInfo("wan_mac_clone_address");%>";
+}
+
+function restore_wan_default_mac()
+{	
+	document.tcpip.wan_macAddr.value="<% getInfo("wan_default_mac_address");%>";
+}
+//end
+</SCRIPT>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<h2>WAN Interface Setup</h2>
+<form action=/boafrm/formWanTcpipSetup method=POST name="tcpip">
+
+<table border=0 width="550" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+    This page is used to configure the parameters for Internet network which
+    connects to the WAN port of your Access Point. Here you may change the access
+    method to static IP, DHCP, PPPoE, PPTP<% getInfo("usb3g_comment_start");%>, USB3G<% getInfo("usb3g_comment_end");%> or L2TP by click the item value of WAN Access
+    type.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+  <tr>
+</table>
+ <input type="hidden" value="pptp" name="ipMode">
+	<input type="hidden" name="lan_ip_address" value="<% getInfo("ip-rom"); %>">
+	<input type="hidden" name="lan_subnet_mask" value="<% getInfo("mask-rom"); %>">
+ <Iinput type=hidden name="pptpDynamicWanIP";  value=0>
+ <input type="hidden" value="<% getIndex("lte4g_build"); %>" name="lte4g_build">
+ <input type="hidden" value="<% getIndex("lte4g_enable"); %>" name="lte4g_enable">
+
+  <table border="0" width=480>
+    <tr>
+       <td width="30%" height=40><font size=2><b>WAN Access Type:</b></td>
+       <td width="70%"><font size=2><select id="wanType_id" size="1" name="wanType" onChange="wanTypeSelection(this)">
+	<option value="fixedIp">Static IP</option>
+	<option value="autoIp">DHCP Client</option>
+	<option value="ppp">PPPoE</option>
+<% getInfo("pptp_comment_start");%>
+	<option value="pptp">PPTP</option>
+<% getInfo("pptp_comment_end");%>
+	<! -- keith: add l2tp support. 20080515  -- >
+<% getInfo("l2tp_comment_start");%>
+	<option value="l2tp">L2TP</option>
+<% getInfo("l2tp_comment_end");%>
+<% getInfo("usb3g_comment_start");%>
+	<option value="USB3G">USB3G</option>
+<% getInfo("usb3g_comment_end");%>
+<% getInfo("ipv6_comment_start");%>
+	<option value="dslite">DS-Lite</option>
+<% getInfo("ipv6_comment_end");%>
+<% getInfo("lte4g_comment_start");%>
+	<option value="LTE4G">LTE4G</option>
+<% getInfo("lte4g_comment_end");%>
+	</select></td>
+    <tr>
+  </table>
+<!-- start multi pppoe -->
+<!---
+  <span id = "multiPppoeSelect_div" class = "off" >  
+  <table border="0" width=480>
+    <tr>
+       <td width="30%" height=40><font size=2><b>PPPOE Connecting No:</b></td>
+       <td width="70%"><font size=2><select size="1" name="pppoeNumber" onChange="pppoeNoSelection(this)">
+       <script type="text/javascript">
+	        var number = <% getIndex("pppoeNo"); %>;
+		     	if ( number == 1 ) {
+		      	  	document.write( "<option selected value=\"1\">1</option>" );
+	    	   	  	document.write( "<option value=\"2\">2</option>" );
+	    		  	document.write( "<option value=\"3\">3</option>" );
+					document.write( "<option value=\"4\">4</option>" );
+		     	}
+		     	if ( number == 2 ) {
+	      	  		document.write( "<option value=\"1\">1</option>" );
+	    	   	  	document.write( "<option selected value=\"2\">2</option>" );
+	    		  	document.write( "<option value=\"3\">3</option>" );
+					document.write( "<option value=\"4\">4</option>" );
+		     	}
+		     	if ( number == 3 ) {
+	      	  		document.write( "<option value=\"1\">1</option>" );
+	    	   	  	document.write( "<option value=\"2\">2</option>" );
+	    		  	document.write( "<option selected value=\"3\">3</option>" );
+					document.write( "<option value=\"4\">4</option>" );
+		     	}
+		     	if ( number == 4 ) {
+	      	  		document.write( "<option value=\"1\">1</option>" );
+	    	   	  	document.write( "<option value=\"2\">2</option>" );
+	    		  	document.write( "<option value=\"3\">3</option>" );
+					document.write( "<option selected value =\"4\">4</option>" );
+		     	}				
+	   </script>       
+	</select></td>
+    <tr>
+  </table> 
+  </span>
+
+-->
+  <span id = "static_div" class = "off" >  
+  <table border="0" width=480>
+    <tr>
+       <td width="30%"><font size=2><b>IP Address:</b></td>
+       <td width="70%"><font size=2>
+        <input type="text" name="wan_ip" size="18" maxlength="15" value="<% getInfo("wan-ip-rom"); %>">
+      </td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Subnet Mask:</b></td>
+      <td width="70%"><font size=2><input type="text" name="wan_mask" size="18" maxlength="15" value="<% getInfo("wan-mask-rom"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Default Gateway:</b></td>
+      <td width="70%"><font size=2><input type="text" name="wan_gateway" size="18" maxlength="15" value="<% getInfo("wan-gateway-rom"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="fixedIpMtuSize" size="10" maxlength="10" value="<% getInfo("fixedIpMtuSize"); %>">&nbsp;(1400-1500 bytes)</td>
+    </tr>
+  </table>  
+  </span>
+  
+  <span id = "dhcp_div" class = "off" >  
+  <table border="0" width=480>
+    <tr>
+      <td width="30%"><font size=2><b>Host Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="hostName" size="18" maxlength="30" value="<% getInfo("hostName"); %>"></td>
+    </tr>  
+    <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="dhcpMtuSize" size="10" maxlength="10" value="<% getInfo("dhcpMtuSize"); %>">&nbsp;(1280-1500 bytes)</td>
+    </tr>
+  </table>  
+  </span>
+
+<!-- start multi pppoe -->
+  <span id = "pppoe_div_display" class = "off" > 
+  <table border="0" width=480>
+	<tr><hr size=1 noshade align=top></tr>  
+	<tr>
+		<td width="100%"><font size=2><b>The First pppoe info:</b></td>
+	</tr>  
+
+  </table>
+  </span>
+  <span id = "pppoe_div" class = "off" >  
+  <table border="0" width=480>
+     <tr>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppUserName" size="18" maxlength="128" value="<% getInfo("pppUserName"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="pppPassword" size="18" maxlength="128" value="<% getInfo("pppPassword"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Service Name(AC):</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppServiceName" size="18" maxlength="40" value="<% getInfo("pppServiceName"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="pppConnectType" onChange="pppTypeSelection(0)">
+<script type="text/javascript">
+        var type = <% getIndex("pppConnectType"); %>;
+	     	if ( type == 0 ) {
+	      	  	document.write( "<option selected value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 1 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option selected value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 2 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option selected value=\"2\">Manual</option>" );
+	     	}
+</script>
+        </select>&nbsp;&nbsp;
+	<input type="submit" value="Connect" name="pppConnect" onClick="return pppConnectClick(0)">&nbsp;&nbsp;
+	<input type="submit" value="Disconnect" name="pppDisconnect" onClick="return pppConnectClick(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus"); %> )
+		setPPPConnected();
+</script>
+	</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppIdleTime" size="10" maxlength="10" value="<% getInfo("wan-ppp-idle"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppMtuSize" size="10" maxlength="10" value="<% getInfo("pppMtuSize"); %>">&nbsp;(1360-1492 bytes)</td>
+    </tr>
+  <!--
+    <tr id = "firstSubNet" class = "on">
+		<td width="30%"><font size=2><b>Sub Net:</b></td>
+		<td width="70%"><font size=2><input type="text" name="pppSubNet_1" size="25" maxlength="25" value="<% getInfo("pppSubNet1"); %>">&nbsp;(eg:192.168.1.0/25)</td>		
+	</tr>    
+	-->
+  </table>
+  </span>
+      
+<!--
+<span id = "pppoe2_div" class = "off" >  
+  <table border="0" width=480>
+	<tr><hr size=1 noshade align=top></tr>    
+	<tr>
+		<td width="100%"><font size=2><b>The second pppoe info:</b></td>
+	</tr>    
+     <tr>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppUserName2" size="18" maxlength="128" value="<% getInfo("pppUserName2"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="pppPassword2" size="18" maxlength="128" value="<% getInfo("pppPassword2"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Service Name(AC):</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppServiceName2" size="18" maxlength="40" value="<% getInfo("pppServiceName2"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="pppConnectType2" onChange="pppTypeSelection(0)">
+<script type="text/javascript">
+        var type = <% getIndex("pppConnectType2"); %>;
+	     	if ( type == 0 ) {
+	      	  	document.write( "<option selected value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 1 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option selected value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 2 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option selected value=\"2\">Manual</option>" );
+	     	}
+</script>      
+        </select>&nbsp;&nbsp;
+	<input type="submit" value="Connect2" name="pppConnect2" onClick="return pppConnectClick2(0)">&nbsp;&nbsp;
+	<input type="submit" value="Disconnect2" name="pppDisconnect2" onClick="return pppConnectClick2(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus2"); %> )
+		setPPP2Connected();
+</script>	
+	</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppIdleTime2" size="10" maxlength="10" value="<% getInfo("wan-ppp-idle2"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppMtuSize2" size="10" maxlength="10" value="<% getInfo("pppMtuSize2"); %>">&nbsp;(1360-1492 bytes)</td>
+    </tr>  
+    <tr>
+      <td width="30%"><font size=2><b>Sub Net:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppSubNet_2" size="25" maxlength="25" value="<% getInfo("pppSubNet2"); %>">&nbsp;(eg:192.168.1.0/25)</td>
+    </tr>    
+  </table>
+  </span>
+
+<span id = "pppoe3_div" class = "off" >  
+  <table border="0" width=480>
+	<tr><hr size=1 noshade align=top></tr>  
+	<tr>
+		<td width="100%"><font size=2><b>The Third pppoe info:</b></td>
+	</tr>      	 
+     <tr>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppUserName3" size="18" maxlength="128" value="<% getInfo("pppUserName3"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="pppPassword3" size="18" maxlength="128" value="<% getInfo("pppPassword3"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Service Name(AC):</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppServiceName3" size="18" maxlength="40" value="<% getInfo("pppServiceName3"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="pppConnectType3" onChange="pppTypeSelection(0)">
+<script type="text/javascript">
+        var type = <% getIndex("pppConnectType3"); %>;
+	     	if ( type == 0 ) {
+	      	  	document.write( "<option selected value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 1 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option selected value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 2 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option selected value=\"2\">Manual</option>" );
+	     	}
+</script> 
+        </select>&nbsp;&nbsp;
+	<input type="submit" value="Connect3" name="pppConnect3" onClick="return pppConnectClick3(0)">&nbsp;&nbsp;
+	<input type="submit" value="Disconnect3" name="pppDisconnect3" onClick="return pppConnectClick3(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus3"); %> )
+		setPPP3Connected();
+</script>
+	
+	</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppIdleTime3" size="10" maxlength="10" value="<% getInfo("wan-ppp-idle3"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppMtuSize3" size="10" maxlength="10" value="<% getInfo("pppMtuSize3"); %>">&nbsp;(1360-1492 bytes)</td>
+    </tr>    
+    <tr>
+      <td width="30%"><font size=2><b>Sub Net:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppSubNet_3" size="25" maxlength="25" value="<% getInfo("pppSubNet3"); %>">&nbsp;(eg:192.168.1.0/25)</td>
+    </tr>    
+  </table>
+  </span>
+
+<span id = "pppoe4_div" class = "off" >  
+  <table border="0" width=480>
+	<tr><hr size=1 noshade align=top></tr>
+	<tr>
+		<td width="100%"><font size=2><b>The Fourth pppoe info:</b></td>
+	</tr>     
+     <tr>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppUserName4" size="18" maxlength="128" value="<% getInfo("pppUserName4"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="pppPassword4" size="18" maxlength="128" value="<% getInfo("pppPassword4"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Service Name(AC):</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppServiceName4" size="18" maxlength="40" value="<% getInfo("pppServiceName4"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="pppConnectType4" onChange="pppTypeSelection(0)">
+<script type="text/javascript">
+        var type = <% getIndex("pppConnectType4"); %>;
+	     	if ( type == 0 ) {
+	      	  	document.write( "<option selected value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 1 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option selected value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 2 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option selected value=\"2\">Manual</option>" );
+	     	}
+</script> 
+        </select>&nbsp;&nbsp;
+	<input type="submit" value="Connect4" name="pppConnect4" onClick="return pppConnectClick4(0)">&nbsp;&nbsp;
+	<input type="submit" value="Disconnect4" name="pppDisconnect4" onClick="return pppConnectClick4(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus4"); %> )
+		setPPP4Connected();
+</script>
+	</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppIdleTime4" size="10" maxlength="10" value="<% getInfo("wan-ppp-idle4"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppMtuSize4" size="10" maxlength="10" value="<% getInfo("pppMtuSize4"); %>">&nbsp;(1360-1492 bytes)</td>
+    </tr>    
+    <tr>
+      <td width="30%"><font size=2><b>Sub Net:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pppSubNet_4" size="25" maxlength="25" value="<% getInfo("pppSubNet4"); %>">&nbsp;(eg:192.168.1.0/25)</td>
+    </tr>    
+  </table>
+  </span>  
+-->
+  <span id = "pptp_div" class = "off" >  
+  <table border="0" width=480>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="radio" value="dynamicIP" name="wan_pptp_use_dynamic_carrier_radio"  onClick="wan_pptp_use_dynamic_carrier_selector(0, this.value);">Dynamic IP (DHCP)</b>
+      </td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="radio" value="staticIP" name="wan_pptp_use_dynamic_carrier_radio"  onClick="wan_pptp_use_dynamic_carrier_selector(1, this.value);">Static IP</b>
+      </td>
+    </tr>
+    <tr>
+
+      <td width="30%"><font size=2><b>IP Address:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpIpAddr" size="18" maxlength="30" value="<% getInfo("pptpIp"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Subnet Mask:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpSubnetMask" size="18" maxlength="30" value="<% getInfo("pptpSubnet"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Default Gateway:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpDefGw" size="18" maxlength="30" value="<% getInfo("pptpDefGw"); %>"></td>
+    </tr>
+ <script type="text/javascript">  
+	if(<%getIndex("enableGetServIpByDomainName")%>)
+		{
+			document.write("\
+				    <tr>\
+				      	<td width=\"100%\" colspan=\"2\"><font size=2>\
+						<b><input type=\"radio\" value=\"pptpGetServByDomainName\" name=\"pptpGetServMode\" onClick=\"pptpGetServByDomainNameClicked()\">Attain Server By Domain Name</b>\
+				      	</td>\
+				    </tr>\
+				    <tr>\
+				    	<td width=\"100%\" colspan=\"2\"><font size=2>\
+						<b><input type=\"radio\" value=\"pptpGetServByIp\" name=\"pptpGetServMode\" onClick=\"pptpGetServByIpClicked()\">Attain Server By Ip Address</b>\
+				      	</td>\
+				    </tr>\
+				     <tr>\
+				      <td width=\"30%\"><font size=2><b>Domain Name:</b></td>\
+				      <td width=\"70%\"><font size=2><input type=\"text\" name=\"pptpServerDomainName\" size=\"18\" maxlength=\"30\" value=\"<% getInfo("pptpServerDomain"); %>\"></td>\
+				    </tr>\
+				 ");
+		}
+ </script>
+    <tr>
+      <td width="30%"><font size=2><b>Server IP Address:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpServerIpAddr" size="18" maxlength="30" value="<% getInfo("pptpServerIp"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpUserName" size="18" maxlength="128" value="<% getInfo("pptpUserName"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="pptpPassword" size="18" maxlength="128" value="<% getInfo("pptpPassword"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="pptpConnectType" onChange="pppTypeSelection(1)">
+<script type="text/javascript">
+        var type = <% getIndex("pptpConnectType"); %>;
+	     	if ( type == 0 ) {
+	      	  	document.write("<option selected value=\"0\">Continuous</option>" );
+    	   	  	document.write("<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write("<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 1 ) {
+	      	  	document.write("<option value=\"0\">Continuous</option>");
+    	   	  	document.write("<option selected value=\"1\">Connect on Demand</option>");
+    		  	document.write("<option value=\"2\">Manual</option>");
+	     	}
+	     	if ( type == 2 ) {
+	      	  	document.write("<option value=\"0\">Continuous</option>");
+    	   	  	document.write("<option value=\"1\">Connect on Demand</option>");
+    		  	document.write("<option selected value=\"2\">Manual</option>");
+	     	}
+</script>
+        </select>&nbsp;&nbsp;
+	<input type="submit" value="Connect" name="pptpConnect" onClick="return pptpConnectClick(0)">&nbsp;&nbsp;
+	<input type="submit" value="Disconnect" name="pptpDisconnect" onClick="return pptpConnectClick(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus"); %> )
+		setPPPConnected();
+</script>
+	</td>
+    </tr>   
+      <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpIdleTime" size="10" maxlength="10" value="<% getInfo("wan-pptp-idle"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>  
+     <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="pptpMtuSize" size="10" maxlength="10" value="<% getInfo("pptpMtuSize"); %>">&nbsp;(1400-1460 bytes)</td>
+    </tr>   
+    
+	<tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="pptpSecurity" value="ON">&nbsp;&nbsp;Request MPPE Encryption&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" name="pptpCompress" value="ON">&nbsp;&nbsp;Request MPPC Compression</b></td>       
+    </tr>
+    <tr></tr><tr></tr><tr></tr>
+    </table>
+    </span>
+    <!-- keith: add l2tp support. 20080515  -->
+    <span id = "l2tp_div" class = "off" >  
+    <table border="0" width=480>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="radio" value="dynamicIP" name="wan_l2tp_use_dynamic_carrier_radio" onClick="wan_l2tp_use_dynamic_carrier_selector(0, this.value);">Dynamic IP (DHCP)</b>
+      </td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="radio" value="staticIP" name="wan_l2tp_use_dynamic_carrier_radio" onClick="wan_l2tp_use_dynamic_carrier_selector(1, this.value);">Static IP</b>
+      </td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>IP Address:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpIpAddr" size="18" maxlength="30" value="<% getInfo("l2tpIp"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Subnet Mask:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpSubnetMask" size="18" maxlength="30" value="<% getInfo("l2tpSubnet"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Default Gateway:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpDefGw" size="18" maxlength="30" value="<% getInfo("l2tpDefGw"); %>"></td>
+    </tr>
+<script type="text/javascript">  
+	if(<%getIndex("enableGetServIpByDomainName")%>)
+	{
+		document.write("\
+			    <tr>\
+			      	<td width=\"100%\" colspan=\"2\"><font size=2>\
+					<b><input type=\"radio\" value=\"l2tpGetServByDomainName\" name=\"l2tpGetServMode\" onClick=\"l2tpGetServByDomainNameClicked()\">Attain Server By Domain Name</b>\
+			      	</td>\
+			    </tr>\
+			    <tr>\
+			    	<td width=\"100%\" colspan=\"2\"><font size=2>\
+					<b><input type=\"radio\" value=\"l2tpGetServByIp\" name=\"l2tpGetServMode\" onClick=\"l2tpGetServByIpClicked()\">Attain Server By Ip Address</b>\
+			      	</td>\
+			    </tr>\
+			     <tr>\
+			      <td width=\"30%\"><font size=2><b>Domain Name:</b></td>\
+			      <td width=\"70%\"><font size=2><input type=\"text\" name=\"l2tpServerDomainName\" size=\"18\" maxlength=\"30\" value=\"<% getInfo("l2tpServerDomain"); %>\"></td>\
+			    </tr>\
+			 ");
+	}
+</script>
+   
+    <tr>
+      <td width="30%"><font size=2><b>Server IP Address:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpServerIpAddr" size="18" maxlength="30" value="<% getInfo("l2tpServerIp"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpUserName" size="18" maxlength="128" value="<% getInfo("l2tpUserName"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="l2tpPassword" size="18" maxlength="128" value="<% getInfo("l2tpPassword"); %>"></td>
+    </tr>
+     <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="l2tpConnectType" onChange="pppTypeSelection(2)">
+<script type="text/javascript">
+        var type = <% getIndex("l2tpConnectType"); %>;
+	     	if ( type == 0 ) {
+	      	  	document.write( "<option selected value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 1 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option selected value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option value=\"2\">Manual</option>" );
+	     	}
+	     	if ( type == 2 ) {
+	      	  	document.write( "<option value=\"0\">Continuous</option>" );
+    	   	  	document.write( "<option value=\"1\">Connect on Demand</option>" );
+    		  	document.write( "<option selected value=\"2\">Manual</option>" );
+	     	}
+</script>
+        </select>&nbsp;&nbsp;
+	<input type="submit" value="Connect" name="l2tpConnect" onClick="return l2tpConnectClick(0)">&nbsp;&nbsp;
+	<input type="submit" value="Disconnect" name="l2tpDisconnect" onClick="return l2tpConnectClick(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus"); %> )
+		setPPPConnected();
+</script>
+	</td>
+    </tr>   
+      <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpIdleTime" size="10" maxlength="10" value="<% getInfo("wan-l2tp-idle"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>  
+     <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="l2tpMtuSize" size="10" maxlength="10" value="<% getInfo("l2tpMtuSize"); %>">&nbsp;(1400-1460 bytes)</td>
+    </tr>  
+    <tr></tr><tr></tr><tr></tr>
+    </table>
+    </span>
+<!-- start USB3G -->
+   <span id = "USB3G_div" class = "off" >
+    <table border="0" width=480>
+      <td width="30%"><font size=2><b>User Name:</b></td>
+      <td width="70%"><font size=2><input type="text" name="USB3G_USER" size="18" maxlength="30" value="<% getInfo("USB3G_USER"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Password:</b></td>
+      <td width="70%"><font size=2><input type="password" name="USB3G_PASS" size="18" maxlength="30" value="<% getInfo("USB3G_PASS"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>PIN:</b></td>
+      <td width="70%"><font size=2><input type="password" name="USB3G_PIN" size="18" maxlength="30" value="<% getInfo("USB3G_PIN"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>APN:</b></td>
+      <td width="70%"><font size=2><input type="text" name="USB3G_APN" size="18" maxlength="128" value="<% getInfo("USB3G_APN"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Dial Number:</b></td>
+      <td width="70%"><font size=2><input type="text" name="USB3G_DIALNUM" size="18" maxlength="128" value="<% getInfo("USB3G_DIALNUM"); %>"></td>
+    </tr>
+     <tr>
+      <td width="30%"><font size=2><b>Connection Type:</b></td>
+      <td width="70%"><font size=2><select size="1" name="USB3GConnectType" onChange="pppTypeSelection(3)">
+<% getInfo("usb3g_comment_start");%>
+<script type="text/javascript">
+        var type = <% getIndex("USB3GConnectType"); %>;
+            if ( type == 0 ) {
+                document.write( "<option selected value=\"0\">Continuous</option>" );
+                document.write( "<option value=\"1\">Connect on Demand</option>" );
+                document.write( "<option value=\"2\">Manual</option>" );
+            }
+            if ( type == 1 ) {
+                document.write( "<option value=\"0\">Continuous</option>" );
+                document.write( "<option selected value=\"1\">Connect on Demand</option>" );
+                document.write( "<option value=\"2\">Manual</option>" );
+            }
+            if ( type == 2 ) {
+                document.write( "<option value=\"0\">Continuous</option>" );
+                document.write( "<option value=\"1\">Connect on Demand</option>" );
+                document.write( "<option selected value=\"2\">Manual</option>" );
+            }
+</script>
+<% getInfo("usb3g_comment_end");%>
+        </select>&nbsp;&nbsp;
+    <input type="submit" value="Connect" name="USB3GConnect" onClick="return USB3GConnectClick(0)">&nbsp;&nbsp;
+    <input type="submit" value="Disconnect" name="USB3GDisconnect" onClick="return USB3GConnectClick(1)">
+<script type="text/javascript">
+	if ( <% getIndex("pppConnectStatus"); %> )
+		setPPPConnected();
+</script>
+    </td>
+    </tr>
+      <tr>
+      <td width="30%"><font size=2><b>Idle Time:</b></td>
+      <td width="70%"><font size=2><input type="text" name="USB3GIdleTime" size="10" maxlength="10" value="<% getInfo("wan-USB3G-idle"); %>">&nbsp;(1-1000 minutes)</td>
+    </tr>
+     <tr>
+      <td width="30%"><font size=2><b>MTU Size:</b></td>
+      <td width="70%"><font size=2><input type="text" name="USB3GMtuSize" size="10" maxlength="10" value="<% getInfo("USB3GMtuSize"); %>">&nbsp;(1420-1490 bytes)</td>
+    </tr>
+    <tr></tr><tr></tr><tr></tr>
+    </table>
+    </span>
+<!-- end USB3G -->
+    
+    <span id = "dnsMode_div" class = "off" >
+    <table border="0" width=480>
+    <!--
+    <tr height="35" valign="bottom">
+    -->
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+		<b><input type="radio" value="dnsAuto" name="dnsMode" onClick="autoDNSclicked()">Attain DNS Automatically</b>
+      </td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="radio" value="dnsManual" name="dnsMode" onClick="manualDNSclicked()">Set DNS Manually</b>
+      </td>
+    </tr>
+    <tr>
+    </table>
+    </span>
+    
+    <span id = "dns_div" class = "off" >
+    <table border="0" width=480>
+       <td width="30%"><font size=2><b>&nbsp;&nbsp;&nbsp;DNS 1:</b></td>
+       <td width="70%"><font size=2><input type="text" name="dns1" size="18" maxlength="15" value=<% getInfo("wan-dns1"); %>></td>
+    </tr>
+    <tr>
+       <td width="30%"><font size=2><b>&nbsp;&nbsp;&nbsp;DNS 2:</b></td>
+       <td width="70%"><font size=2><input type="text" name="dns2" size="18" maxlength="15" value=<% getInfo("wan-dns2"); %>></td>
+    </tr>
+    <tr>
+       <td width="30%"><font size=2><b>&nbsp;&nbsp;&nbsp;DNS 3:</b></td>
+       <td width="70%"><font size=2><input type="text" name="dns3" size="18" maxlength="15" value=<% getInfo("wan-dns3"); %>></td>
+    </tr>
+    </table>
+    </span>
+
+<!-- start ds-lite -->
+    <span id = "dslite_div" class = "off">
+    <table border="0" width=480>
+    <!--
+    <tr height="35" valign="bottom">
+    -->
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+		<b><input type="radio" value="dsliteAuto" name="dsliteMode" onClick="autoDsliteclicked();">Attain AFTR Automatically</b>
+      </td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="radio" value="dsliteManual" name="dsliteMode" onClick="manualDsliteclicked();">Set AFTR Manually</b>
+      </td>
+    </tr>
+    <tr>
+    </table>
+
+    <table border="0" width=480>
+    <tr>
+      <td width="30%"><font size=2><b>AFTR IPv6 Address:</b></td>
+      <td width="70%"><font size=2><input type="text" name="dsliteAftrIpAddr6" size="40" maxlength="40" value="<% getInfo("dsliteAftr"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>WAN IPv6 Address:</b></td>
+      <td width="70%"><font size=2><input type="text" name="dsliteWanIpAddr6" size="40" maxlength="40" disabled="disabled" value="<% getInfo("ipv6WanIp"); %>"></td>
+    </tr>
+    <tr>
+      <td width="30%"><font size=2><b>Default Gateway:</b></td>
+      <td width="70%"><font size=2><input type="text" name="dsliteDefGw" size="40" maxlength="40" disabled="disabled" value="<% getInfo("ipv6DefGW"); %>"></td>
+    </tr>
+    </table>
+    </span>
+ <!-- end ds-lite -->
+    
+    <span id = "always_div" class = "off" >
+    <table border="0" width=480>
+    <tr> 
+       <td width="40%"><font size=2><b>Clone MAC Address:</b></td>
+       <td width="20%"><font size=2><input type="text" name="wan_macAddr" size="18" maxlength="12" value=<% getInfo("wanMac"); %>></td>
+	<td width="20%"><input type="button" value="Clone MAC" name="wan_macAddr_clone" onClick="clone_wan_mac();" ></td>
+       <td width="20%"><input type="button" value="Restore Default MAC" name="wan_default_macAddr" onClick="restore_wan_default_mac();" ></td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="upnpEnabled" value="ON">&nbsp;&nbsp;Enable uPNP</b></td>
+</script>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="igmpproxyEnabled" value="ON">&nbsp;&nbsp;Enable IGMP Proxy</b></td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="pingWanAccess" value="ON">&nbsp;&nbsp;Enable Ping Access on WAN</b></td>
+    </tr>        
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="webWanAccess" value="ON" ONCLICK=update_web_access_port_state()>&nbsp;&nbsp;Enable Web Server Access on WAN</b></td>
+    </tr>
+    
+     <script> load_web_access_port_info(); </script>
+    	
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="WANPassThru1" value="ON">&nbsp;&nbsp;Enable IPsec pass through on VPN connection</b></td>
+    </tr>
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="WANPassThru2" value="ON">&nbsp;&nbsp;Enable PPTP pass through on VPN connection</b></td>
+    </tr>
+    <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="WANPassThru3" value="ON">&nbsp;&nbsp;Enable L2TP pass through on VPN connection</b></td>
+    </tr>
+	<!-- disable ipv6 pass throuth for release jungle sdk v2.2, add "<" before %if (getIndex... enable it-->
+<% getInfo("ipv6_passthrough_start");%>
+    <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" name="ipv6_passthru_enabled" value="ON">&nbsp;&nbsp;Enable IPv6 pass through on VPN connection</b></td>
+    </tr>
+ <% getInfo("ipv6_passthrough_end");%>
+ 
+ <% getInfo("eth1xclient_comment_start");%>
+	<tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="WANDot1xEnabled" name="WANDot1xEnabled"  onclick="check_wan_dot1x_enabled()">&nbsp;&nbsp;Enable ethernet 802.1x on WAN</b></td>
+    </tr>
+ <% getInfo("eth1xclient_comment_end");%>
+   </table>
+    </span>
+ <% getInfo("eth1xclient_comment_start");%>
+    <div id = "show_wan_8021x_eap" class="off">
+    <table border="0" width=480>
+			<tr>
+			 <td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;EAP Type:</b></font></td>					 
+			 <td width="60%"><font size="2">
+			 <select size="1"  id="eap_type" name="eapType" onChange="change_1x_eap_type_settings()">	 
+				<option value="0"> MD5 </option>
+	 			<option value="1"> TLS </option>
+				<option value="2"> PEAP </option>
+				<option value="3"> TTLS </option>
+			</select> </font></td>
+		</tr>
+
+		<tr id = "show_wan_8021x_inside_type" style="display:">
+			 <td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;Inside Tunnel Type:</b></font></td>					 
+			 <td width="60%"><font size="2">
+			 <select size="1"  id="eap_inside_type" name="eapInsideType" value=<% getIndex("eth_eap_inside_type"); %> onChange="change_1x_eap_type_settings()">	 
+	 			<option value="0"> MSCHAPV2 </option>
+			 </select> </font></td>
+		</tr>
+		
+		
+		<tr id = "show_wan_8021x_phase2_type" style="display:">
+			 <td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;EAP TTLS Phase2 Type:</b></font></td>					 
+			 <td width="60%"><font size="2">
+			 <select size="1"  id="eap_phase2_type" name="eapPhase2Type" value=<% getIndex("eth_eap_phase2_type"); %> onChange="change_1x_eap_type_settings()">	 
+	 			<option value="0"> EAP/MD5 </option>
+			 </select> </font></td>
+		</tr>
+		
+		<tr>
+			 <td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;EAP User ID:</b></font></td>
+			 <td width="60%"><input id="eap_user_id" name="eapUserId" size="24" maxlength="64" value=<% getIndex("eth_eap_user_id"); %>></td>
+		</tr>
+		<tr>
+			 <td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;RADIUS User Name:</b></font></td>
+			 <td width="60%"><input id="radius_user_name" name="radiusUserName" size="24" maxlength="64" value=<% getIndex("eth_eap_user_name"); %>></td>
+		</tr>
+		<tr>
+			<td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;RADIUS User Password:</b></font></td>
+			<td width="60%"><input type="password" id="radius_user_pass" name="radiusUserPass" size="24" maxlength="64" value=<% getIndex("eth_eap_user_password"); %>></td>
+		</tr>
+		<tr>
+			<td width="40%"><font size="2"><b>&nbsp;&nbsp;&nbsp;User Key Password (if any):</b></font></td>
+			<td width="60%"><input type="password" id="radius_user_cert_pass" name="radiusUserCertPass" size="24" maxlength="64" value=<% getIndex("eth_eap_user_key"); %>></td>
+		</tr>
+	</table>								
+</div>
+ <% getInfo("eth1xclient_comment_end");%>
+   <SCRIPT>
+/*
+   if(document.tcpip.wanType.selectedIndex != 0){ // static ip
+	   group = document.tcpip.dnsMode;
+	   for (var r = 0; r < group.length; r++)
+		  if (group[r].checked)
+		    break;
+	   initialDnsMode = r;
+	   if (initialDnsMode == 0)
+	      disableDNSinput();
+   }
+*/
+	var wan_connection_type=document.tcpip.wanType.selectedIndex;
+/*   wanTypeSelection(document.tcpip.wanType);
+   alert("after wanTypeSelection MultiPppoeEnable value is :"+MultiPppoeEnable);
+   if(wan_connection_type == 2)
+   		pppTypeSelection(0);
+   	else if(wan_connection_type == 3)
+   		pppTypeSelection(1);
+   	else if(wan_connection_type == 4)
+   		pppTypeSelection(2);
+   	else if(wan_connection_type == 5)
+   		pppTypeSelection(3);
+   	else
+*/   	
+   		pppConnection_Init();
+  </SCRIPT>
+
+  <BR>
+  <input type="hidden" value="/tcpipwan.htm" name="submit-url">
+<% getInfo("apply_prompt_comment_start");%>  
+  <p><input type="submit" value="Apply Changes" name="save" onClick="return saveChanges_wan(document.tcpip,MultiPppoeEnable,dynamicWanIP)">&nbsp;&nbsp;
+	<input type="reset" value="Reset" name="reset" onClick="resetClicked()">
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+  <p><input type="submit" value="Save" name="save" onClick="return saveChanges_wan(document.tcpip,MultiPppoeEnable,dynamicWanIP)">&nbsp;&nbsp;
+	<input type="submit" value="Save & Apply" name="save_apply" onClick="return saveChanges_wan(document.tcpip,MultiPppoeEnable,dynamicWanIP)">&nbsp;&nbsp;
+	<input type="reset" value="Reset" name="reset" onClick="resetClicked()">
+<% getInfo("apply_direct_comment_end");%>
+</p>
+</form>
+</blockquote>
+</body>
+</html>

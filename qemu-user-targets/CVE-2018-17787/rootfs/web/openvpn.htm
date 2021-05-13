@@ -1,0 +1,147 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Time Zone Setting</title>
+<% getInfo("include_css"); %>
+</head>
+<script>
+
+function disableButton (button,val) {
+  if (document.all || document.getElementById)
+    button.disabled = val;
+  else if (button) {
+    button.oldOnClick = button.onclick;
+    button.onclick = null;
+    button.oldValue = button.value;
+    button.value = 'DISABLED';
+  }
+}
+
+function disableOpenvpnButton(val)
+{
+	disableButton(document.openvpn.openvpnMode, val);
+	disableButton(document.openvpn.openvpnPort, val);
+	disableButton(document.openvpn.authenticationType, val);
+}
+
+function updateState()
+{
+	if(document.openvpn.openvpnEnabled.checked)
+		disableOpenvpnButton(false);
+	else
+		disableOpenvpnButton(true);
+}
+
+function openvpn_saveChanges()
+{
+	form = document.openvpn ;
+	if(form.openvpnEnabled.checked){
+		if(form.openvpnPort.value == ""){
+			alert("Openvpn port can't be empty");
+			form.openvpnPort.focus();
+			return false ;
+		}		
+	}
+	return true;
+}
+
+function init()
+{
+	var cf = document.openvpn;
+	var EnableOpenvpn = <%getInfo("openvpnEnabled");%>;
+
+    	if(EnableOpenvpn == 1) 
+        	cf.openvpnEnabled.checked = true;
+        else
+        	cf.openvpnEnabled.checked = false;
+	cf.openvpnMode.selectedIndex = <%getInfo("openvpnMode");%>;
+	cf.authenticationType.selectedIndex = <%getInfo("authenticationType");%>;
+	updateState();
+}
+
+
+
+function saveClick(url)
+{
+  var form=document.saveOpenvpnClientConfig;
+  
+  form.submit(); 
+}
+
+
+</script>
+
+<body onload="init();">
+<blockquote>
+<h2>OpenVPN&nbsp; Setting</h2>
+
+
+<table border=0 width="500" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+   This page is used to configure OpenVPN parameters. 
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<form action=/boafrm/formOpenvpn method=POST name="openvpn">
+<table border="0" width=600>
+
+	<tr><td colspan="2"><font size=2><b>
+		<input type="checkbox" name="openvpnEnabled" 
+		value="ON" ONCLICK=updateState()>&nbsp;&nbsp;Enable OpenVPN </b><br>
+	    </td>
+	</tr>
+	<tr ><td height=10> </td> </tr>
+	<tr>
+	<td width ="20%">
+	<font size=2> <b> Mode : </b> </font>
+	</td>
+	<td width ="85%">
+		<select name="openvpnMode">
+			<option value=0 >server </option>
+			<!--
+			<option value=1 >p2p </option>
+			-->
+		</select>
+	</td>
+	</tr>
+	
+	<tr><td width="20%"><font size=2> <b>Port : </b> </font></td>
+	    <td width="85%">
+ 			<font size=2><input type="text" name="openvpnPort" size="20" maxlength="50" value=<% getInfo("openvpnPortNumber"); %>></font>
+	    </td>
+	</tr>	
+	<tr>
+	<td width ="20%">
+	<font size=2> <b> Auth Type : </b> </font>
+	</td>
+	<td width ="85%">
+		<select name="authenticationType">
+			<option value=0 >username/password </option>
+			<option value=1 >certification </option>
+			<option value=2 >username/password+certification </option>
+		</select>
+	</td>
+	</tr>
+</table>
+  <p>
+  <input type="hidden" value="/openvpn.htm" name="submit-url">
+  <input type="submit" value="Apply Change" name="apply" onClick="return openvpn_saveChanges()">
+&nbsp;&nbsp;
+  <input type="reset" value="Reset" name="set" >
+</form>
+
+<form action=/boafrm/formSaveOpenvpnClientConfig method=POST name="saveOpenvpnClientConfig">
+  <tr>
+    <td width="32%"><font size=2><b>Save Client Config File:</b></td>
+    <td width="30%"><font size=2>
+        <p><input type="submit" value="Save..." name="saveOpenvpnClientConfig" onclick="return saveClick('/client.ovpn')"></p>
+   </tr>
+  </form>
+  
+</blockquote>
+</font>
+</body>
+
+</html>

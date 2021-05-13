@@ -1,0 +1,1090 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPDhcpServer.js"></script>
+<!-- <script type="text/javascript" charset="utf-8" src="js/jquery.ellipsis.js"></script> -->
+<style type="text/css">
+.dhcplistname_show
+{
+	width:160px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+.block td{
+	line-height: 40px;
+}
+</style>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var DebugMode=0;
+//var HNAP = new HNAP_XML();
+var dhcpenable;
+var dhcpstart;
+var dhcpend;
+var dhcpleasetime;
+var lanip="";
+var lanmask="";
+var getlanmac ;
+var dhcpclientinfo;
+var isDHCPOpen=false;
+var wanip="";
+var wanmask="";
+var guestip="";
+var guestmask="";
+//var SUB_NAME_INDEX=20;
+//var max_show_width=150;//最大显示宽度px
+function Load_HTML()	
+{	
+	GetDHCPClientInfoXML();
+	GetXML();
+}
+//获取dhcp用户列表
+function GetDHCPClientInfoXML()
+{
+	var soapAction = new SOAPAction();
+	var sOAPGetDHCPClientInfoResponse = new SOAPGetDHCPClientInfoResponse();
+	//获取用户列表
+	var dhcpClientInfo = soapAction.sendSOAPAction("GetDHCPClientInfo", null, sOAPGetDHCPClientInfoResponse);
+	$.when(dhcpClientInfo).done(function(obj){
+		GetDHCPClientInfoResult_2nd(obj);
+	})
+	.fail(function(){
+		document.getElementById("content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+		if (DebugMode == 1)	{
+			alert("[!!GetXML Error!!] Function: GetResult_2nd");
+		}
+	});
+}
+
+function GetDHCPClientInfoResult_2nd(dhcpClientInfo)
+{
+		var dhcplist=[];
+		var dhcpTableList=[];
+		//在线设备
+	for(var i = 0;i<dhcpClientInfo.DHCPClientInfoLists.ClientInfo.length;i++){
+		dhcpTableList[i]=[];
+		var deviceNamehtml="";
+		var dhcplis = [];
+		dhcplist[i] = [];
+		dhcplis[0]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].DeviceName;
+		dhcplis[1]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].MacAddress;
+		dhcplis[2]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].IPv4Address;
+		dhcplis[3]=dhcpClientInfo.DHCPClientInfoLists.ClientInfo[i].LeaseTime;
+		/*dhcplis[4]=dhcpClientInfo.ClientInfoLists.ClientInfo[i].NickName;
+		if(dhcplis[0]==""&&dhcplis[4]==""){
+			dhcplis[0]==dhcplis[2];
+		}else if(dhcplis[0]==""){
+			dhcplis[0]==dhcplis[4];
+		}*/
+		if(dhcplis[0]==""){
+			dhcplis[0] = dhcplis[2];
+		}
+		dhcplist[i].push(dhcplis[0]);//主机名
+		dhcplist[i].push(dhcplis[1]);//mac地址
+		dhcplist[i].push(dhcplis[2]);//IP地址
+		dhcplist[i].push(dhcplis[3]);//租约剩余时间
+
+		deviceNamehtml="<div class='dhcplistname_show'>"+dhcplist[i][0]+"</div>";
+		dhcpTableList[i].push(deviceNamehtml);
+		dhcpTableList[i].push(dhcplist[i][1]);
+		dhcpTableList[i].push(dhcplist[i][2]);
+		var strtime="";
+		if(dhcplist[i][3]=="Always"){
+			strtime = I18N("j","always");
+		}else
+		if(dhcplist[i][3]>0)
+		{
+			var second= Number(dhcplist[i][3]);
+			if (second >= (24 * 3600)) {
+				//strtime += parseInt(second / (24 * 3600)) + '天';
+				strtime += parseInt(second / (24 * 3600)) + I18N("j","Home_Day");
+				second %= 24 * 3600;
+			}
+			if (second >= 3600) {
+				//strtime += parseInt(second / 3600) + '小时';
+				strtime += parseInt(second / 3600) + I18N("j","Home_Hour");
+				second %= 3600;
+			}
+			if (second >= 60) {
+				//strtime += parseInt(second / 60) + '分钟';
+				strtime += parseInt(second / 60) + I18N("j","Home_Minute");
+				second %= 60;
+			}
+			/*if (second > 0) {
+			 strtime += second+' sec';
+			 }*/
+		}
+		dhcpTableList[i].push(strtime);
+	}
+	if(dhcpTableList.length>0)
+	{
+		document.getElementById("trnull").style.display="none";
+	}
+	else
+	{
+		document.getElementById("trnull").style.display="";
+	}
+	ClearTable("dhcplist",3);
+	CreateTable("dhcplist", dhcpTableList);
+
+
+
+
+
+	/*var stad_info;
+	var stad_info_item = [];
+	var stad_info_array = new Array(); //定义一维数组 
+	
+	
+	var GetDHCPClientInfoResult_2nd = result_xml.Get("GetDhcpClientInfoResponse/GetDhcpClientInfoResult");
+	if (GetDHCPClientInfoResult_2nd == "OK"){
+		
+		dhcpclientinfo = result_xml.Get("GetDhcpClientInfoResponse/lan(0)_dhcps_clientinfo");
+		var dhcplisttem=[];
+		if(dhcpclientinfo!="")
+		{
+			dhcplisttem=dhcpclientinfo.split(";");
+			
+			//stad info
+			stad_info = result_xml.Get("GetDhcpClientInfoResponse/stad_info");
+			stad_info_item = stad_info.split(";");
+			for(var j = 0; j < stad_info_item.length; j++) {
+				stad_info_array[j] = new Array(); //将每一个子元素又定义为数组 
+				stad_info_array[j][0] = stad_info_item[j].split(",")[0];
+				stad_info_array[j][1] = stad_info_item[j].split(",")[1];
+			}
+			
+		}
+		
+		var dhcplist=[];
+		var dhcpTableList=[];
+		//var sub_devicename="";
+		for(var i=0;i<dhcplisttem.length;i++)
+		{
+			dhcplist[i]=[];
+			dhcplist[i]=dhcplisttem[i].split(",");	
+		}
+		
+		for(var i=0;i<dhcplist.length;i++)
+		{
+			dhcpTableList[i]=[];
+			var deviceNamehtml="";
+			var ext_name = 0;
+			for (var k = 0; k < stad_info_array.length; k++) {
+				//如果MAC地址相同
+				if (dhcplist[i][1] == stad_info_array[k][0]) {
+					if (stad_info_array[k][1] != "") {
+						dhcplist[i][0] = stad_info_array[k][1];
+						ext_name = 1;
+					} 
+					break;
+				}
+			}
+			//如果别名不存在并且主机名为*,则显示为IP地址
+			if (ext_name == 0 && dhcplist[i][0] == "*") {
+				dhcplist[i][0] = dhcplist[i][2];
+			}
+			//sub_devicename=subDeviceNameDisplay(dhcplist[i][0],SUB_NAME_INDEX);//设备名称显示...
+			//dhcpTableList[i].push(dhcplist[i][0]);
+			deviceNamehtml="<div class='dhcplistname_show'>"+dhcplist[i][0]+"</div>";
+			dhcpTableList[i].push(deviceNamehtml);
+			dhcpTableList[i].push(dhcplist[i][1]);
+			dhcpTableList[i].push(dhcplist[i][2]);
+			
+			if(dhcplist[i][3]>0)
+			{
+				var second= Number(dhcplist[i][3]);
+				var strtime="";
+				if (second >= (24 * 3600)) {
+					//strtime += parseInt(second / (24 * 3600)) + '天';
+					strtime += parseInt(second / (24 * 3600)) + I18N("j","Home_Day");
+					second %= 24 * 3600;
+				}
+				if (second >= 3600) {
+					//strtime += parseInt(second / 3600) + '小时';
+					strtime += parseInt(second / 3600) + I18N("j","Home_Hour");
+					second %= 3600;
+				}
+				if (second >= 60) {
+					//strtime += parseInt(second / 60) + '分钟';
+					strtime += parseInt(second / 60) + I18N("j","Home_Minute");
+					second %= 60;
+				}
+				/!*if (second > 0) {
+					strtime += second+' sec';
+				}*!/
+			}
+			dhcpTableList[i].push(strtime);
+		
+		}
+		if(dhcpTableList.length>0)
+		{
+			document.getElementById("trnull").style.display="none";
+		}
+		else
+		{
+			document.getElementById("trnull").style.display="";
+		}
+		ClearTable("dhcplist",3);
+		CreateTable("dhcplist", dhcpTableList);
+		//$(".dhcplistname_show").each(function(){$(this).ellipsis({maxWidth:max_show_width,isTextShow:false});});//显示...
+	} else {	
+		if (DebugMode == 1)	{	
+			alert("[!!GetXML Error!!] Function: GetResult_2nd");
+		}
+	}*/
+}
+//获取页面显示相关
+function GetXML()	
+{	
+	GetResult_1st();
+}
+function GetResult_1st()
+{
+	$("#select_dhcpLease").selectbox();
+	var soapAction = new SOAPAction();
+	var sOAPGetnetworksResponse = new SOAPGetnetworksResponse();
+	var sOAPGetGuestouterResponse=new SOAPGetGuestouterResponse();
+	//LAN口相关
+	var lanMessage = soapAction.sendSOAPAction("GetNetworkSettings", null, sOAPGetnetworksResponse);
+	//guest相关
+	var guestMessage = soapAction.sendSOAPAction("GetGuestNetworkSettings", null, sOAPGetGuestouterResponse);
+	$.when(lanMessage,guestMessage)
+			.done(function(r1,r2){
+				GetResult_2nd(r1,r2);
+	})
+			.fail(function(){
+				document.getElementById("right_content").style.display="";
+				document.getElementById("CreateOnloadMessage").style.display="none";
+				if (DebugMode == 1)	{
+					alert("[!!GetXML Error!!] Function: GetResult_1nd");
+				}
+			});
+	/*var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetMultipleHNAPs/GetNetworkSettings");
+		result_xml.Set("GetMultipleHNAPs/GetGuestNetworkSettings");
+		HNAP.SetXMLAsync("GetMultipleHNAPs", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+	}
+	else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}*/
+}
+	
+function GetResult_2nd(lanMessage,guestMessage)
+{
+		lanip=lanMessage.IPAddress;
+		lanmask = lanMessage.SubnetMask;
+		getlanmac =lanMessage.MACAddress;
+		dhcpenable = lanMessage.DHCPenable;
+		dhcpstart = lanMessage.IPRangeStart;
+		dhcpend = lanMessage.IPRangeEnd;
+		dhcpleasetime = lanMessage.LeaseTime;
+		guestip=guestMessage.IPAddress;
+		guestmask=guestMessage.SubnetMask;
+
+	document.getElementById("lanIP").value = lanip;
+	document.getElementById("lanmac").innerHTML = getlanmac;
+	document.getElementById("preLanIp1").innerHTML = lanip.substring(0,lanip.lastIndexOf(".") + 1);
+	document.getElementById("startLanIp").value = dhcpstart.substring(dhcpstart.lastIndexOf(".") + 1);
+	document.getElementById("endLanIp").value = dhcpend.substring(dhcpend.lastIndexOf(".") + 1);;
+
+	document.getElementById("select_dhcpLease").value = dhcpleasetime;
+
+	if (dhcpenable == "true") {
+		document.getElementById("dhcp_enable").checked = true;
+		document.getElementById("dhcp_statue").className = "checkbox_on";
+		document.getElementById("dhcppool").style.display = "";
+		//30秒获取一次客户端列表的信息
+		setInterval("GetDHCPClientInfoXML()",30000);
+		isDHCPOpen=true;
+	} else {
+		document.getElementById("dhcp_enable").checked = false;
+		document.getElementById("dhcp_statue").className = "checkbox_off";
+		document.getElementById("dhcppool").style.display = "none";
+		document.getElementById("dhcplist").style.display = "none";
+		document.getElementById("dhcp_table_line").style.display = "none";
+		isDHCPOpen=false;
+		$("#error_2").hide();
+	}
+
+	$("#select_dhcpLease").selectbox('detach');
+	$("#select_dhcpLease").selectbox();
+	document.getElementById("right_content").style.display="";
+	document.getElementById("CreateOnloadMessage").style.display="none";
+	/*var GetResult_2nd = result_xml.Get("GetMultipleHNAPsResponse/GetMultipleHNAPsResult");
+	if (GetResult_2nd == "OK"){
+	
+		lanip = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_ipaddr");
+		lanmask = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_netmask");
+		
+		guestip=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_ipaddr");
+		guestmask=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_netmask");
+		
+		document.getElementById("lanIP").value = lanip;
+		
+		getlanmac = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_mac");
+		document.getElementById("lanmac").innerHTML = getlanmac;		
+		
+		dhcpenable = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_dhcps_enable");
+		dhcpstart = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_dhcps_start");
+		dhcpend = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_dhcps_end");
+		dhcpleasetime = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_dhcps_lease");
+		document.getElementById("preLanIp1").innerHTML = lanip.substring(0,lanip.lastIndexOf(".") + 1);
+		document.getElementById("startLanIp").value = dhcpstart;
+		document.getElementById("endLanIp").value = dhcpend;
+		
+		document.getElementById("select_dhcpLease").value = dhcpleasetime;
+
+		if (dhcpenable == "1") {
+			document.getElementById("dhcp_enable").checked = true;
+			document.getElementById("dhcp_statue").className = "checkbox_on";
+			document.getElementById("dhcppool").style.display = "";
+			//30秒获取一次客户端列表的信息
+			setInterval("GetDHCPClientInfoXML()",30000);
+			isDHCPOpen=true;
+		} else {
+			document.getElementById("dhcp_enable").checked = false;
+			document.getElementById("dhcp_statue").className = "checkbox_off";
+			document.getElementById("dhcppool").style.display = "none";
+			document.getElementById("dhcplist").style.display = "none";	
+			document.getElementById("dhcp_table_line").style.display = "none";	
+			isDHCPOpen=false;
+			$("#error_2").hide();
+		}
+		
+		$("#select_dhcpLease").selectbox('detach');
+		$("#select_dhcpLease").selectbox();
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+		
+	} else {	
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";		
+		if (DebugMode == 1)	{	
+			alert("[!!GetXML Error!!] Function: GetResult_2nd");
+		}
+	}*/
+}
+
+$(document).ready( function() {
+	document.getElementById("right_content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	MoreContainMiniheight();
+	Load_HTML();
+	checkTimeout();
+	$('#lanIP').bind('input propertychange', function() {changeLanIpRange();});//输入IP地址时，实时更新pool
+	//$('#lanIP')[0].onkeyup= function(){changeLanIpRange();}
+	$("#option_1hour").html(I18N("j","DHCP_One_Hour"));//1小时
+	$("#option_12hour").html(I18N("j","DHCP_Twelve_Hours"));//12小时
+	$("#option_1day").html(I18N("j","DHCP_One_Day"));//1天
+	$("#option_1week").html(I18N("j","DHCP_One_Week"));//1周
+	document.getElementById("savebutton5").value = I18N("j","Commom_Save");//保存
+	$("#savebutton5").attr("disabled",true).removeClass("styled_button_s_active").addClass("styled_button_s");
+	$(" input[type='text']").keyup(function () {
+		inputChanged(this);
+		$("#savebutton5").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+	});
+	$(" select").change(function(){
+		$("#savebutton5").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+	})
+});
+
+function inputChanged(label){
+	if(label.id=="lanIP"){
+		$("#error_1").hide();
+		var gatewayIPValue=$("#lanIP").val();
+		var ipresult=checkIpAddr(gatewayIPValue);
+		if(CORRECT!=ipresult)//网关IP合法性验证
+		{
+			switch(ipresult)
+			{
+				case ERR_IP_EMPTY:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPEmpty"));
+					return false;
+				case ERR_IP_NOTNUMBER:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPnotNomber"));
+					return false;
+				case ERR_IP_FORMAT:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrFormat"));
+					return false;
+				case ERR_IP_ALLZERO:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrAllZero"));
+					return false;
+				case ERR_IP_ALLONE:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrAllOne"));
+					return false;
+				case ERR_IP_INVALID:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpNet"));
+					return false;
+				case ERR_IP_FIRSTZERO:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrFirstZero"));
+					return false;
+				case ERR_IP_LOOP:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrLoop"));
+					return false;
+				case ERR_IP_GROUP:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrGroup"));
+					return false;
+				default:
+					break;
+			}
+		}
+		else//与子网掩码匹配检查
+		{
+			var IpMaskResult=checkIpMaskMatch(gatewayIPValue,lanmask);
+			switch(IpMaskResult)
+			{
+				case ERR_NETID_INV:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPNetIdInvalid"));
+					return false;
+				case ERR_HOSTID_INV:
+					showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPHostIdInvalid"));
+					return false;
+				default:
+					break;
+			}
+		}
+	}else if(label.id=="startLanIp"||label.id=="endLanIp"){
+		$("#error_2").hide();
+		var poolStartValue=$("#startLanIp").val();
+		var poolEndValue=$("#endLanIp").val();
+		if(""==poolStartValue)//开始值
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolStartEmpty"));
+			return false;
+		}
+		else if(!isPositiveInteger(poolStartValue) || parseInt(poolStartValue,10)>254)//不符合正整数格式或大于254
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolStartFormat"));
+			return false;
+		}
+
+		if(""==poolEndValue)//结束值
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolEndEmpty"));
+			return false;
+		}
+		else if(!isPositiveInteger(poolEndValue) || parseInt(poolEndValue,10)>254)//不符合正整数格式或大于254
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolEndFormat"));
+			return false;
+		}
+		else if(parseInt(poolEndValue,10) < parseInt(poolStartValue,10))
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolEndLittle"));
+			return false;
+		}
+	}
+	return true;
+}
+//提交验证
+function SubmitLan()
+{
+	//var ret;
+	//ret = checkLanSetValues();
+	var ret=verifyDhcpIPAddrPool();
+	if (ret)
+	{
+		//SaveLan();
+		GetWanSettingsInfo();//Lan Wan冲突检测(guest没做 先注释后期打开并删除上方SaveLan)
+		//alert("noerror");
+		//SaveLan();
+	}
+}
+/*
+function checkLanSetValues()
+{
+	document.getElementById("error_1").style.display="none";
+	var startip = document.getElementById("startLanIp").value;
+	var endip = document.getElementById("endLanIp").value;
+	if(startip=="" || endip=="" || startip<1 || startip > 254 || endip <1 || endip >254)
+	{
+		document.getElementById("error_1").style.display="";
+		showErr("error_1","errorinfo_1",I18N("j","err_dhcpip"));
+		return false;	
+	}
+	return true;
+}
+*/
+
+function SaveLan()
+{
+	$.ajax({
+		cache: false,
+		url: "./js/CheckConnection",
+		timeout: 5000,
+		type: "GET",
+		success: function(data) {
+		// SetXMLLan();
+			SetXML();
+		},
+		error: function() {
+			document.getElementById("DetectRouterConnection").style.display = "inline";
+		}
+	});
+}
+
+function SetXML() {
+	/*
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("waitSettingFinish").style.display = "inline";
+	*/
+	SetResult_1st();
+}
+
+var changedIp;
+function SetNetSuccess()
+{
+	window.location.href = "http://" + changedIp;
+}
+
+//
+function SetResult_1st() {
+	var soapAction = new SOAPAction();
+	changedIp = document.getElementById("lanIP").value;
+	var sOAPSetnetworksRequest = new SOAPSetnetworksRequest();
+	sOAPSetnetworksRequest.IPAddress = document.getElementById("lanIP").value;
+	sOAPSetnetworksRequest.SubnetMask = lanmask;
+	dhcpenable = document.getElementById("dhcp_enable").checked;
+	if (dhcpenable) {
+		//dhcp server开关
+		var preLanIp = document.getElementById("preLanIp1").innerHTML;
+		var LeaseTime = document.getElementById("select_dhcpLease").value;
+		if(LeaseTime==""){
+			LeaseTime=dhcpleasetime;
+		}
+		sOAPSetnetworksRequest.DHCPenable="true";
+		sOAPSetnetworksRequest.IPRangeStart =preLanIp+ document.getElementById("startLanIp").value;
+		sOAPSetnetworksRequest.IPRangeEnd =preLanIp+ document.getElementById("endLanIp").value;
+		sOAPSetnetworksRequest.LeaseTime = LeaseTime.substring(0,LeaseTime.length-1);
+	} else {
+		sOAPSetnetworksRequest.DHCPenable="false";
+		sOAPSetnetworksRequest.IPRangeStart = dhcpstart;
+		sOAPSetnetworksRequest.IPRangeEnd = dhcpend;
+		sOAPSetnetworksRequest.LeaseTime = dhcpleasetime;
+	}
+	soapAction.sendSOAPAction("SetNetworkSettings", sOAPSetnetworksRequest,null)
+			.done(function(obj){
+				if(obj.SetNetworkSettingsResult!="OK"){
+					if (DebugMode == 1) {
+						alert("[!!SetXML Error!!] Function: SetResult_1st");
+					}
+					document.getElementById("CreatePopAlertMessage").style.display = "none";
+					document.getElementById("waitSettingFinish").style.display = "none";
+					document.getElementById("DetectRouterConnection").style.display = "inline";
+				}else{
+					setTimeout("SetNetSuccess()",20000);
+				}
+
+			})
+			.fail(function(){
+				if (DebugMode == 1)	{
+					alert("[!!SetXML Error!!] Function: SetResult_1st");
+				}
+				document.getElementById("CreatePopAlertMessage").style.display = "none";
+				document.getElementById("waitSettingFinish").style.display = "none";
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			});
+
+
+	/*var result_xml = new StringDoc();
+	if (result_xml != null) {
+	
+		result_xml.Set("SetNetworkSettings/lan_unit", "0");
+		//lan ip
+		
+		changedIp = document.getElementById("lanIP").value;
+		
+		result_xml.Set("SetNetworkSettings/lan(0)_ipaddr", document.getElementById("lanIP").value);
+		
+		//lan netmask
+		result_xml.Set("SetNetworkSettings/lan(0)_netmask", lanmask);
+		
+		dhcpenable = document.getElementById("dhcp_enable").checked;
+		
+		if (dhcpenable) {
+			//dhcp server开关
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_enable", "1");
+			
+			//dhcp start ip
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_start", document.getElementById("startLanIp").value);
+			
+			//dhcp end ip
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_end", document.getElementById("endLanIp").value);
+		
+			//dhcp leasetime
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_lease", document.getElementById("select_dhcpLease").value);
+		} else {
+			//dhcp server开关
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_enable", "0");
+			
+			//dhcp start ip
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_start", dhcpstart);
+			
+			//dhcp end ip
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_end", dhcpend);
+		
+			//dhcp leasetime
+			result_xml.Set("SetNetworkSettings/lan(0)_dhcps_lease", dhcpleasetime);
+		}
+		
+		// Send HNAP to DUT
+		HNAP.SetXMLAsync("SetNetworkSettings", result_xml, function(xml)	{	SetResult_2nd(xml);	});
+		setTimeout("SetNetSuccess()",60000);
+	} else {	
+		if (DebugMode == 1)	{	
+			alert("[!!SetXML Error!!] Function: SetResult_1st");	
+		}	
+	}
+}
+
+function SetResult_2nd(result_xml) {
+	var SetResult_1st = result_xml.Get("SetNetworkSettingsResponse/SetNetworkSettingsResult");
+	if (SetResult_1st == "OK") {
+		setTimeout("waitSettingFinished()", 1000);
+		//window.location.href = "http://" + document.getElementById("lanIP").value;
+	}
+	if (SetResult_1st == "ERROR") {
+		if (DebugMode == 1) {
+		alert("[!!SetXML Error!!] Function: SetResult_2nd");
+		}
+		window.location.reload();
+	}*/
+}
+function waitSettingFinished() 
+{
+	window.location.reload();
+}
+//dhcp状态切换
+function ChangeDhcpStatus()
+{
+	$("#savebutton5").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+	var a = document.getElementById("dhcp_enable").checked;
+	
+	var ret=verifyDhcpIPAddrPool();
+	if (ret) {
+		if(a)
+		{
+			document.getElementById("dhcp_statue").className = "checkbox_off";
+			document.getElementById("dhcp_enable").checked=false;	
+			isDHCPOpen=false;
+			$("#error_2").hide();
+			//document.getElementById("dhcpdesc").style.display = "none";
+			document.getElementById("dhcppool").style.display = "none";
+			document.getElementById("dhcplist").style.display = "none";	
+			document.getElementById("dhcp_table_line").style.display = "none";	
+		}
+		else
+		{
+			document.getElementById("dhcp_statue").className = "checkbox_on";
+			document.getElementById("dhcp_enable").checked=true;
+			isDHCPOpen=true;
+			//document.getElementById("dhcpdesc").style.display = "";
+			document.getElementById("dhcppool").style.display = "";
+			document.getElementById("dhcplist").style.display = "";	
+			document.getElementById("dhcp_table_line").style.display = "";	
+		}
+		//提交数据即时生效
+		/*
+		$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+			// SetXMLLan();
+				SetXML();
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});
+		*/
+	}
+}
+function changeLanIpRange()
+{
+	var dhcpip=$("#lanIP").val();
+	if(CORRECT==checkIpAddr(dhcpip) && CORRECT==checkIpMaskMatch(dhcpip,lanmask))
+	{
+		document.getElementById("preLanIp1").innerHTML = dhcpip.substring(0,dhcpip.lastIndexOf(".") + 1);
+	}
+}
+
+//保存时才判断lan wan冲突
+function GetWanSettingsInfo()
+{
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("waitSettingFinish").style.display = "inline";
+	var soapAction = new SOAPAction();
+	var sOAPGetWanSettingsResponse=new SOAPGetWanSettingsResponse();
+	//WAN口相关信息
+	var wanMessage =  soapAction.sendSOAPAction("GetWanSettings", null, sOAPGetWanSettingsResponse);
+	GetWanSettingsInfo_2nd(wanMessage)
+			.fail(function(){
+				if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetWanSettingsInfo_2nd");	}
+			});
+	/*var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetSysStatus");
+		HNAP.SetXMLAsync("GetSysStatus", result_xml, function(xml){	GetWanSettingsInfo_2nd(xml); });
+	}
+	else{	if (DebugMode == 1){	alert("[!!GetXML Error!!] Function: GetWanSettingsInfo");}	}*/
+}
+
+function GetWanSettingsInfo_2nd(wanMessage)
+{
+	var dtd = $.Deferred();
+	$.when(wanMessage).done(function(obj){
+		wanip = obj.IPAddress;
+		wanmask = obj.SubnetMask;
+		var gatewayIPValue=$("#lanIP").val();
+		var lanmask_Int=transIptoInt(lanmask);//将lanmask转换成整数
+
+		if(wanmask!="")//Lan Wan冲突检测
+		{
+			var wanmask_Int=transIptoInt(wanmask);//将wanmask转换成整数
+			var checkmaskwan=( lanmask_Int < wanmask_Int ? lanmask : wanmask);//取得较小者
+			if(isSameNet(gatewayIPValue,wanip,checkmaskwan)!=ERR_IP_DIFFNET)
+			{
+				document.getElementById("CreatePopAlertMessage").style.display = "none";
+				document.getElementById("waitSettingFinish").style.display = "none";
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_LanIpWanConflict"));
+				return false;
+			}
+		}
+		if(guestmask!="")//Lan Guest冲突检测
+		{
+			var guestmask_Int=transIptoInt(guestmask);//guestmask转换成整数
+			var checkmaskguest=( lanmask_Int < guestmask_Int ? lanmask : guestmask);//取得较小者
+			if(isSameNet(gatewayIPValue,guestip,checkmaskguest)!=ERR_IP_DIFFNET)
+			{
+				document.getElementById("CreatePopAlertMessage").style.display = "none";
+				document.getElementById("waitSettingFinish").style.display = "none";
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_LanIpGuestConflict"));
+				return false;
+			}
+		}
+
+			SaveLan();
+			dtd.resolve();
+	}).fail(function(){
+		dtd.reject();
+	});
+
+	return dtd.promise();
+	/*var GetWanResult_2nd = result_xml.Get("GetSysStatusResponse/GetSysStatusResult");
+	if (GetWanResult_2nd == "OK"){
+		wanip = result_xml.Get("GetSysStatusResponse/wan_wan(0)_ipaddr");
+		wanmask = result_xml.Get("GetSysStatusResponse/wan_wan(0)_netmask");
+		var gatewayIPValue=$("#lanIP").val();
+		var lanmask_Int=transIptoInt(lanmask);//将lanmask转换成整数
+		
+		if(wanmask!="")//Lan Wan冲突检测
+		{
+			var wanmask_Int=transIptoInt(wanmask);//将wanmask转换成整数
+			var checkmaskwan=( lanmask_Int < wanmask_Int ? lanmask : wanmask);//取得较小者
+			if(isSameNet(gatewayIPValue,wanip,checkmaskwan)!=ERR_IP_DIFFNET)
+			{
+				document.getElementById("CreatePopAlertMessage").style.display = "none";
+				document.getElementById("waitSettingFinish").style.display = "none";
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_LanIpWanConflict"));
+				return false;
+			}
+		}
+		if(guestmask!="")//Lan Guest冲突检测
+		{
+			var guestmask_Int=transIptoInt(guestmask);//guestmask转换成整数
+			var checkmaskguest=( lanmask_Int < guestmask_Int ? lanmask : guestmask);//取得较小者
+			if(isSameNet(gatewayIPValue,guestip,checkmaskguest)!=ERR_IP_DIFFNET)
+			{
+				document.getElementById("CreatePopAlertMessage").style.display = "none";
+				document.getElementById("waitSettingFinish").style.display = "none";
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_LanIpGuestConflict"));
+				return false;
+			}
+		}
+		
+		SaveLan();
+	}
+	else {if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetWanSettingsInfo_2nd");	}	}*/
+}
+
+function verifyDhcpIPAddrPool()//验证DHCP设置
+{
+	$("#error_1").hide();
+	$("#error_2").hide();
+	var gatewayIPValue=$("#lanIP").val();
+	var ipresult=checkIpAddr(gatewayIPValue);
+	if(CORRECT!=ipresult)//网关IP合法性验证
+	{
+		switch(ipresult)
+		{
+			case ERR_IP_EMPTY:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPEmpty"));
+				return false;
+			case ERR_IP_NOTNUMBER:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPnotNomber"));
+				return false;
+			case ERR_IP_FORMAT:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrFormat"));
+				return false;
+			case ERR_IP_ALLZERO:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrAllZero"));
+				return false;
+			case ERR_IP_ALLONE:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrAllOne"));
+				return false;
+			case ERR_IP_INVALID:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpNet"));
+				return false;
+			case ERR_IP_FIRSTZERO:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrFirstZero"));
+				return false;
+			case ERR_IP_LOOP:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrLoop"));
+				return false;
+			case ERR_IP_GROUP:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IpAddrGroup"));
+				return false;
+			default:
+				break;
+		}
+	}
+	else//与子网掩码匹配检查
+	{
+		var IpMaskResult=checkIpMaskMatch(gatewayIPValue,lanmask);
+		switch(IpMaskResult)
+		{
+			case ERR_NETID_INV:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPNetIdInvalid"));
+				return false;
+			case ERR_HOSTID_INV:
+				showErr("error_1","errorinfo_1",I18N("j","Err_Dhcp_IPHostIdInvalid"));
+				return false;
+			default:
+				break;
+		}
+	}
+	
+	if(isDHCPOpen)//开启DHCP，验证地址池输入
+	{
+		var poolStartValue=$("#startLanIp").val();
+		var poolEndValue=$("#endLanIp").val();
+		if(""==poolStartValue)//开始值
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolStartEmpty"));
+			return false;
+		}
+		else if(!isPositiveInteger(poolStartValue) || parseInt(poolStartValue,10)>254)//不符合正整数格式或大于254
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolStartFormat"));
+			return false;
+		}
+		
+		if(""==poolEndValue)//结束值
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolEndEmpty"));
+			return false;
+		}
+		else if(!isPositiveInteger(poolEndValue) || parseInt(poolEndValue,10)>254)//不符合正整数格式或大于254
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolEndFormat"));
+			return false;
+		}
+		else if(parseInt(poolEndValue,10) < parseInt(poolStartValue,10))
+		{
+			showErr("error_2","errorinfo_2",I18N("j","Err_Dhcp_IPAddrPoolEndLittle"));
+			return false;
+		}
+	}
+	return true;
+} 
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container"> 
+					<script>initialLeftMenu();</script>
+				</div>
+				<div id="right_content"  class="pull-left" style="display:none; ">
+					<table class="clearboth tablemoreheader" cellspacing="0" cellpadding="0" border="0" style="display:block; " align="left">
+						<tbody>
+						<tr>
+							<th align="left"><script>I18N("h","Commom_LAN_Settings");</script><!-- 局域网设置 --></th>				
+						</tr>
+					  </tbody>
+					</table>					
+					<div class="moreline1 clearboth"></div>
+					<div class="moredescription" id = "dhcpdesc" style="display:none; "><script>I18N("h","DHCP_Description");</script></div>
+					 <table border="0" class="block" cellpadding="0" cellspacing="0" align="left" style="margin-top:36px;">
+					 	<tbody>
+			 			 <tr>
+							<th width="141px">
+							  <script>I18N("h","Commom_MAC_Address");</script><!-- MAC地址 -->
+							</th>
+							<td><div class="networkstatue" id="lanmac"></div></td>
+						  </tr>
+						  <tr class="space">
+						  </tr>
+						  <tr>
+							<th>
+							  <script>I18N("h","Commom_IP_Address");</script><!-- IP地址 -->
+							</th>
+							<td>
+								<input type="text" id="lanIP" size="30" maxlength="15" name="lanIP" class="styled-text" >
+							</td>
+						  </tr>
+						 <tr id="error_1" style="display:none; ">
+							<td>&nbsp;</td>
+							<td class="errorinfo">
+								<table>
+									<tbody>
+										<tr>
+											<td>
+											<div class="ic-sign ic"></div>
+										  </td>
+										  <td id="errorinfo_1" style="line-height:20px;"></td>
+										</tr>
+									</tbody>
+								  </table>
+							</td>
+						 </tr>						
+						  <tr class="space"></tr>
+						<tr>
+							<th><script>I18N("h","DHCP_Server");</script><!-- DHCP服务器 --></th>
+							<td class="tdcheckbox">
+								<div id="dhcp_statue" class="checkbox_off" onclick="ChangeDhcpStatus()">
+                       				 <input type="checkbox" id="dhcp_enable" name="dhcp_enable">
+                      			</div>
+							</td>
+						</tr>									  
+						 </tbody>
+						 </table>
+						 <div class="clearboth"> </div>
+
+						  <table border="0" class="block clearboth" cellpadding="0" cellspacing="0" align="left" id="dhcppool">
+						    <tr class="space"></tr>
+						  <tr>
+							<th width="141px"><script>I18N("h","DHCP_IP_Range");</script><!-- IP地址分配范围 --></th>
+							<td>
+								<div class="pull-left">
+								<span id="preLanIp1" style="float:left; padding-right:13px;">192.168.1.</span>
+								<input type="text" id="startLanIp" size="3" maxlength="3" name="startLanIp" class="samll_styled-text">
+								</div>
+								<div class="pull-left shortline"></div>
+								<div class="pull-left">
+								<input type="text" id="endLanIp" size="3" maxlength="3" name="endLanIp" class="samll_styled-text">								
+								</div>
+							</td>
+						  </tr>
+						  <tr id="error_2" style="display:none; ">
+							<td>&nbsp;</td>
+							<td class="errorinfo">
+								<table>
+									<tbody>
+										<tr>
+											<td>
+											<div class="ic-sign ic"></div>
+										  </td>
+										  <td id="errorinfo_2" style="line-height:20px;width:260px;"></td>
+										</tr>
+									</tbody>
+								  </table>
+							</td>
+						 </tr>						 
+						  <tr class="space"></tr>
+						  <tr>
+						  	<th><script>I18N("h","DHCP_Lease_Time");</script><!-- 租期 --></th>
+							<td>
+								<select name="select_dhcpLease" id="select_dhcpLease">
+									<!-- <option value="60m">1小时</option>
+									<option value="720m">12小时</option>
+									<option value="1440m">1天</option>
+									<option value="10080m">1周</option> -->
+									<option id="option_1hour" value="60m"></option>
+									<option id="option_12hour" value="720m"></option>
+									<option id="option_1day" value="1440m"></option>
+									<option id="option_1week" value="10080m"></option>
+								</select>
+							</td>
+						  </tr>
+					 </table>
+					  <div class="clearboth"> </div>
+					 <table style="margin-left:110px; margin-top:36px;" class="clearboth" align="left" >
+					 <!-- <tr><td><input type="button" value="保存" id="savebutton5" class="styled_button_s" onClick="SubmitLan();"></td></tr> -->
+					 <tr><td><input type="button" value="" id="savebutton5" class="styled_button_s" onClick="SubmitLan();"></td></tr>
+					 </table>
+					  <div class="clearboth"> </div>
+					 <table id="dhcp_table_line" class="clearboth" align="left" style="width:100%; margin-top:36px;">
+					 <tr><td><div class="moreline2"></div></td></tr>
+					 </table>
+					  <div class="clearboth"> </div>				
+		  		<table class="clearboth table_list" id="dhcplist" align="left" cellpadding="0" cellspacing="0" style="margin-top:36px; ">
+					<tbody>
+					<tr class="tableheader">
+						<td colspan="4">
+						<div><div style="text-align:center;"><script>I18N("h","DHCP_Table");</script><!-- DHCP设备列表 --></div></div>
+						</td>
+					</tr>
+					<tr class="tableheader2">
+						<td style="width:192px; "><script>I18N("h","DHCP_Hosts");</script><!-- 主机 --></td>
+						<td style="width:192px; "><script>I18N("h","Commom_MAC_Address");</script><!-- MAC地址 --></td>
+						<td style="width:192px; "><script>I18N("h","Commom_IP_Address");</script><!-- IP地址 --></td>
+						<td style="width:192px; "><script>I18N("h","DHCP_Active_Time");</script><!-- 有效时间 --></td>
+					</tr>
+					<tr id="trnull">
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					</tr>
+				
+				
+				</tbody>
+			
+			
+			</table>					 
+
+				</div><!--end right_content -->
+			</div>
+	   </div>
+ 	   <div class="footer_placeholder"></div>  
+   </div>
+	
+	<div id="footer"></div>
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

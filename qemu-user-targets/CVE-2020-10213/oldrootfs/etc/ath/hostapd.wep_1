@@ -1,0 +1,19 @@
+interface=ath1
+bridge=br0
+#
+logger_syslog=0
+logger_syslog_level=0
+logger_stdout=0
+logger_stdout_level=0
+
+# Debugging: 0 = no, 1 = minimal, 2 = verbose, 3 = msg dumps, 4 = excessive
+debug=0
+
+# Dump file for state information (on SIGUSR1)
+#dump_file=/tmp/hostapd.dump
+
+#wsc_auth_mode bit0:open bit1:wpa-psk bit2:wep
+wsc_auth_mode=4
+ieee8021x=1
+eap_server=1
+own_ip_addr=127.0.0.1

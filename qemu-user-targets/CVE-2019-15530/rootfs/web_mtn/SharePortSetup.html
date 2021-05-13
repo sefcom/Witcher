@@ -1,0 +1,937 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/AES.js"></script>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var G_SambaUserList=[];
+var HNAP = new HNAP_XML();
+function GetXML()
+{
+	var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetMultipleHNAPs/GetSambaSettings");
+		result_xml.Set("GetMultipleHNAPs/GetSambaUserSettings");
+		HNAP.SetXMLAsync("GetMultipleHNAPs", result_xml, function(xml)	{	GetResult_1nd(xml);	});
+	}
+	else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}
+}
+function GetResult_1nd(result_xml)
+{
+	var GetResult_1nd = result_xml.Get("GetMultipleHNAPsResponse/GetMultipleHNAPsResult");
+	if (GetResult_1nd == "OK"){
+		var sambaEnable=result_xml.Get("GetMultipleHNAPsResponse/GetSambaSettingsResponse/samba_enable");
+		var sambaStatue=result_xml.Get("GetMultipleHNAPsResponse/GetSambaSettingsResponse/samba_status");
+		var sambaUserList = result_xml.GetObjectNode("GetMultipleHNAPsResponse/GetSambaUserSettingsResponse/SambaUserList");
+		if(sambaUserList!=null && sambaUserList!="" && sambaUserList.length>0)
+		{
+			G_SambaUserList = sambaUserList;
+		}
+		if(sambaEnable=="1")
+		{
+			document.getElementById("share_enable").checked=true;
+			document.getElementById("shareport_statue").className = "checkbox_on";
+			document.getElementById("shareport_power").style.display = "";
+		}
+		else
+		{
+			document.getElementById("shareport_statue").className = "checkbox_off";
+			document.getElementById("share_enable").checked=false;	
+			document.getElementById("shareport_power").style.display = "none";
+		}
+		CreateSambaListTable();
+		document.getElementById("select_requirement").value=sambaStatue;
+		$("#select_requirement").selectbox('detach');
+		$("#select_requirement").selectbox();
+	}
+	
+	else{
+		if (DebugMode == 1)	{
+			alert("[!!GetXML Error!!] Function: GetResult_1nd");
+		}
+	}
+}
+
+function CreateSambaListTable()
+{
+	ClearTable("shareportlist",1);
+	var TableList=[];
+	for(var i=0;i<G_SambaUserList.length;i++)
+	{
+		TableList[i]=[];
+
+		TableList[i].push(G_SambaUserList[i].samba_name);
+		
+		if(G_SambaUserList[i].samba_dir=="/")
+		{
+			TableList[i].push("根目录");
+		}
+		else
+		{
+			TableList[i].push(G_SambaUserList[i].samba_dir);
+		}
+		if(G_SambaUserList[i].samba_readonly=="no")
+		{
+			TableList[i].push("读写");
+		}
+		else
+		{
+			TableList[i].push("只读");
+		}
+		if(G_SambaUserList[i].samba_num=="1")
+		{
+			TableList[i].push("--");
+			TableList[i].push("--");
+		}
+		else
+		{
+			TableList[i].push("<div class='editimg' onclick='editSambaUser("+i+")'></div>");
+			TableList[i].push("<div class='delimg' onclick='delSambaUser("+i+")'></div>");
+		}
+
+	}
+	CreateTable("shareportlist", TableList);
+}
+
+function editSambaUser(id)
+{
+	edit=G_SambaUserList[id].samba_num;
+	document.getElementById("shareport_UserName").disabled=true;
+	document.getElementById("shareport_UserName").value=G_SambaUserList[id].samba_name;
+	document.getElementById("shareport_Password").value=AES_Decrypt128(G_SambaUserList[id].samba_pwd);
+	if(G_SambaUserList[id].samba_dir=="/")
+	document.getElementById("shareport_Folder").value ="根目录";
+	else
+	document.getElementById("shareport_Folder").value = G_SambaUserList[id].samba_dir;
+	document.getElementById("createPop").style.display = "";
+	$("#shareport_Permission").selectbox('detach');
+	document.getElementById("shareport_Permission").value = G_SambaUserList[id].samba_readonly;
+	$("#shareport_Permission").selectbox('attach');
+
+}
+
+function delSambaUser(user)
+{
+	var delnum=G_SambaUserList[user].samba_num;
+
+		$.ajax({
+			cache: false,
+			url: "./js/CheckConnection",
+			timeout: 5000,
+			type: "GET",
+			success: function(data) {
+				SetResult_3st(delnum);
+			},
+			error: function() {
+				document.getElementById("DetectRouterConnection").style.display = "inline";
+			}
+		});	
+
+
+}
+
+
+
+function SetResult_3st(num) {
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("waitSettingFinish").style.display = "inline";
+	var result_xml = new StringDoc();
+	if (result_xml != null) {
+		
+		result_xml.Set("DelSambaUserSettings/samba_num", num);
+		HNAP.SetXMLAsync("DelSambaUserSettings", result_xml, function(xml)	{	SetResult_4nd(xml);	});
+	} else {	
+		if (DebugMode == 1)	{	
+			alert("[!!SetXML Error!!] Function: SetResult_3st");	
+		}	
+	}
+}
+
+function SetResult_4nd(result_xml) {
+	var SetResult_4nd = result_xml.Get("DelSambaUserSettingsResponse/DelSambaUserSettingsResult");
+	if (SetResult_4nd == "OK") {
+		setTimeout("waitSettingFinished()", 1000);
+	}
+	if (SetResult_4nd == "ERROR") {
+		if (DebugMode == 1) {
+		alert("[!!SetXML Error!!] Function: SetResult_4nd");
+		}
+		window.location.reload();
+	}
+}
+
+function ShareportStatus()
+{
+		
+		var a = document.getElementById("share_enable").checked;
+
+		if(a)
+		{
+			document.getElementById("shareport_statue").className = "checkbox_off";
+			document.getElementById("share_enable").checked=false;	
+			document.getElementById("shareport_power").style.display = "none";
+
+		}
+		else
+		{
+			document.getElementById("shareport_statue").className = "checkbox_on";
+			document.getElementById("share_enable").checked=true;	
+			document.getElementById("shareport_power").style.display = "";
+		}
+}
+
+$(document).ready( function() {
+	//document.getElementById("right_content").style.display="none";
+	//document.getElementById("CreateOnloadMessage").style.display="";
+GetXML();
+});
+
+function createUserButton()
+{
+	edit="0";
+	
+	document.getElementById("shareport_UserName").disabled=false;
+	document.getElementById("shareport_UserName").value="";
+	document.getElementById("shareport_Password").value="";
+	document.getElementById("shareport_Folder").value = "根目录";
+	document.getElementById("createPop").style.display = "";
+	$("#shareport_Permission").selectbox('detach');
+	$("#shareport_Permission").val('no');
+	$("#shareport_Permission").selectbox('attach');
+}
+
+function AddCancle()
+{
+	document.getElementById("createPop").style.display = "none";
+}
+
+function GetDirectoryList()
+{
+		var result_xml = new StringDoc();
+		if (result_xml != null)
+		{
+			result_xml.Set("GetUsbListDirectory/DirectoryPath","/");
+			HNAP.SetXMLAsync("GetUsbListDirectory", result_xml, function(xml)	{	GetResult_Directory(xml);	});
+		}
+		else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetDirectoryList");	}	}
+}
+var IsOpenFolder = 0;
+var counter=1;
+function GetResult_Directory(result_xml)
+{
+	var GetResult_1nd = result_xml.Get("GetUsbListDirectoryResponse/GetUsbListDirectoryResult");
+	if (GetResult_1nd == "OK"){
+		var directory=result_xml.GetObjectNode("GetUsbListDirectoryResponse/UsbDirectoryList");
+		//var directory= [ { "DirectoryName": "bin", "DirectoryPath": "/bin", "SubDirectory": "false" }, { "DirectoryName": "dev", "DirectoryPath": "/dev", "SubDirectory": "true" }, { "DirectoryName": "etc", "DirectoryPath": "/etc", "SubDirectory": "true" }, { "DirectoryName": "lib", "DirectoryPath": "/lib", "SubDirectory": "true" }, { "DirectoryName": "mnt", "DirectoryPath": "/mnt", "SubDirectory": "true" }, { "DirectoryName": "overlay", "DirectoryPath": "/overlay", "SubDirectory": "true" }, { "DirectoryName": "proc", "DirectoryPath": "/proc", "SubDirectory": "true" }, { "DirectoryName": "rom", "DirectoryPath": "/rom", "SubDirectory": "true" }, { "DirectoryName": "root", "DirectoryPath": "/root", "SubDirectory": "false" }, { "DirectoryName": "sbin", "DirectoryPath": "/sbin", "SubDirectory": "false" }, { "DirectoryName": "sys", "DirectoryPath": "/sys", "SubDirectory": "true" }, { "DirectoryName": "tmp", "DirectoryPath": "/tmp", "SubDirectory": "true" }, { "DirectoryName": "usr", "DirectoryPath": "/usr", "SubDirectory": "true" }, { "DirectoryName": "www", "DirectoryPath": "/www", "SubDirectory": "true" }, { "DirectoryName": "log", "DirectoryPath": "/log", "SubDirectory": "false" } ];
+		if(directory=="" || directory == null)
+		{
+			return ;
+		}
+		else
+		{
+				var G_Dirctory_List=directory;
+				document.getElementById("searchFolder").disabled = false;
+				var div1 = document.getElementById("partitionView");
+				var div2 = document.getElementById("FolderTreeView");
+				var tmp = "";
+				div1.innerHTML = "";
+				div2.innerHTML = "";
+				document.getElementById("createPop").style.display = "none";
+				document.getElementById("treeViewPop").style.display = "";
+				tmp = "<li><a href=\"javascript:GetDirectoryList()\" id=\"partition_1\" style=\"font-size:16px;line-height:35px;color:#4598aa;\"></a></li>";
+				div1.innerHTML += tmp;
+				document.getElementById("partition_1").innerHTML = "/";
+				
+			var div3 = document.getElementById("FolderTreeView");
+			div3.innerHTML += "<a href=\"javascript:ReturnBack();\" id=\"rootName\" style=\"margin: 0 0 0 10px;\"></a>";
+			document.getElementById("rootName").innerHTML = "/";
+			IsOpenFolder = 0;
+			if (IsOpenFolder == 0)
+			{
+				var div4 = document.getElementById("FolderTreeView");
+				var List_counter = 1;
+				var default_Setting = 0;
+				div4.innerHTML += "<br />";
+				
+				for(var i=0;i<G_Dirctory_List.length;i++)
+				{
+					var folder_Name=G_Dirctory_List[i].DirectoryName;
+					var folder_Path=G_Dirctory_List[i].DirectoryPath;
+					var folder_Sub=G_Dirctory_List[i].SubDirectory;
+					var re_folder_Name = { trueFolderName: folder_Name };
+					if (folder_Sub == "true")	{	div4.innerHTML += "<div id=subfolder_" + counter + ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Get_SubFolderList(" + counter + ");\"><img src=\"image/folder_open.png\" border=\"0\"></img><a href=\"javascript:Return_Back(" + counter + ");\">" + re_folder_Name.trueFolderName + "</a><label></label><label></label><label></label></div>";	}
+					else						{	div4.innerHTML += "<div id=subfolder_" + counter + ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Get_SubFolderList(" + counter + ");\"><a href=\"javascript:Return_Back(" + counter + ");\">" + re_folder_Name.trueFolderName + "</a><label></label><label></label><label></label></div>";	}
+					document.getElementById("subfolder_" + counter).childNodes[3].innerHTML = folder_Path;
+					document.getElementById("subfolder_" + counter).childNodes[3].style.display = "none";
+					document.getElementById("subfolder_" + counter).childNodes[4].innerHTML = folder_Sub;
+					document.getElementById("subfolder_" + counter).childNodes[4].style.display = "none";
+					document.getElementById("subfolder_" + counter).childNodes[5].innerHTML = default_Setting;
+					document.getElementById("subfolder_" + counter).childNodes[5].style.display = "none";
+					counter ++;
+				
+				}
+				IsOpenFolder = 1;
+			}
+			
+		}
+	
+	}
+	else{
+		if (DebugMode == 1)	{
+			alert("[!!GetXML Error!!] Function: GetResult_Directory");
+		}
+	}
+}
+
+function Get_SubFolderList(str)
+	{
+		var GetDefaultSettings = document.getElementById("subfolder_" + str).childNodes[5].innerHTML;
+		if (GetDefaultSettings == 0)
+		{
+			// 詢問目前是否有子目錄
+			var getSubFolder = document.getElementById("subfolder_" + str).childNodes[4].innerHTML;
+			
+			if (getSubFolder == "true")
+			{
+				document.getElementById("subfolder_" + str).childNodes[5].innerHTML = 1;
+				// 取得目前的目錄
+				var getFolder = document.getElementById("subfolder_" + str).childNodes[3].innerHTML;
+				
+				var result_xml = new StringDoc();
+				if (result_xml != null)
+				{
+					result_xml.Set("GetUsbListDirectory/DirectoryPath",getFolder);
+					HNAP.SetXMLAsync("GetUsbListDirectory", result_xml, function(xml)	{	GetResult_SubFolderList(xml,str);	});
+				}
+			}
+			else	{	alert("wwwww");document.getElementById("subfolder_" + str).childNodes[1].childNodes[0].src = "/image/folder_close.png";	}
+		}
+		else
+		{
+		var aa="subfolder_" + str;
+		//alert(aa.childNodes[4].innerHTML);
+			var folder_Sub = document.getElementById("subfolder_" + str).childNodes[4].innerHTML;
+			var folder_Path = document.getElementById("subfolder_" + str).childNodes[3].innerHTML;
+			var getFolder = document.getElementById("subfolder_" + str).childNodes[2].innerHTML;
+			var div = document.getElementById("subfolder_" + str);
+			var re_folder_Name = { trueFolderName: getFolder };
+			var brcount = folder_Path.match(/\//g);
+			var tmp = "";
+			for (var j = 0; j < brcount.length; j ++)	{	tmp += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";	}
+			div.innerHTML = tmp + "<a href=\"javascript:Get_SubFolderList(" + str + ");\"><img src=\"image/folder_open.png\" border=\"0\"></img></a><a href=\"javascript:Return_Back(" + str + ");\"></a><label></label><label></label><label></label></div>";
+			var default_Setting = 0;
+			document.getElementById("subfolder_" + str).childNodes[2].innerHTML = re_folder_Name.trueFolderName;
+			document.getElementById("subfolder_" + str).childNodes[3].innerHTML = folder_Path;
+			document.getElementById("subfolder_" + str).childNodes[3].style.display = "none";
+			document.getElementById("subfolder_" + str).childNodes[4].innerHTML = folder_Sub;
+			document.getElementById("subfolder_" + str).childNodes[4].style.display = "none";
+			document.getElementById("subfolder_" + str).childNodes[5].innerHTML = default_Setting;
+			document.getElementById("subfolder_" + str).childNodes[5].style.display = "none";
+		}
+	}
+
+function GetResult_SubFolderList(result_xml,str)
+{
+	var GetResult_SubFolderList = result_xml.Get("GetUsbListDirectoryResponse/GetUsbListDirectoryResult");
+	if (GetResult_SubFolderList == "OK"){
+				var G_Dirctory_Sub_List=[];
+				var directory=result_xml.GetObjectNode("GetUsbListDirectoryResponse/UsbDirectoryList");
+			//var directory=[ { "DirectoryName": "2014年", "DirectoryPath": "\/季度案例\/2014年", "SubDirectory": "true" }, { "DirectoryName": "11月份", "DirectoryPath": "\/季度案例\/11月份","SubDirectory": "false" }, { "DirectoryName": "10月份", "DirectoryPath": "\/季度案例\/10月份", "SubDirectory": "true" } ]
+				if(directory=="" || directory == null)
+				{
+					return ;
+				}
+
+				var G_Dirctory_Sub_List=directory;
+				document.getElementById("subfolder_" + str).childNodes[1].childNodes[0].src = "/image/folder_close.png";
+				var div1 = document.getElementById("subfolder_" + str);
+				for (var i = 0; i < G_Dirctory_Sub_List.length; i ++)
+				{
+					var folder_Name=G_Dirctory_Sub_List[i].DirectoryName;
+					var folder_Path=G_Dirctory_Sub_List[i].DirectoryPath;
+					var folder_Sub=G_Dirctory_Sub_List[i].SubDirectory;
+					var default_Setting = 0;
+					var re_folder_Name = { trueFolderName: folder_Name };
+					var brcount = folder_Path.match(/\//g);
+					var tmp = "";
+					tmp += "<div id=subfolder_" + counter + ">";
+					for (var j = 0; j < brcount.length - 1; j ++)	{	tmp += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";	}
+					{
+						tmp += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+					}
+					if (folder_Sub == "true")	{	tmp += "<a href=\"javascript:Get_SubFolderList(" + counter + ");\"><img src=\"image/folder_open.png\" border=\"0\"></img><a href=\"javascript:Return_Back(" + counter + ");\"></a><label></label><label></label><label></label></div>";	}
+					else						{	tmp += "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Get_SubFolderList(" + counter + ");\"><a href=\"javascript:Return_Back(" + counter + ");\"></a><label></label><label></label><label></label></div>";	}
+					div1.innerHTML += tmp;
+					document.getElementById("subfolder_" + counter).childNodes[2].innerHTML = re_folder_Name.trueFolderName;
+					document.getElementById("subfolder_" + counter).childNodes[3].innerHTML = folder_Path;
+					document.getElementById("subfolder_" + counter).childNodes[3].style.display = "none";
+					document.getElementById("subfolder_" + counter).childNodes[4].innerHTML = folder_Sub;
+					document.getElementById("subfolder_" + counter).childNodes[4].style.display = "none";
+					document.getElementById("subfolder_" + counter).childNodes[5].innerHTML = default_Setting;
+					document.getElementById("subfolder_" + counter).childNodes[5].style.display = "none";
+					counter ++;
+				}
+	
+	
+	}
+
+
+}
+
+function ReturnBack()
+{
+		document.getElementById("shareport_Folder").value = document.getElementById("rootName").innerHTML;
+		document.getElementById("createPop").style.display = "inline";
+		document.getElementById("treeViewPop").style.display = "none";
+}
+
+function Return_Back(counter)
+{
+		document.getElementById("shareport_Folder").value = document.getElementById("subfolder_" + counter).childNodes[3].innerHTML;
+		document.getElementById("createPop").style.display = "inline";
+		document.getElementById("treeViewPop").style.display = "none";
+}
+
+function Checkvalidity()
+{
+	
+	var username=document.getElementById("shareport_UserName").value;
+	
+	if(username.length==0)
+	{
+		showErr("error_1","errorinfo_1",I18N("j","Err_Shareport_UserName_Null"));
+		return false;
+	}
+	
+	var ValidHEXRegex = /^[a-zA-Z0-9_-]+$/;
+	var returnVal = true;
+	if (!ValidHEXRegex.test(username))
+	{
+		showErr("error_1","errorinfo_1",I18N("j","Err_Shareport_UserName"));
+		return false;
+	}
+	
+	if(username.length>64)
+	{
+		showErr("error_1","errorinfo_1",I18N("j","Err_Shareport_UserName_Length"));
+		return false;
+	}
+	
+	if(edit=="0")
+	{
+		for(var i=0;i<G_SambaUserList.length;i++)
+		{
+			if(username==G_SambaUserList[i].samba_name)
+			{
+					showErr("error_1","errorinfo_1",I18N("j","Err_Shareport_UserName_Repeat"));
+					return false;
+					break;
+			}
+		
+		}
+	}
+	return true;
+
+}
+
+function AddList()
+{
+	if(!Checkvalidity())
+	{
+		return false;
+	}
+	
+	
+	$.ajax({
+		cache: false,
+		url: "./js/CheckConnection",
+		timeout: 5000,
+		type: "GET",
+		success: function(data) {
+		SetXMLList();
+		},
+		error: function() {
+		  document.getElementById("DetectRouterConnection").style.display = "inline";
+		}
+	});
+
+}
+var edit="0";
+function SetXMLList() {
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("createPop").style.display = "none";
+	SetResult_SetList();
+}
+
+function SetResult_SetList()
+{
+	var result_xml = new StringDoc();
+	if (result_xml != null) {
+	
+	var username=document.getElementById("shareport_UserName").value;
+	var password=document.getElementById("shareport_Password").value;
+	var permission=document.getElementById("shareport_Permission").value;
+	var path=document.getElementById("shareport_Folder").value;
+	result_xml.Set("ChgSambaUserSettings/samba_num", edit.toString());
+	result_xml.Set("ChgSambaUserSettings/samba_name", username);
+	result_xml.Set("ChgSambaUserSettings/samba_readonly", permission);
+	result_xml.Set("ChgSambaUserSettings/samba_pwd", AES_Encrypt128(password));
+	if(path=="根目录")
+	result_xml.Set("ChgSambaUserSettings/samba_dir", "/");
+	else
+	result_xml.Set("ChgSambaUserSettings/samba_dir", path);
+	HNAP.SetXMLAsync("ChgSambaUserSettings", result_xml, function(xml)	{	SetResult_SetList2(xml);	});
+		
+	} else {	
+		if (DebugMode == 1)	{	
+			alert("[!!SetXML Error!!] Function: SetResult_SetList");	
+		}	
+	}
+	
+}
+
+function SetResult_SetList2(result_xml)
+{
+	var SetResult_SetList2 = result_xml.Get("ChgSambaUserSettingsResponse/ChgSambaUserSettingsResult");
+	if (SetResult_SetList2 == "OK") {
+		setTimeout("waitSettingFinished()", 1000);
+	} 
+	if (SetResult_SetList2 == "ERROR") {
+		if (DebugMode == 1) {
+		alert("[!!SetXML Error!!] Function: SetResult_2nd");
+		}
+		window.location.reload();
+	}
+}
+
+function waitSettingFinished() {
+	window.location.reload();
+}
+
+
+function SaveData()
+{
+	$.ajax({
+		cache: false,
+		url: "./js/CheckConnection",
+		timeout: 5000,
+		type: "GET",
+		success: function(data) {
+		SetXMData();
+		},
+		error: function() {
+		  document.getElementById("DetectRouterConnection").style.display = "inline";
+		}
+	});
+}
+
+function SetXMData()
+{
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	SetResult_SetData();
+}
+
+function SetResult_SetData()
+{
+	var result_xml = new StringDoc();
+	if (result_xml != null) {
+	
+	var enable=document.getElementById("share_enable").checked;
+	var statue=document.getElementById("select_requirement").value;
+	if(enable==true)
+	{
+		result_xml.Set("SetSambaSettings/samba_enable", "1");
+	}
+	else
+	{
+		result_xml.Set("SetSambaSettings/samba_enable", "0");
+	}
+	result_xml.Set("SetSambaSettings/samba_status", statue);
+
+	HNAP.SetXMLAsync("SetSambaSettings", result_xml, function(xml)	{	SetResult_SetData_respon(xml);	});
+		
+	} else {	
+		if (DebugMode == 1)	{	
+			alert("[!!SetXML Error!!] Function: SetResult_SetData");	
+		}	
+	}
+}
+
+function SetResult_SetData_respon(result_xml)
+{
+	var SetResult_SetData_respon = result_xml.Get("SetSambaSettingsResponse/SetSambaSettingsResult");
+	if (SetResult_SetData_respon == "OK") {
+		setTimeout("waitSettingFinished()", 1000);
+	} 
+	if (SetResult_SetData_respon == "ERROR") {
+		if (DebugMode == 1) {
+		alert("[!!SetXML Error!!] Function: SetResult_SetData_respon");
+		}
+		window.location.reload();
+	}
+}
+
+function closeTreeViewPOP()
+{
+		document.getElementById("createPop").style.display = "inline";
+		document.getElementById("treeViewPop").style.display = "none";
+		document.getElementById("partitionView").innerHTML = "";
+		document.getElementById("FolderTreeView").innerHTML = "";
+}
+
+</script>
+<style>
+.myCreatePop_table_left {
+    color: #56583f;
+    font-size: 14px;
+    left: 20px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 30px;
+    width: 100%;
+}
+.myCreatePop_table_left li {
+    list-style-type: square;
+}
+.myCreatePop_table_right {
+    color: #56583f;
+    font-size: 14px;
+    left: 230px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 30px;
+    width: 100%;
+}
+
+
+#editPop 	{	display: none;	}
+.progressBar {
+	background-color: #fff;
+	height: 30px;
+	width: 300px;
+	border: 1px solid #4598aa;
+	color: #222;
+}
+.progressBar .bar {
+	background-color: #4598aa;
+	height: 30px;
+	width: 0px;
+}
+#treeViewPop {
+    background: rgba(0, 0, 0, 0) url("/image/black_bg.png") repeat scroll 0 0;
+    height: 100%;
+    left: 0;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    width: 100%;
+    z-index: 500;
+}
+
+.popTitle_s {
+    color: #4598aa;
+    font-size: 18px;
+    font-weight: normal;
+    left: 0;
+    position: relative;
+    text-align: left;
+    top: 0;
+}
+#closeCreatePopBtn {
+    background: rgba(0, 0, 0, 0) url("/image/closeDialog3.png") no-repeat scroll left top / contain ;
+    cursor: pointer;
+    height: 26px;
+    margin: 20px;
+    padding: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 26px;
+    z-index: 100;
+}
+</style>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container"> 
+					<script>initialLeftMenu();</script>
+				</div>
+				<div id="right_content"  class="pull-left">
+					<table class="clearboth tablemoreheader" cellspacing="0" cellpadding="0" border="0" style="display:block; " align="left">
+						<tbody>
+						<tr>
+							<th align="left"><script>I18N("h","Commom_USB_Settings");</script></th>				
+						</tr>
+					  </tbody>
+					</table>					
+					<div class="moreline1 clearboth"></div>
+					
+					<div class="clearboth headerline2" style="padding-top:48px; padding-bottom:12px; " align="left">
+						<script>I18N("h","USB_Shareport");</script>
+				   </div>
+				   <div class="clearboth moreline1"></div>
+					 <table border="0" class="block" cellpadding="0" cellspacing="0" align="left" style="margin-top:36px;">
+					 	<tbody>
+			 			 <tr>
+							<th>
+							  <script>I18N("h","USB_Shareport_Statue");</script>
+							</th>
+							<td class="tdcheckbox">
+								<div id="shareport_statue" class="checkbox_off" onclick="ShareportStatus()">
+                       				 <input type="checkbox" id="share_enable" name="share_enable">
+                      			</div>
+							</td>
+						  </tr>
+						  <tr id="shareport_power">
+							<th style="padding-top:14px;" >
+							  <script>I18N("h","USB_Shareport_Power");</script>
+							</th>
+							<td style="padding-top:14px;" >
+								<select name="select_requirement" id="select_requirement">
+									<option id="option_password" value="1">要求路由器管理密码</option>
+									<option id="option_anonymous" value="0">允许所有用户访问（无密码）</option>
+								</select>
+							</td>
+						  </tr>
+						  <tr style="height:36px;"></tr>
+						  <tr>
+						  	<th>&nbsp;</th>
+							<td><input type="button" value="保存" id="savebutton5" class="styled_button_s" onClick="SaveData();"></td>
+						  </tr>									  
+						 </tbody>
+						 </table>
+						 <div class="clearboth"> </div>
+						<div class="clearboth headerline2" style="padding-top:48px; padding-bottom:12px; " align="left">
+							<script>I18N("h","USB_CreateUser");</script>
+					   </div>
+					   <div class="clearboth moreline1"></div>
+		  		<table class="clearboth table_list" id="shareportlist" align="left" cellpadding="0" cellspacing="0" style="margin-top:36px; ">
+					<tbody>
+					<tr class="tableheader">
+						<td style="width:160px; "><script>I18N("h","USB_User_Name");</script></td>
+						<td style="width:188px; "><script>I18N("h","USB_User_Path");</script></td>
+						<td style="width:150px; "><script>I18N("h","USB_User_Allow");</script></td>
+						<td style="width:135px; "><script>I18N("h","USB_User_Edit");</script></td>
+						<td style="width:135px; "><script>I18N("h","USB_User_Del");</script></td>
+					</tr>
+					<tr id="trnull">
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					</tr>
+				
+				
+				</tbody>
+			
+			
+			</table>					 
+			 <table style="width:100%; margin-top:36px;" class="clearboth" align="left">
+					 <tr align="center">
+						<td>
+							<input type="button" value="创建用户" id="savebutton" class="styled_button_s" onClick="createUserButton();"/>
+						</td>
+					</tr>
+			</table>			
+					
+				</div><!--end right_content -->
+			</div>
+	   </div>
+ 	   <div class="footer_placeholder"></div>  
+   </div>
+   
+	<div id="treeViewPop" style="display:none">
+	  <div class="dialogBox" style="width:550px;height:400px;">
+		<div id="closeCreatePopBtn" onclick="closeTreeViewPOP()" style="cursor:pointer">
+		</div>
+		<table class="myCreatePop_table_left" style="width:200px" border="0" cellspacing="0"
+		id="tblTreeView1">
+		  <tbody>
+			<tr>
+			  <td>
+				<div class="popTitle_s">
+				  <script>
+					I18N("h", "Disk Name");
+				  </script>
+				</div>
+			  </td>
+			</tr>
+			<td>
+			  <div id="partitionView" style="overflow:auto; height:350px; width:175px; text-align:left; margin: 0 0 0 10px; white-space:nowrap;">
+			  </div>
+			</td>
+		  </tbody>
+		</table>
+		<table class="myCreatePop_table_right" style="width:350px" border="0" cellspacing="0" id="tblTreeView2">
+		  <tbody>
+			<tr>
+			  <td>
+				<div class="popTitle_s">
+				  <script>
+					I18N("h", "Select Folder");
+				  </script>
+				</div>
+			  </td>
+			</tr>
+			<td>
+			  <div id="FolderTreeView" style="overflow:auto; height:350px; width:340px; text-align:left;line-height:25px;border-style:groove; white-space:nowrap;">
+				<a href="javascript:ReturnBack();" id="rootName" style="margin: 0 0 0 10px;">
+				</a>
+			  </div>
+			</td>
+		  </tbody>
+		</table>
+	  </div>
+	</div>
+	
+		<div id="treeViewPop2" style="display:none; ">
+				<div class="dialogBox" style="width:550px;height:400px;">
+				<div id="closeCreatePopBtn" onclick="closeTreeView2POP()" style="cursor:pointer"></div>
+					<table class="myCreatePop_table_left" style="width:200px" border="0" cellspacing="0" id="tblTreeView3">
+						<tbody>
+							<tr>
+								<td><div class ="popTitle_s">磁盘名称</div></td>
+							</tr>
+							<td>
+								<div id="partitionView2" style="overflow:auto;height:350px;text-align:left;margin: 0 0 0 10px;"></div>
+							</td>
+						</tbody>
+					</table>
+					<table class="myCreatePop_table_right" style="width:350px" border="0" cellspacing="0" id="tblTreeView4">
+						<tbody>
+							<tr>
+								<td><div class ="popTitle_s">选择文件夹</div></td>
+							</tr>
+							<td>
+							<div id="FolderTreeView2" style="overflow:auto; height:350px; width:340px; text-align:left;line-height:25px;border-style:groove;white-space:nowrap;">
+								<a href="javascript:ReturnBack2();" id="rootName2" style="margin: 0 0 0 10px;"></a>
+							</div>
+							</td>
+						</tbody>
+					</table>
+				</div>
+				</div>
+	
+	<div id="createPop" style="display: none;">
+	  <div class="dialogBox2" style="width:550px">
+		<div class="advance_row">
+			<span >新建用户</span>
+		</div>
+		<table class="block clearboth" id="tblUserList2" cellspacing="0" border="0" style="width:428px; margin:0 auto;margin-top:36px;  " align="center">
+		  <tbody>
+			<tr>
+			  <th>
+				用户名:
+			  </th>
+			  <td colspan="2">
+				<input class="styled-text" name="shareport_UserName" size="27" maxlength="20" id="shareport_UserName" tabindex="1" type="text">
+			  </td>
+			</tr>
+			 <tr id="error_1" style="display:none;">
+				<td>&nbsp;</td>
+				<td class="errorinfo">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<div class="ic-sign ic"></div>
+								</td>
+								<td id="errorinfo_1" style="line-height:20px;"></td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			  </tr>
+			 <tr class="space"> </tr>	
+			<tr>
+			  <th>
+				密码:
+			  </th>
+			  <td colspan="2">
+				<input class="styled-text" name="shareport_Password" size="27" maxlength="32" id="shareport_Password" tabindex="2" type="text">
+			  </td>
+			</tr>
+			 <tr class="space"> </tr>	
+			<tr>
+			  <th>
+				允许:
+			  </th>
+			  <td colspan="2">
+				  <select name="shareport_PermissionSelect" id="shareport_Permission">
+					<option value="yes">
+					  只读
+					</option>
+					<option value="no">
+					 读/写
+					</option>
+				  </select>
+			  </td>
+			</tr>
+			 <tr class="space"> </tr>	
+			<tr>
+			  <th>
+				文件夹:
+			  </th>
+			  <td style="width:150px;">
+				<input class="styled-text" name="shareport_Folder" size="27" id="shareport_Folder" readonly="true" type="text">
+			  </td>
+			  <td>
+				<button type="button" name="searchFolder" id="searchFolder" class="styled_button_sss" onclick="GetDirectoryList()">
+				  浏览
+				</button>
+			  </td>
+			</tr>
+
+		  </tbody>
+		</table>
+		<div class="clearboth moreline2"  style="margin-top:36px; "></div>
+		<div align="center" style="margin-top:28px; ">
+		<span>
+			<!-- <input type="button" value="取消" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();"> -->
+			<input type="button" value="取消" id="cancelbutton" class="styled_button_ss" onClick="AddCancle();">
+		</span>
+		<span style="margin-left:20px; ">
+			<!-- <input type="button" value="确定" id="savebutton" class="styled_button_ss" onClick="AddList();"> -->
+			<input type="button" value="保存" id="savebutton" class="styled_button_ss" onClick="AddList();">
+		</span>
+		</div>
+	  </div>
+	</div>
+	
+	
+	<div id="footer"></div>
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="/image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

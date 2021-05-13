@@ -1,0 +1,33 @@
+#!/bin/sh
+# Sample udhcpc bound script
+
+RESOLV_IPV4="/var/etc/resolv.conf"
+RESOLV_IPV6="/var/etc/resolv_ipv6.conf"
+RESOLV_CONF="/etc/resolv.conf"
+
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+
+/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+
+if [ -n "$router" ]
+then
+	echo "deleting routers"
+	while /sbin/route del default gw 0.0.0.0 dev $interface
+	do :
+	done
+
+	for i in $router
+	do
+		/sbin/route add default gw $i dev $interface
+	done
+fi
+
+echo -n > $RESOLV_IPV4
+[ -n "$domain" ] && echo domain $domain >> $RESOLV_IPV4
+for i in $dns
+do
+	echo adding dns $i
+	echo nameserver $i >> $RESOL_IPV4
+done
+cat $RESOLV_IPV6 $RESOLV_IPV4 > $RESOLV_CONF

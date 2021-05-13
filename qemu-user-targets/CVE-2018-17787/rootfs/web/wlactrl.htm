@@ -1,0 +1,207 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Wireless Access Control</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+function addClick()
+{
+  var str = document.formWlAcAdd.mac.value;
+
+  if (document.formWlAcAdd.wlanAcEnabled.selectedIndex == 0)
+	return true;
+
+	// WPS2DOTX  ; 4.2.7
+    wlanMode = <% write(getIndex("wlanMode")); %>;	
+	if(wlanMode==0 || wlanMode==3){
+      if (document.formWlAcAdd.wlanAcEnabled.selectedIndex == 1){	
+	    if(!confirm("if ACL allow list turn on ; WPS2.0 will be disabled")){
+		   return false;
+	    }
+     }
+   }
+   
+	
+  if ( str.length == 0)
+  	return true;
+
+  if ( str.length < 12) {
+	alert("Input MAC address is not complete. It should be 12 digits in hex.");
+	document.formWlAcAdd.mac.focus();
+	return false;
+  }
+  // add for "All MAC Address field can't reject 00:00:00:00:00:00/ff:ff:ff:ff:ff:ff MAC Address" issue
+  with(document.formWlAcAdd)
+  {
+	if(!checkMacAddr(mac,"mac address invalid!"))
+		return false;
+  }
+  return true;
+}
+
+function deleteClick()
+{
+  acl_num = <% getIndex("wlanAcNum"); %> ;
+  delNum = 0 ;
+  for(i=1 ; i <= acl_num ; i++){
+  	if(document.formWlAcDel.elements["select"+i].checked)
+  		delNum ++ ;
+  }
+  if(document.formWlAcAdd.wlanAcEnabled.selectedIndex==1 && delNum==acl_num){
+		if ( !confirm('Delete the all entries will cause all client cannot connect to AP.  Sure?') )
+			return false;
+   }
+  else if ( !confirm('Do you really want to delete the selected entry?') ) {
+	return false;
+  }
+  else
+	return true;
+}
+
+function deleteAllClick()
+{
+   if(document.formWlAcAdd.wlanAcEnabled.selectedIndex==1){
+	if ( !confirm('Delete the all entries will cause all client cannot connect to AP.  Sure?') )
+			return false;
+   }else if ( !confirm('Do you really want to delete the all entries?') ) {
+	return false;
+  }
+  else
+	return true;
+}
+function disableDelButton()
+{
+	disableButton(document.formWlAcDel.deleteSelFilterMac);
+	disableButton(document.formWlAcDel.deleteAllFilterMac);
+}
+
+function enableAc()
+{
+  enableTextField(document.formWlAcAdd.mac);
+  enableTextField(document.formWlAcAdd.comment);
+}
+
+function disableAc()
+{
+  disableTextField(document.formWlAcAdd.mac);
+  disableTextField(document.formWlAcAdd.comment);
+}
+
+function updateState(filed)
+{
+  wlanDisabled = <% getIndex("wlanDisabled"); %> ;
+  wlanMode = <% getIndex("wlanMode"); %>;
+  var wlanState="<%getScheduleInfo("wlan_state");%>";
+  if(wlanDisabled || wlanMode == 1 || wlanMode ==2 || wlanState=='Disabled'){
+	disableDelButton();
+	disableButton(document.formWlAcDel.reset);
+	disableButton(document.formWlAcAdd.reset);
+	disableButton(document.formWlAcAdd.addFilterMac);
+  	disableTextField(document.formWlAcAdd.wlanAcEnabled);
+  	disableAc();
+  } 
+  else{
+  if (filed.selectedIndex > 0)
+ 	enableAc();
+  else
+  	disableAc();
+  }
+
+}
+
+function resetForm()
+{
+	document.formWlAcAdd.wlanAcEnabled.selectedIndex = <% getIndex("wlanAcEnabled"); %> ;
+	document.formWlAcAdd.mac.value="";
+	document.formWlAcAdd.comment.value="";
+	
+}
+
+</script>
+</head>
+<body>
+<blockquote>
+<h2>
+<script type="text/javascript">
+var wlan_num =  <% getIndex("wlan_num"); %>;
+if (wlan_num > 1) {
+	var wlan_idx_ = <% getIndex("wlan_idx"); %> + 1;
+	document.write("Wireless Access Control -wlan" + wlan_idx_ + "</p>");
+}
+else
+	document.write("Wireless Access Control</p>");
+</script>
+</h2>
+
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><font size=2>
+ If you choose 'Allowed Listed', only those clients whose wireless MAC
+ addresses are in the access control list will be able to connect to your
+ Access Point. When 'Deny Listed' is selected, these wireless clients on 
+ the list will not be able to connect the Access Point.
+</font></tr>
+
+<form action=/boafrm/formWlAc method=POST name="formWlAcAdd">
+<tr><hr size=1 noshade align=top><br></tr>
+
+<!--
+<tr><font size=2><b>
+   <input type="checkbox" name="wlanAcEnabled" value="ON" <% if (getIndex("wlanAcEnabled")) write("checked");
+   %> onclick="updateState()">&nbsp;&nbsp;Enable Wireless Access Control</b>
+</tr>
+-->
+<tr> <font size=2><b>
+   	Wireless Access Control Mode: &nbsp;&nbsp;&nbsp;&nbsp;
+	<select size="1" name="wlanAcEnabled" onChange="updateState(this)">
+          <option value="0" >Disable</option>
+          <option value="1" selected >Allow Listed</option>
+          <option value="2" >Deny Listed</option>
+        </select></font></b>
+	<script>
+	document.formWlAcAdd.wlanAcEnabled.selectedIndex = <% getIndex("wlanAcEnabled"); %> ;
+	</script>
+</tr>
+<tr><td>
+
+     <p><font size=2><b>MAC Address: </b> <input type="text" name="mac" size="15" maxlength="12">&nbsp;&nbsp;
+   	<b><font size=2>Comment: </b> <input type="text" name="comment" size="16" maxlength="20"></font>
+     </p>
+<% getInfo("apply_prompt_comment_start");%>	 
+     <p><input type="submit" value="Apply Changes" name="addFilterMac" onClick="return addClick()">&nbsp;&nbsp;
+       <input type="button" value="Reset" name="reset" onClick="resetForm();">&nbsp;&nbsp;&nbsp;
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+     <p><input type="submit" value="Save" name="addFilterMac" onClick="return addClick()">&nbsp;&nbsp;
+	   <input type="submit" value="Save & Apply" name="save_apply" onClick="return addClick()">&nbsp;&nbsp;
+       <input type="button" value="Reset" name="reset" onClick="resetForm();">&nbsp;&nbsp;&nbsp;
+<% getInfo("apply_direct_comment_end");%>
+        <input type="hidden" value="/wlactrl.htm" name="submit-url">
+     </p>
+  </form>
+</table>
+<br>
+<form action=/boafrm/formWlAc method=POST name="formWlAcDel">
+  <table border="0" width=440>
+  <tr><font size=2><b>Current Access Control List:</b></font></tr>
+  <% wlAcList(); %>
+  </table>
+  <br>
+  <input type="submit" value="Delete Selected" name="deleteSelFilterMac" onClick="return deleteClick()">&nbsp;&nbsp;
+  <input type="submit" value="Delete All" name="deleteAllFilterMac" onClick="return deleteAllClick()">&nbsp;&nbsp;&nbsp;
+  <input type="reset" value="Reset" name="reset">
+  <input type="hidden" value="/wlactrl.htm" name="submit-url">
+ <script>
+	var entryNum = <% getIndex("wlanAcNum"); %>;
+	if ( entryNum == 0 )
+		disableDelButton();
+
+	updateState(document.formWlAcAdd.wlanAcEnabled);
+ </script>
+</form>
+
+</blockquote>
+</body>
+</html>

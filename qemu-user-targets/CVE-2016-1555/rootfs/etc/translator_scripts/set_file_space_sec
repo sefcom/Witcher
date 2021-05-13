@@ -1,0 +1,20 @@
+
+awk   '  BEGIN { param = "'$2'" 
+		 value = "'$3'"
+		rep
+		}
+		
+	{
+	if ( $1 == param )
+		{
+		 rep = rep+1 
+		}
+		
+	if(rep == 2){
+		 rep = rep+1 
+		  $2= value
+		    }
+	{print}
+	}' $1 > $1.back
+
+mv $1.back $1 

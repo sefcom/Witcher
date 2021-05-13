@@ -1,0 +1,12 @@
+#!/bin/sh
+# udhcpc renew script
+
+sysconf renew dhcp $interface $ip $subnet $router $dns
+
+
+
+
+
+
+
+

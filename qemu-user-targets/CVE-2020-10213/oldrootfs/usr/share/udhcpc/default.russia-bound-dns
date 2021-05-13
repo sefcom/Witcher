@@ -1,0 +1,56 @@
+#!/bin/sh
+# Sample udhcpc renew script
+
+RESOLV_IPV4="/var/etc/resolv.conf"
+RESOLV_IPV6="/var/etc/resolv_ipv6.conf"
+RESOLV_CONF="/etc/resolv.conf"
+RUSSIA_PHY_RESOLV_CONF="/var/tmp/russia_phy_dns.conf"
+
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+
+/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+
+#echo -n > $RESOLV_CONF
+
+virtual_if=`/sbin/ifconfig | grep ppp0`
+
+if [ -z "$virtual_if" ]
+then
+	echo "deleting routers"
+	while /sbin/route del default gw 0.0.0.0 dev $interface
+	do :
+	done
+
+	for i in $router
+	do
+		/sbin/route add default gw $i dev $interface		
+	done
+fi
+
+# jimmy modified 20080526 to avoid "grep" warning msg when $domain is empty
+if [ -n "$domain" ]; then
+	if [	!`cat $RESOLV_IPV4 | grep $domain`	]; then
+		echo -n > $RESOLV_IPV4
+		[ -n "$domain" ] && echo domain $domain >> $RESOLV_IPV4
+	fi
+fi
+
+for i in $dns
+do
+	if [	!`cat $RESOLV_IPV4 | grep $i`	]; then
+	echo adding dns $i
+	echo nameserver $i >> $RESOLV_IPV4
+	fi
+done
+
+#NickChou add 10080718
+#When RUSSIA PPTP(PPPOE) disconnect, we can recovery WAN Physical DNS (get from DHCP server) from RUSSIA_PHY_RESOLVFILE.
+#So WEB GUI would not show PPP DNS if RUSSIA PPTP(PPPOE) disconnect.
+cp -f $RESOLV_IPV4 $RUSSIA_PHY_RESOLV_CONF
+
+#	Date: 2009-06-24
+#	Name: Tina Tsao
+#	Reason: When rs-pptp/l2tp static mode switch dynamic mode then repower DUT link fail. Because RESOLV_CONF file is empty.
+#	Note:
+cat $RESOLV_IPV6 $RESOLV_IPV4 > $RESOLV_CONF

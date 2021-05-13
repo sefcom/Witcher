@@ -1,0 +1,149 @@
+/* Layout Stylesheet */
+* {
+	margin: 0px;
+	padding: 0px;
+}
+
+#header{
+	width:100%;
+	height: 58px;
+}
+
+#headerLogo {
+	width:100%;
+	padding: 10px;
+	height: 65px;
+	border: 0px solid #CCCCCC;
+	background-color: #FFFFFF;
+}
+
+#header TABLE {
+	width:100%;
+	background-color: #FFFFFF;
+}
+
+#container {
+	width: 100%;
+	text-align: center;
+}
+
+#bodyblock {
+/*	position: relative;
+	min-width: 778px;
+	height: 100%;
+	overflow: none;
+	vertical-align: top;
+    width: 98%;
+	background-color: #FFFFFF;*/
+    padding: 0px 10px 10px 10px;
+    height: 100%;
+}
+
+#bodyContainer {
+    width: 435px;
+}
+
+#bar {
+	position: relative;
+	height: 40px;
+	width: 100%;
+	width: auto;
+	text-align: right;
+	clear: both;
+	vertical-align: center;
+	padding-right: 30px;
+	background: #666F74;
+}
+
+#topCurve {
+	position: relative;
+	height: 40px;
+	width: 100%;
+	width: auto;
+	text-align: right;
+	clear: both;
+	vertical-align: middle;
+	padding-right: 30px;
+	background: #FFFFFF;
+}
+
+#menublock {
+	min-width: 156px;
+	width: 100%;
+	height: 100%;
+	padding: 12px;
+	padding-top: 0px;
+	padding-right: 0px;
+	vertical-align: top;
+	background-color: #FFFFFF;
+}
+
+#thirdMenuContainer {
+	vertical-align: top;
+}
+
+#left-col {
+	border: 1px solid #EEEEEE;
+	vertical-align: top;
+	text-align: left;
+	width: 144px;
+	background-color: #CCCCCC;
+	padding-left: 5px;
+	padding-right: 0px;
+	padding-bottom: 5px;
+}
+
+#left-col a {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	color: #46008f;
+	text-decoration: none;
+}
+
+a#ThirdSubmenuItem:hover {
+	color: #ffa400;
+}
+
+
+#content {
+	float: left;
+	height: 100%;
+	width: 100%;
+	overflow: auto;
+	background: #FFFFFF;
+	text-align: left;
+	vertical-align: top;
+}
+
+#footer {
+	padding: 2px 0px 7px 0px;
+	margin: 0px;
+	width: 100%;
+	text-align: left;
+	vertical-align: middle;
+	background: transparent;
+	color: #46008F;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+}
+
+#errorMessageBlock {
+	text-align: left;
+	margin-bottom: 10px;
+	margin-top: 4px;
+	border: 1px solid #CC0000;
+	background-color: #FFCCCC;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #CC0000;
+	padding: 5px;
+	white-space: nowrap;
+	overflow: visible;
+}
+
+#errorMessageBlock * {
+	padding: 0px;
+	margin: 0px;
+	white-space: nowrap;
+}

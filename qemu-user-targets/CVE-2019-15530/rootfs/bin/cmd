@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+
+echo $@ > /proc/wlan0/cmd
+

@@ -1,0 +1,75 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>menu</title>
+</head>
+
+<body>
+<p>In menu.htm...</p>
+<table border="0" width="100%" font color="#ffffff">
+<tr><td><a href="wizard.htm" target="view">Setup Wizard</a></td></tr>
+<tr><td><a href="opmode.htm" target="view">Operation Mode</a></td></tr>
+<script>
+function get_form(page, wlan_id){
+	return 'boafrm/formWlanRedirect?redirect-url='+page+'&wlan_id='+wlan_id ;
+}
+wlan_num = <% getIndex("wlan_num"); %>; 
+for(i=0;i < wlan_num ;i ++){
+	document.write('<tr><td><b>Wireless '+i+'</b></td></tr>\
+	<tr><td><a href="'+get_form("wlbasic.htm",i)+ '" target="view">Basic Settings</a></td></tr>\
+	<tr><td><a href="'+get_form("wladvanced.htm",i)+'" target="view">Advanced Settings</a></td></tr>\
+	<tr><td><a href="'+get_form("wlsecurity.htm",i)+'" target="view">Security</a></td></tr>\
+	<tr><td><a href="'+get_form("wlactrl.htm",i)+'" target="view">Access Control</a></td></tr>\
+	<tr><td><a href="'+get_form("wlsurvey.htm",i)+'" target="view">Site Survey</a></td></tr>\
+	<tr><td><a href="'+get_form("wlwds.htm",i)+'" target="view">WDS Setting</a></td></tr>\
+	<tr><td><a href="'+get_form("wlwps.htm",i)+'" target="view">WPS</a></td></tr>');
+}
+</script>
+<tr><td><b>TCP/IP Settings</b></td></tr>
+<tr><td><a href="tcpiplan.htm" target="view">LAN Interface</a></td></tr>
+<script>
+	if ( <% getIndex("multiWanSupport"); %> )
+		document.write("<tr><td><a href='tcpip_multiwanlist.htm' target='view'>WAN Interface list</a></td></tr>");
+	else
+		document.write("<tr><td><a href='tcpipwan.htm' target='view'>WAN Interface</a></td></tr>");
+
+</script>
+<% getInfo("IPv6_nojs_Menu"); %>
+
+<tr><td><b>Firewall</b></td></tr>
+<% getInfo("portfilter_menu"); %>
+<% getInfo("ipfilter_menu"); %>
+<tr><td><a href="macfilter.htm" target="view">MAC Filtering</a></td></tr>
+<tr><td><a href="portfw.htm" target="view">Port Forwarding</a></td></tr>
+<tr><td><a href="urlfilter.htm" target="view">URL Filtering</a></td></tr>
+<tr><td><a href="dmz.htm" target="view">DMZ</a></td></tr>
+<!-- 
+<tr><td><a href="route.htm" target="view">Route Setup</a></td></tr>
+-->
+
+<% getInfo("voip_menu"); %>
+
+<% getInfo("tr069_nojs_menu"); %>
+
+<tr><td><b>Management</b></td></tr>
+<tr><td><a href="status.htm" target="view">Status</a></td></tr>
+<tr><td><a href="stats.htm" target="view">Statistics</a></td></tr>
+<tr><td><a href="ddns.htm" target="view">DDNS</a></td></tr>
+<tr><td><a href="ntp.htm" target="view">Time Zone Setting</a></td></tr>
+<tr><td><a href="dos.htm" target="view">Denial-of-Service</a></td></tr>
+<tr><td><a href="syslog.htm" target="view">System Log</a></td></tr>
+<tr><td><a href="upload.htm" target="view">Upgrade Firmware</a></td></tr>
+<tr><td><a href="saveconf.htm" target="view">Save/Load Setting</a></td></tr>
+<tr><td><a href="password.htm" target="view">Password</a></td></tr>
+<tr><td><a href="smtpclient.htm" target="view">Smtp Client</a></td></tr>
+<script>
+userName= '<% getInfo("userName"); %>' ;
+if(userName != "")
+document.write('<tr><td><a href="logout.htm" target="view">Logout</a></td></tr>');
+</script>
+</table>
+
+</body>
+</html>

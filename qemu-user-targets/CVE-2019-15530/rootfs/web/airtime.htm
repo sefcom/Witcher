@@ -1,0 +1,376 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2015. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<% getIndex("no-cache"); %>
+<title>Air Time Fairness</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+
+var airMode = <% getIndex("airTimeMode"); %>;
+var airEnable = <% getIndex("airTimeEnabled"); %>;
+
+function addClick(value)
+{
+  var df = document.formRuleAdd;
+
+  if (!df.enabled.checked)
+   return true;
+
+  /* check interface mode input value */
+  var wl_num = <%getIndex("wlan_root_mssid_rpt_num");%>;
+  if (df.airtime_mode.value == 2 && value == 1) {
+    for (i=0; i<wl_num; i++) {
+      var x = document.getElementsByName("time"+i.toString());
+      if (x[0].value <0 || x[0].value>100) {
+        alert("Invalid allocation!")
+        return false;
+      }
+    }
+  }
+
+  /* check station mode input value */
+  if (df.airtime_mode.value == 3 && value == 2) {
+    if (df.ipaddr.value=="" && df.macaddr.value=="") {
+      if (df.ipaddr.value=="")
+        alert("null ipaddr");
+      else
+        alert("null macaddr");
+      return false;
+    } else {
+      /* check ipaddr */
+      if ( !df.ipaddr.value=="" && 
+        checkIpAddr(df.ipaddr, 'Invalid IP address') == false )
+        return false;
+   
+      /* check macaddr */
+      if ( !df.macaddr.value=="") {
+        var str = df.macaddr.value;
+        if ( str.length < 12) {
+          alert("Input MAC address is not complete. It should be 12 digits in hex.");
+          return false;
+        }
+      }
+    }
+
+    if (df.allocation.value=="" ) {
+      alert("null allocation");
+      return false;
+    }
+    else {
+      if ( df.allocation.value <= 0 || df.allocation.value > 100) {
+        alert("Invalid allocation");
+        return false;
+      }     
+    }
+  }
+  return true;
+}
+
+function deleteClick()
+{
+  if ( !confirm('Do you really want to delete the selected entry?') )
+   return false;
+  else
+    return true;
+}
+
+function deleteAllClick()
+{
+  if ( !confirm('Do you really want to delete the all entries?') )
+    return false;
+  else
+    return true;
+}
+
+function disableDelButton(value)
+{
+  df = document.formRuleAdd;
+  if (value == 1) {
+    disableButton(df.deleteSelRule);
+    disableButton(df.deleteAllRules);
+  }
+  else {
+    enableButton(df.deleteSelRule);
+    enableButton(df.deleteAllRules); 
+  }
+}
+
+function updateInterface(value)
+{
+  df = document.formRuleAdd;
+  <% getIndex("airTimeIfTime"); %>
+}
+
+function updateSTASelect(value)
+{
+  var i=0;
+  var sta_num = <% getIndex("airTimeNum"); %>;
+  for (i=1;i<=sta_num;i++) {
+    var x = document.getElementsByName("select"+i.toString());
+    x[0].disabled = value;
+  }
+
+  var x = document.getElementsByName("ip_mac");
+  x[0].disabled = value;
+  x[1].disabled = value;
+}
+
+function updateStation(value)
+{
+  if (value == 1) {
+    enableTextField(document.formRuleAdd.ipaddr);
+    enableTextField(document.formRuleAdd.macaddr);
+    enableTextField(document.formRuleAdd.allocation);
+    enableTextField(document.formRuleAdd.comment);
+    enableButton(document.formRuleAdd.addStation);
+    updateSTASelect(false);
+    disableDelButton(0);
+  }
+  else {
+    disableTextField(document.formRuleAdd.ipaddr);
+    disableTextField(document.formRuleAdd.macaddr);
+    disableTextField(document.formRuleAdd.allocation);
+    disableTextField(document.formRuleAdd.comment);
+    disableButton(document.formRuleAdd.addStation);
+    updateSTASelect(true);
+    disableDelButton(1);
+  }
+}
+
+function updateMode(value)
+{
+  if (value == 0) {
+    updateInterface(0);
+    updateStation(0);
+  }
+  else if (value == 1) {
+    updateInterface(0);
+    updateStation(0);
+  }
+  else if (value == 2) {
+    updateInterface(1);
+    updateStation(0);
+  }
+  else if (value == 3) {
+    updateInterface(0);
+    updateStation(0);
+
+  }
+  else if (value == 4) {
+    updateInterface(0);
+    updateStation(1);
+  }
+  else {
+    alert("updateMode, unknown mode, value=", value);
+  }
+}
+
+function update_show(ssid, device)
+{
+  if (ssid == 1)
+    ssid = "";
+  else
+    ssid = "none";
+
+  if (device == 1)
+    device = "";
+  else
+    device = "none";
+
+  get_by_id("ssid_base").style.display = ssid;
+  get_by_id("device_base").style.display = device;
+}
+
+function update_ip_mac(value)
+{
+  if (value == 0) {
+    get_by_id("ipaddr").style.display = "";
+    get_by_id("macaddr").style.display = "none";
+  }
+  if (value == 1) {
+    get_by_id("ipaddr").style.display = "none";
+    get_by_id("macaddr").style.display = "";
+  }
+}
+
+function modeSelected(index)
+{
+  if (index == 1 && (airMode == 0 || airMode == 3 || airMode == 4)) {
+    airEnable = 1;
+    airMode = 1;
+  }
+  if (index == 2 && (airMode == 0 || airMode == 1 || airMode == 2)) {
+    airEnable = 1;
+    airMode = 3;
+  }
+  if (index == 0) {
+    airEnable = 0;
+    airMode = 0;
+  }
+
+  document.formRuleAdd.airtime_mode_select.selectedIndex=index;
+  
+  if (airEnable == 1) {
+    var x = document.getElementsByName("airtime_mode");
+    x[airMode-1].checked = true;
+  }
+
+  if (airMode == 0) {
+    update_show(0, 0);
+  }
+  else if (airMode == 1 || airMode == 2) {
+    update_show(1, 0);
+  }
+  else if (airMode == 3 || airMode == 4) {
+    update_show(0, 1);
+  }
+  else {
+    alert("modeSelected, unknown mode="+airMode+", index="+index);
+  }
+
+  updateMode(airMode);
+}
+
+function updateState()
+{
+  if (airEnable == 1) {
+    if (airMode == 1 || airMode == 2)
+      modeSelected(1);
+    else
+      modeSelected(2);
+  }
+  else
+    modeSelected(0);
+}
+
+function Load_Setting()
+{
+	updateState();
+}
+</script>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<h2>
+<script type="text/javascript">
+var wlan_num =  <% getIndex("wlan_num"); %>;
+if (wlan_num > 1) {
+  var wlan_idx_ = <% getIndex("wlan_idx"); %> + 1;
+  document.write("Air Time Fairness -wlan" + wlan_idx_ + "</p>");
+}
+else
+  document.write("Air Time Fairness</p>");
+</script>
+</h2>
+
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><td><font size=2>
+ Airtime Management, sometimes called Airtime Fairness. 
+This function can allocate airtime time evenly or set dedicated airtime to different network(by SSID) or devices (by Mac/IP address). The Allocation is used to make all clients getting airtime fairly or make some network or device getting airtime proportional.
+</font></td></tr>
+
+<tr><td><hr size=1 noshade align=top></td></tr>
+
+<!-- -->
+<form action=/boafrm/formAirtime method=POST name="formRuleAdd">
+  <tr><td>
+    <font size=2><b>
+      Mode:&nbsp;&nbsp;
+      <select name="airtime_mode_select" onChange="modeSelected(this.selectedIndex)">
+        <option value ="0">Disabled</option>
+        <option value ="1">SSID Mode</option>
+        <option value ="2">Device Mode</option>
+      </select>
+      <br>
+      <p>
+    </b></font>
+  </td></tr>
+
+  <tr><td align="right">
+  <input type="submit" value="Apply Changes" name="applyChanges" onClick="return addClick(1)">
+  <input type="hidden" value="/airtime.htm" name="submit-url">
+  </td></tr>
+
+  <!-- -->
+  <tr id="ssid_base" style="display:none"><td>
+    <hr size=1 noshade align=top>
+    <font size=4><b>SSID Base Priorites:</b><br></font>
+    
+    <font size=2>
+    &nbsp;&nbsp;Equal Airtime Across all Networks:
+    <input type="radio" name="airtime_mode" value="1" ONCLICK=updateMode(1)>Enable
+    <input type="radio" name="airtime_mode" value="2" ONCLICK=updateMode(2)>Disable
+    <br>
+    </b></font>
+
+    <table border=0 width="400">
+    　<tr>
+      <td width="70%"><font size=2><b>Wlan Interface:</b></font></td>
+    　<td width="30%" align="middle"><font size=2><b>Allocation</b></font></td>
+      </tr>
+      <% getIndex("airTimeInterfaceHtml"); %>
+    </table>
+    <table border=0 width="500">
+    　<tr><td align="right"><font size=2><br>The total allocation must be less than 100</td></tr>
+    </table>   
+  </td></tr>
+
+  <!-- -->
+  <tr id="device_base" style="display:none"><td>
+    <hr size=1 noshade align=top>
+    <font size=4><b>Device Base Priorites:</b><br></font>
+
+    <font size=2>
+    &nbsp;&nbsp;Equal Airtime Across all Devices:
+    <input type="radio" name="airtime_mode" value="3" ONCLICK=updateMode(3)>Enable
+    <input type="radio" name="airtime_mode" value="4" ONCLICK=updateMode(4)>Disable
+    <br>
+    </b></font>
+    
+    <table border=0 width="400">
+       <td width="30%"><font size=2>
+        <input type="radio" name="ip_mac" value="ip"  ONCLICK=update_ip_mac(0) checked=true>IP
+        <input type="radio" name="ip_mac" value="mac" ONCLICK=update_ip_mac(1)>MAC:
+      </font></td>
+    　<td width="70%" align="middle" id="ipaddr" style="display:"><font size=2><input type="text" name="ipaddr"  size="15" maxlength="15"></font></td>
+    　<td width="70%" align="middle" id="macaddr" style="display:none"><font size=2><input type="text" name="macaddr" size="15" maxlength="12"></font></td>
+  
+      <tr>
+      <td width="30%"><font size=2>&nbsp;&nbsp;Allocation:</font></td>
+    　<td width="70%" align="middle"><font size=2><input type="text" name="allocation"  size="15" maxlength="3"></font></td>
+      </tr>
+      <tr>
+      <td width="30%"><font size=2>&nbsp;&nbsp;Comment:</font></td>
+    　<td width="70%" align="middle"><font size=2><input type="text" name="comment"  size="15" maxlength="20"></font></td>
+      </tr>
+      <tr><td>
+        <input type="submit" value="Add Station" name="addStation" onClick="return addClick(2)">
+      </td></tr>
+      <script> updateState(); </script>
+    </table>
+
+  <table border="0" width=500>
+  <tr><font size=2><b>List of Prioritized Devices:</b></font></tr>
+   <% airTimeList(); %>
+  </table>
+    <table border=0 width="500">
+    　<tr><td align="right"><font size=2><br>The total allocation must be less than 100.<br>The rest allocation is is <% getIndex("airTimeUnallcation"); %>.</td></tr>
+    </table>
+  <br>
+  <input type="submit" value="Delete Selected" name="deleteSelRule" onClick="return deleteClick()">&nbsp;&nbsp;
+  <input type="submit" value="Delete All" name="deleteAllRules" onClick="return deleteAllClick()">&nbsp;&nbsp;&nbsp;
+  <input type="hidden" value="/airtime.htm" name="submit-url">
+ <script>
+  if ( <% getIndex("airTimeNum"); %> == 0 )
+    disableDelButton(1);
+ </script>
+  </td></tr>
+</form>
+</table>
+
+</blockquote>
+</body>
+</html>

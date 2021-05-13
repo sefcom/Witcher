@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+
+if [ $# -lt 4 ]; then echo "Usage: $0 <phyId> <devId> <regId> <regData>";  exit 1 ; fi
+
+if [ $# -eq 4 ]; then
+	echo write $1 $2 $3 $4 > /proc/rtl865x/mmd
+else
+	echo "Wrong Input!"
+fi

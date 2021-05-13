@@ -1,0 +1,1655 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<style>
+#slideshow	{	margin: 0 0 0 0;}
+/* ---------------- Item Instance ---------------- */
+.dataElement {
+	position: relative;
+	background-color: #FFFFFF;
+	border:1px solid #4598aa;
+	border-radius:4px;
+}
+.dataElement1 {
+	position: relative;
+	background-color: #4598aa;
+	border:1px solid #4598aa;
+	border-radius:4px;
+}
+
+.dataElement2 {
+    position: relative;
+    background-color: #e1e1e1;
+    border:1px solid #4598aa;
+    border-radius:4px;
+}
+
+.dataElement_deviceName {
+	position: absolute;
+	top: 18px;
+	left: 14px;
+	color: #333333;
+	font-size: 14px;
+	width: 125px;
+	overflow: hidden;
+	font-family:微软雅黑;
+	white-space:nowrap;
+	text-overflow:ellipsis;
+}
+.dataElement_deviceName_check {
+	position: absolute;
+	top: 18px;
+	left: 14px;
+	color: #ffffff;
+	font-size: 14px;
+	width: 125px;
+	overflow: hidden;
+	font-family:微软雅黑;
+	white-space:nowrap;
+	text-overflow:ellipsis;
+}
+.dataElement_vendor {
+	position: absolute;
+	text-transform:uppercase;
+	top: 38px;
+	left: 30px;
+	color: #888;
+	width: 140px;
+	overflow: hidden;
+	font-size: 12px;
+}
+.dataElement_ip {
+	position: absolute;
+	bottom:20px;
+	left: 14px;
+	color: #666666;
+	width: 100%;
+	overflow: hidden;
+	font-size: 14px;
+	font-family:微软雅黑;
+}
+.dataElement_ip_check {
+	position: absolute;
+	bottom:20px;
+	left: 14px;
+	color: #cccccc;
+	width: 100%;
+	overflow: hidden;
+	font-size: 14px;
+	font-family:微软雅黑;
+}
+.dataElement_mac {
+	position: absolute;
+	display: none;
+	top: 55px;
+	left: 30px;
+	color: #666;
+	width: 140px;
+	overflow: hidden;
+	font-size: 12px;
+}
+.dataElement_deviceNameReal {
+	position: absolute;
+	display: none;
+	top: 55px;
+	left: 30px;
+	color: #666;
+	width: 140px;
+	overflow: hidden;
+	font-size: 12px;
+}
+
+.date{
+border: 1px solid #4598aa;
+color:#333333;
+border-radius: 2px 2px 2px 2px;
+width:76px;
+height:40px;
+line-height:40px;
+float:left;
+margin-right:16px;
+text-align:center;
+background-color:#FFFFFF;
+cursor:pointer;
+border-radius:4px;
+}
+
+.datecheck{
+border: 1px solid #4598aa;
+color:#FFFFFF;
+width:76px;
+height:40px;
+line-height:40px;
+float:left;
+margin-right:16px;
+text-align:center;
+background-color: #4598aa;
+cursor:pointer;
+border-radius:4px;
+}
+
+.styled-texturl{
+    color:#595957;
+    border: 1px solid #9E9E9F;
+    box-shadow: 0 0 8px #DCDCDC inset;
+	border-radius: 4px;
+    font-size: 18px;
+    height: 32px;
+	line-height: 32px;
+	padding-left:14px;
+	padding-right:40px;
+    width: 252px;
+}
+
+.styled-texturl:focus{
+    border: 1px solid #008DA8;
+    outline: medium none;
+}
+
+.url_rightimg_eye{
+	position:absolute;
+	right:0px;
+	top:0px;
+	cursor:pointer;
+	padding:9px;
+}
+
+.urlinput{
+position:relative;
+margin-right:24px;
+margin-top:10px;
+ 
+
+}
+
+
+
+#parentcontroltableadd{
+margin-top:28px;
+}
+#parentcontroltableadd th{
+text-align:right;
+width:90px;
+color:#666666;
+font-size:16px;
+}
+#parentcontroltableadd td{
+text-align:left;
+color: #333333;
+}
+
+.empty{
+height:32px;
+
+}
+.dhcplisttem_show
+{
+	width:160px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+.urlarray_show
+{
+	width:170px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+</style>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPDevices.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPParentcontrol.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+<!-- <script type="text/javascript" charset="utf-8" src="js/jquery.ellipsis.js"></script> -->
+
+
+<body data-spy="scroll" data-target=".bs-docs-sidebar">
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper"> 
+	<div id="header"></div>
+
+	<div class="clearboth" align="center" id="content" style="display:none; ">
+	  <div class="basiccontainer" align="center" id="basiccontent">
+	  	  <div class="clearboth headerline" align="left">
+			<script>I18N("h","Commom_Parent_Control");</script><!-- 家长控制 -->
+		  </div>
+		  <div class="line"></div>
+		  <div class="description"><script>I18N("h","ParentControl_Description");</script><!-- 家长控制不仅可帮助您限制孩子使用计算机的时间，还可以限制他们访问的网址。 --></div>
+	  	  <div style="margin-top:64px;">
+		  	<table class="table_list clearboth" id="parentcontroltable" align="center" cellpadding="0" cellspacing="0">
+				<tbody>
+					<tr class="tableheader">
+						<td colspan="5">
+							<div style="position:relative;height:100%;">
+								<span style="text-align:center;"><script>I18N("h","ParentControl_Online_Time");</script><!-- 上网时间控制 --></span>
+								<div onClick="Add();" class="addbutton"></div>
+							</div>
+						</td>
+					</tr>
+					<tr class="tableheader2">
+						<td  style="width:228px; " align="center"><script>I18N("h","ParentControl_Devices_User");</script><!-- 终端设备(用户) --></td>
+						<td  style="width:286px; " align="center"><script>I18N("h","ParentControl_Restricted_Time");</script><!-- 限制上网时间段 --></td>
+						<td  style="width:254px; " align="center"><script>I18N("h","ParentControl_Permission_URL");</script><!-- 允许访问的网址 --></td>
+						<td  style="width:136px; " align="center"><script>I18N("h","ParentControl_Open_Close");</script><!-- 开启/关闭 --></td>
+						<td  style="width:136px; " align="center"><script>I18N("h","Commom_Operation");</script><!-- 操作 --></td>
+					</tr>
+					<tr id="trnull" style="height:86px; ">
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					</tr>
+				
+				
+				</tbody>
+			
+			
+			</table>
+			<table align="center" style="width:100%; margin-top:36px;" class="clearboth">
+				<!-- <tr align="center"><td><input type="button" value="保存" class="styled_button_s" onClick="SaveData();"></td></tr> -->
+				<tr align="center"><td><input type="button" id="btn_save" value="" disabled class="styled_button_s" onClick="SetXML();"></td></tr>
+			 </table>			
+		</div>
+	  
+	  
+	  </div>
+	</div>
+<div style=" display:none;" id="createPop">
+  <div style="width:880px; max-height:570px; padding-bottom:0px;" class="dialogBox2" id="PopAddParenetcontrol">
+	<div class="advance_row">
+		<span><script>I18N("h","ParentControl_Add");</script><!-- 添加限制上网时间 --></span>
+	</div>
+	<div align="center" id="error_list_num" class="errorinfo" style="display:none;">
+		<table>
+			<tbody>
+				<tr>
+					<td><div class="ic-sign ic"></div></td>
+					<td id="errorinfo_list_num" style="color:#666666"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+    <table cellspacing="0" border="0" id="parentcontroltableadd" class="clearboth" style="display:block; ">
+      <tbody>
+
+		<tr>
+		<th><script>I18N("h","ParentControl_Specify_Devices");</script><!-- 指定设备 : --></th>
+		<td align="left" style="padding-left:22px; "><div id="slideshow"></div></td>
+		</tr>
+		<tr align="left" id="error_device" style="display:none;">
+			<th></th>
+			<td class="errorinfo" style="padding-left:66px; ">
+				<table>
+					<tbody>
+						<tr>
+							<td>
+							<div class="ic-sign ic"></div>
+						  </td>
+						  <td id="errorinfo_device" style="color:#666666"></td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr class="empty"></tr>
+	    <tr>
+          <th>
+         <script>I18N("h","ParentControl_Time_Period");</script><!-- 时间段 : -->
+          </th>
+          <td style="padding-left:66px; ">
+			<div style="float:left; ">
+			<select name="begin_hour" id="begin_hour">
+				<option value="00">00</option>
+				<option value="01">01</option>
+				<option value="02">02</option>
+				<option value="03">03</option>
+				<option value="04">04</option>
+				<option value="05">05</option>
+				<option value="06">06</option>
+				<option value="07">07</option>
+				<option value="08">08</option>
+				<option value="09">09</option>
+				<option value="10">10</option>
+				<option value="11">11</option>
+				<option value="12">12</option>
+				<option value="13">13</option>
+				<option value="14">14</option>
+				<option value="15">15</option>
+				<option value="16">16</option>
+				<option value="17">17</option>
+				<option value="18">18</option>
+				<option value="19">19</option>
+				<option value="20">20</option>
+				<option value="21">21</option>
+				<option value="22">22</option>
+				<option value="23">23</option>
+			</select>
+			</div>
+			<div style=" width:40px; text-align:center; float:left; padding-top:8px;">:
+			</div>
+			<div style="float:left; ">
+			<select name="begin_minute" id="begin_minute">
+			</select>
+			</div>
+			<div style="float:left;width:118px; text-align:center;padding-top:8px; ">
+			<script>I18N("h","ParentControl_Between");</script><!-- 至 -->
+			</div>
+			<div style="float:left; ">
+			<select name="end_hour" id="end_hour">
+				<option value="00">00</option>
+				<option value="01">01</option>
+				<option value="02">02</option>
+				<option value="03">03</option>
+				<option value="04">04</option>
+				<option value="05">05</option>
+				<option value="06">06</option>
+				<option value="07">07</option>
+				<option value="08">08</option>
+				<option value="09">09</option>
+				<option value="10">10</option>
+				<option value="11">11</option>
+				<option value="12">12</option>
+				<option value="13">13</option>
+				<option value="14">14</option>
+				<option value="15">15</option>
+				<option value="16">16</option>
+				<option value="17">17</option>
+				<option value="18">18</option>
+				<option value="19">19</option>
+				<option value="20">20</option>
+				<option value="21">21</option>
+				<option value="22">22</option>
+				<option value="23">23</option>			
+			</select> 
+			 </div> 
+			 <div style="width:40px; text-align:center; float:left; padding-top:8px; ">      
+			 :
+			</div>
+			<div style="float:left; ">
+			<select name="end_minute" id="end_minute">
+			</select>
+			</div>
+			 </td>
+        </tr>
+		<tr align="left" id="error_time" style="display:none;">
+			<th></th>
+			<td class="errorinfo" style="padding-left:66px; ">
+				<table>
+					<tbody>
+						<tr>
+							<td>
+							<div class="ic-sign ic"></div>
+						  </td>
+						  <td id="errorinfo_time" style="color:#666666"></td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr class="empty"></tr>
+		<tr >
+			<th align="left" ><script>I18N("h","ParentControl_Repeated_Days");</script><!-- 重复 : --></th>
+			<td style="padding-left:66px; ">
+			<div class="date" id="date0" onClick="DateCheck(0)"><script>I18N("h","ParentControl_Sunday");</script><!-- 周日 --></div>
+			<div class="date" id="date1" onClick="DateCheck(1)"><script>I18N("h","ParentControl_Monday");</script><!-- 周一 --></div>
+			<div class="date" id="date2" onClick="DateCheck(2)"><script>I18N("h","ParentControl_Tuesday");</script><!-- 周二 --></div>
+			<div class="date" id="date3" onClick="DateCheck(3)"><script>I18N("h","ParentControl_Wednesday");</script><!-- 周三 --></div>
+			<div class="date" id="date4" onClick="DateCheck(4)"><script>I18N("h","ParentControl_Thursday");</script><!-- 周四 --></div>
+			<div class="date" id="date5" onClick="DateCheck(5)"><script>I18N("h","ParentControl_Friday");</script><!-- 周五 --></div>
+			<div class="date" id="date6" onClick="DateCheck(6)"><script>I18N("h","ParentControl_Saturday");</script><!-- 周六 --></div>
+			<input type="checkbox" id="checkboxdate0" style="display:none;"><input type="checkbox" id="checkboxdate1" style="display:none;"><input type="checkbox" id="checkboxdate2" style="display:none;"><input type="checkbox" id="checkboxdate3" style="display:none;"><input type="checkbox" id="checkboxdate4" style="display:none;"><input type="checkbox" id="checkboxdate5" style="display:none;"><input type="checkbox" id="checkboxdate6" style="display:none;">
+			</td>
+		</tr>
+		<tr align="left" id="error_day" style="display:none;">
+			<th></th>
+			<td class="errorinfo" style="padding-left:66px; ">
+				<table>
+					<tbody>
+						<tr>
+							<td>
+							<div class="ic-sign ic"></div>
+						  </td>
+						  <td id="errorinfo_day" style="color:#666666"></td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr class="empty"></tr>
+		<tr>
+			<th align="left"><script>I18N("h","ParentControl_Restricted_URL");</script><!-- 网址限制 : --></th>
+			<td  style="padding-left:66px;" align="left">
+				 <div id="url_statue" class="checkbox_on" onclick="ChangUrlStatus()" style="margin-left:0px; ">
+                       <input type="checkbox" id="url_enable" name="url_enable" checked>
+                 </div>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td style="padding-left:66px; padding-top:12px;" align="left" class="description"> 
+			<div id="url_info1" style="display:none; "><script>I18N("h","ParentControl_URL_Open");</script><!-- 开启后即可添加只允许访问的网址。(最多8个) --></div>
+			<div id="url_info2"><script>I18N("h","ParentControl_URL_Close");</script><!-- 关闭后您将不限制设备对任何网站的访问。 --></div>	
+			</td>
+		</tr>
+		<tr id="urlcontent">
+			<td>&nbsp;</td>
+			<td style="padding-left:66px;">
+				<table>
+					<tbody>
+						<tr>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_1" maxlength="64" name="url_1" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(1);checkUrl(1);"/>
+									<img class="url_rightimg_eye" id="clean_img1" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(1);">
+								</div>
+							</td>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_2" maxlength="64" name="url_2" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(2);checkUrl(2);">
+									<img class="url_rightimg_eye" id="clean_img2" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(2);">
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<table class="errorinfo" id="error_1" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_1" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td>
+								<table class="errorinfo" id="error_2" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_2" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_3" maxlength="64" name="url_3" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(3);checkUrl(3);">
+									<img class="url_rightimg_eye" id="clean_img3" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(3);">
+								</div>
+							</td>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_4" maxlength="64" name="url_4" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(4);checkUrl(4);">
+									<img class="url_rightimg_eye" id="clean_img4" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(4);">
+								</div>	
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<table class="errorinfo" id="error_3" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_3" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td>
+								<table class="errorinfo" id="error_4" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_4" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_5" maxlength="64" name="url_5" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(5);checkUrl(5);">
+									<img class="url_rightimg_eye" id="clean_img5" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(5);">
+								</div>
+							</td>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_6" maxlength="64" name="url_6" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(6);checkUrl(6);">
+									<img class="url_rightimg_eye" id="clean_img6" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(6);">
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<table class="errorinfo" id="error_5" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_5" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td>
+								<table class="errorinfo" id="error_6" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_6" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_7" maxlength="64" name="url_7" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(7);checkUrl(7);">
+									<img class="url_rightimg_eye" id="clean_img7" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(7);">
+								</div>
+							</td>
+							<td>
+								<div class="urlinput">
+									<input type="text" id="url_8" maxlength="64" name="url_8" class="styled-texturl hiddenclean" onkeyup="urlCleanImg(8);checkUrl(8);">
+									<img class="url_rightimg_eye" id="clean_img8" src="/image/icon_del02.png" height="16" width="16" class="imgrightclean" style="display:none; " onClick="urlClen(8);">
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<table class="errorinfo" id="error_7" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_7" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td>
+								<table class="errorinfo" id="error_8" style="display:none;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ic-sign ic"></div>
+											</td>
+											<td id="errorinfo_8" style="width:285px;color:#666666"></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						
+					</tbody>
+				</table>		
+			</td>
+		</tr>
+      </tbody>
+    </table>
+	<div class="line" style="padding-top:24px;"></div>
+		<div align="center" style="margin-top:24px; padding-bottom:48px;">
+		<!-- <span><input type="button" value="取消" id="canclebutton" class="styled_button_ss" onClick="AddCancle();"></span><span  style="margin-left:20px; "><input type="button" value="确定" id="addbutton" class="styled_button_ss" onClick="closeCreateRulePOP();"></span> -->
+		<span><input type="button" value="" id="canclebutton" class="styled_button_ss" onClick="AddCancle();"></span><span  style="margin-left:20px; "><input type="button" value="" id="addbutton" class="styled_button_ss" onClick="closeCreateRulePOP();"></span>
+		</div>
+	</div>
+</div>
+ <div class="footer_placeholder"></div>  
+</div>	
+<div id="footer"></div>
+<div id="CreatePopAlertMessage" style=" display:none;"></div>
+<div style=" display:none;" id="DetectRouterConnection"></div>
+<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="/image/submit.gif" width="58" height="58"></div></div>
+<script type="text/javascript" charset="utf-8" src="js/ParentSlideshow.js"></script>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+Initial();
+//var HNAP = new HNAP_XML();
+var G_List=[];
+var B_G_List=[];
+var G_P_Rule="";
+var G_WeekDayrray=["Sun","Mon","Tues","Wed","Thur","Fri","Sat"];
+var DeviceArray = [];
+//var subname_maxlength=17;//最大显示长度
+//var max_show_width=150;//最大显示宽度px
+$(document).ready( function() {
+document.getElementById("content").style.display="none";
+document.getElementById("CreateOnloadMessage").style.display="";
+basiccontainerminiheigh();
+	GetXML();
+   beginMinuteSelect();
+   endMinuteSelect();
+	 resetRulePOP();
+	 checkTimeout();
+	 popAddMaxHeight();
+	document.getElementById("btn_save").value = I18N("j","Commom_Save");//保存
+	document.getElementById("canclebutton").value = I18N("j","Commom_Cancel");//取消
+	document.getElementById("addbutton").value = I18N("j","Commom_Apply");//确定
+});
+
+function IschangeFlag()
+{
+		var liststr="";
+		for(var i=0;i<G_List.length;i++)
+		{
+			if(i==G_List.length-1)
+			{
+				liststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+","+G_List[i][3]+","+G_List[i][4]+","+G_List[i][5]+","+G_List[i][6]+","+G_List[i][7];
+			}
+			else
+			{
+				liststr+=G_List[i][0]+","+G_List[i][1]+","+G_List[i][2]+","+G_List[i][3]+","+G_List[i][4]+","+G_List[i][5]+","+G_List[i][6]+","+G_List[i][7]+";";
+			}
+		
+		}
+
+		if(liststr!=G_P_Rule)
+		{
+			changeFlag=true;
+		}
+		else
+		{
+			changeFlag=false;
+		}
+
+}
+
+function popAddMaxHeight()
+{
+	var clientHeight=document.documentElement.clientHeight;
+	var height=clientHeight-80-50;
+	var maxheight=height>570?570:height;
+	document.getElementById("PopAddParenetcontrol").style.maxHeight=maxheight+"px";
+}
+
+function TranslationDay(day)//转换显示日期为中文格式
+{
+	var dayshow="";
+	switch(day)
+	{
+		case "Sun":
+			//dayshow="周日";
+			dayshow=I18N("j","ParentControl_Sunday");
+			break;
+		case "Mon":
+			//dayshow="周一";
+			dayshow=I18N("j","ParentControl_Monday");
+			break;
+		case "Tues":
+			//dayshow="周二";
+			dayshow=I18N("j","ParentControl_Tuesday");
+			break;
+		case "Wed":
+			//dayshow="周三";
+			dayshow=I18N("j","ParentControl_Wednesday");
+			break;
+		case "Thur":
+			//dayshow="周四";
+			dayshow=I18N("j","ParentControl_Thursday");
+			break;
+		case "Fri":
+			//dayshow="周五";
+			dayshow=I18N("j","ParentControl_Friday");
+			break;
+		case "Sat":
+			//dayshow="周六";
+			dayshow=I18N("j","ParentControl_Saturday");
+			break;
+	}
+	return dayshow;
+}
+
+function CreateParentTable()
+{
+
+	if(G_List.length>0)
+	{
+		document.getElementById("trnull").style.display="none";
+	}
+	else
+	{
+		document.getElementById("trnull").style.display="";
+	}
+	ClearTable("parentcontroltable",3);
+	var AccessTableList=[];
+    DeviceArray = [];
+	//var sub_devicename="";
+	for(var i=0;i<G_List.length;i++)
+	{
+		AccessTableList[i]=[];
+		var deviceHTML="";//设备名称显示
+		var dhcpListItem=[];
+		var urlArray=[];
+		var urlHTML="";
+		var limitTime="";
+		var subUrlAddr="";
+        DeviceArray = DeviceArray.concat(G_List[i].Mac.split(";"));
+		if(G_List[i].HostName.length>0)  //设备名称
+		{
+            dhcpListItem=G_List[i].HostName.split(";");
+		}
+		for(var j=0;j<dhcpListItem.length;j++)
+		{
+            deviceHTML+="<div class='dhcplisttem_show'>"+dhcpListItem[j]+"</div>";
+		}
+		
+		var day_display_list=G_List[i].Week.split(",");
+		var day_display_chinese="";//星期显示
+		for(var t=0;t<day_display_list.length;t++)
+		{
+			if(t==day_display_list.length-1)//最后一个
+			{
+				day_display_chinese+=TranslationDay(day_display_list[t]);
+				
+			}
+			else
+			{
+				day_display_chinese+=TranslationDay(day_display_list[t])+" ";
+			}
+		}
+		var limitTime="<div>"+G_List[i].StartTime+"-"+G_List[i].EndTime+"</div><div>"+day_display_chinese+"</div>";
+
+        for(var h = 1; h<=8; h++ ){
+            if(G_List[i]["URL"+h] != ""){
+                urlArray.push(G_List[i]["URL"+h]);
+            }
+        }
+		if(G_List[i].UrlEnable=="1")
+		{		
+			for(var k=0;k<urlArray.length;k++)
+			{
+                urlHTML+="<div class='urlarray_show'>"+urlArray[k]+"</div>";
+			}
+		}
+		else
+		{
+            urlHTML=I18N("j","ParentControl_Unrestricted");
+		}
+				
+		AccessTableList[i].push(deviceHTML);
+		AccessTableList[i].push(limitTime);
+		AccessTableList[i].push(urlHTML);
+		if(G_List[i].IndexEnable=="1")
+			AccessTableList[i].push("<div id='list_statue"+i+"' class='checkbox_on' onclick='changStatue("+i+")'><input type='checkbox' styel='display:none;' id='list_enable"+i+"' checked></div>");
+			else
+			AccessTableList[i].push("<div id='list_statue"+i+"' class='checkbox_off' onclick='changStatue("+i+")'><input type='checkbox' styel='display:none;' id='list_enable"+i+"'></div>");
+
+		AccessTableList[i].push("<div class='divboximg'><div class='editimg pull-left' onclick='editData("+i+")'></div><div class='delimg pull-right' onclick='deleteData("+i+")'></div></div>");
+	}
+	CreateTable("parentcontroltable", AccessTableList);
+}
+
+function changStatue(id)
+{
+		var listid="list_statue"+id;
+		var listenableid="list_enable"+id;
+		var a = document.getElementById(listenableid).checked;
+		
+		if(a)
+		{
+			document.getElementById(listid).className = "checkbox_off";
+			document.getElementById(listenableid).checked=false;	
+			G_List[id].IndexEnable="0";
+
+		}
+		else
+		{
+			document.getElementById(listid).className = "checkbox_on";
+			document.getElementById(listenableid).checked=true;
+			G_List[id].IndexEnable="1";
+		}
+		save_button_changed();
+		//IschangeFlag();
+		
+}
+
+function GetXML(){
+    var getClientInfo = new SOAPGetClientInfoResponse();
+    var getNetworkInfo = new SOAPGetNetworkSettingsResponse();
+    var getParentControlInfo = new SOAPGetParentControlInfoResponse();
+    var soapAction = new SOAPAction();
+    var clientInfo = soapAction.sendSOAPAction("GetClientInfo",null,getClientInfo);
+    var networkInfo = soapAction.sendSOAPAction("GetNetworkSettings",null,getNetworkInfo);
+    var parentControlInfo = soapAction.sendSOAPAction("GetParentsControlInfo",null,getParentControlInfo);
+    $.when(clientInfo,networkInfo,parentControlInfo).done(function(clientInfo,networkInfo,parentControlInfo){
+        GetDHCPClientInfoResult(clientInfo,networkInfo,parentControlInfo);
+    });
+}
+
+function GetDHCPClientInfoResult(clientInfo,networkInfo,parentControlInfo)
+{
+    var clientLists = clientInfo.ClientInfoLists.ClientInfo;
+    var lanIP = networkInfo.IPAddress, lanMask = networkInfo.SubnetMask;
+    var total=0;
+    for(var i = 0; i<clientLists.length; i++){
+        if(isSameNet(clientLists[i].IPv4Address,lanIP,lanMask)==SAMESUBNET)//判断是否与Lan在同网段
+        {
+            addDevice(HTMLDecode(clientLists[i].DeviceName), clientLists[i].IPv4Address, clientLists[i].MacAddress,total);
+            total++;
+        }
+    }
+    var parentListItem = parentControlInfo.UsersInfo;
+    for(var i=0;i<parentListItem.length;i++)
+    {
+        G_List[i]=[];
+        B_G_List[i]=[];
+        parentListItem[i].HostName = HTMLDecode(parentListItem[i].HostName);
+        G_List[i]=parentListItem[i];
+        B_G_List[i]=parentListItem[i];
+        //DeviceArray = DeviceArray.concat(parentListItem[i].Mac.split(";"));
+    }
+    CreateParentTable();
+    document.getElementById("content").style.display="";
+    document.getElementById("CreateOnloadMessage").style.display="none";
+
+}
+
+
+function beginMinuteSelect()
+{
+		var u=document.getElementById("begin_minute");
+		for(var i=0;i<60;i++)
+		{
+			var value=i;
+			var textvlue=i;
+			if(i<10)
+			{
+			  value="0"+i.toString();
+			  textvlue="0"+i.toString();
+			}
+			u.options.add(new Option(value,textvlue));
+		}
+
+}
+function endMinuteSelect()
+{
+		var u=document.getElementById("end_minute");
+		for(var i=0;i<60;i++)
+		{
+			var value=i;
+			var textvlue=i;
+			if(i<10)
+			{
+			  value="0"+i.toString();
+			  textvlue="0"+i.toString();
+			}
+			
+			u.options.add(new Option(value,textvlue));
+
+		}
+
+}
+
+function DateCheck(num)
+{
+	var checkdateid="date"+num;
+	var checkboxid="checkboxdate"+num;
+	if(document.getElementById(checkboxid).checked==true)
+	{
+		document.getElementById(checkboxid).checked=false;
+		document.getElementById(checkdateid).className="date";
+	}
+	
+	else
+	{
+		document.getElementById(checkboxid).checked=true;
+		document.getElementById(checkdateid).className="datecheck";	
+	}
+
+
+}
+function urlCleanImg(num)
+{
+var imagid="clean_img"+num;
+var inputid="url_"+num;
+var inputvalue=document.getElementById(inputid).value;
+if(inputvalue.length==0)
+document.getElementById(imagid).style.display="none";
+else
+document.getElementById(imagid).style.display="";
+}
+
+function urlClen(num)
+{
+var inputid="url_"+num
+var imagid="clean_img"+num;
+var errorid="error_"+num;
+document.getElementById(inputid).value="";
+document.getElementById(errorid).style.display="none";
+document.getElementById(imagid).style.display="none";
+document.getElementById(inputid).focus();
+}
+
+function ChangUrlStatus()
+{
+	var a = document.getElementById("url_enable").checked;
+	
+	if(a)
+	{
+		document.getElementById("url_statue").className = "checkbox_off";
+		document.getElementById("url_enable").checked=false;
+		document.getElementById("urlcontent").style.display="none";
+		document.getElementById("url_info1").style.display="";
+		document.getElementById("url_info2").style.display="none";
+		$("#urlcontent table[id^='error_']").each(function(){$(this).hide();});
+	}
+	else
+	{
+		document.getElementById("url_statue").className = "checkbox_on";
+		document.getElementById("url_enable").checked=true;  
+		document.getElementById("urlcontent").style.display="";
+		document.getElementById("url_info1").style.display="none";
+		document.getElementById("url_info2").style.display="";
+	}
+
+
+}
+
+var deviceDataArray = new Array(); 		// contain all device in here!
+var createDeviceData = function(deviceName, ip, mac,id) {
+	var data = new deviceData(deviceName, ip, mac,id);
+	deviceDataArray.push([deviceName,ip,mac]);
+	return data;
+}
+
+function addDevice(deviceName, ip, mac,id) {
+
+	var data = createDeviceData(deviceName, ip, mac,id); 
+	
+	mySlideshow.addItem(data);
+
+}
+var mySlideshow = new Slideshow("slideshow");
+//--------------------------------------------------------------
+//		DeviceData
+//--------------------------------------------------------------
+var deviceData = function(deviceName, ip, mac,id) {
+
+	//deviceName=subDeviceNameDisplay(deviceName,subname_maxlength);//显示...
+	this.deviceName 	= deviceName;
+	this.ip				= ip;
+	this.mac			= mac
+	this.element;
+	//--------------------------------------------------------------
+	// create element
+	this.element 						= document.createElement("div");
+	this.element.style.width 			= "148px";
+	this.element.style.height 			= "84px";
+	this.element.style.fontSize			= "12px";
+	this.element.style.cursor			= "pointer";
+	this.element.style.verticalAlign	= "top";
+	this.element.style.margin			= "0 7px";
+	this.element.className				= "dataElement";
+	this.element.id	= "device"+id;
+	
+	this.element.onmouseover = function() {
+		this.style.backgroundPosition = "bottom left";
+	};
+	this.element.onmouseout = function() {
+		this.style.backgroundPosition = "top left";
+	};
+	
+	// DeviceName
+	this.element_deviceName 			= document.createElement("div");
+	this.element_deviceName.className	= "dataElement_deviceName";
+	this.element_deviceName.innerHTML 	= deviceName;
+	
+	
+	// IP
+	this.element_ip 					= document.createElement("div");
+	this.element_ip.className			= "dataElement_ip";
+	this.element_ip.innerHTML 			= ip;
+	
+	// MAC
+	this.element_mac 					= document.createElement("div");
+	this.element_mac.className			= "dataElement_mac";
+	this.element_mac.innerHTML 			= mac;
+	
+	
+	var idss="checboxid"+id;
+	this.element_checkbox 				= document.createElement("div");
+	this.element_checkbox.innerHTML 		= "<input type='checkbox' id="+idss+" name='dhcp_enable' style='display:none;'>";
+	
+	this.element.appendChild(this.element_deviceName);
+	this.element.appendChild(this.element_ip);
+	this.element.appendChild(this.element_mac);
+	this.element.appendChild(this.element_checkbox);
+	this.element.onclick = function() {
+		
+		var checkid="checboxid"+id;
+
+		if(document.getElementById(checkid).checked==true)
+		{
+			document.getElementById(checkid).checked=false;
+			this.className				= "dataElement";
+			this.childNodes[0].className="dataElement_deviceName";
+			this.childNodes[1].className="dataElement_ip";
+		}
+		else
+		{
+            //判断禁配置设备
+            if(this.className == "dataElement2"){
+                return;
+            }
+			document.getElementById(checkid).checked=true;
+			this.className				= "dataElement1";
+			this.childNodes[0].className="dataElement_deviceName_check";
+			this.childNodes[1].className="dataElement_ip_check";
+		}
+	};	
+	var data = this;
+
+}
+
+function AddCancle()
+{
+document.getElementById("createPop").style.display = "none";
+resetRulePOP();
+hideAllErrorInfo();
+}
+var edit=-1;
+
+function Add()
+{
+edit=-1;
+    //禁用已经编辑的设备
+    for(var da = 0; da<DeviceArray.length; da++){
+        for(var idx=0;idx<deviceDataArray.length;idx++)
+        {
+            if(DeviceArray[da]==deviceDataArray[idx][2])
+            {
+                var checkid="checboxid"+idx;
+                var devicename="device"+idx;
+
+                document.getElementById(checkid).checked=false;
+                document.getElementById(devicename).className = "dataElement2";
+                document.getElementById(devicename).childNodes[0].className="dataElement_deviceName_check";
+                document.getElementById(devicename).childNodes[1].className="dataElement_ip_check";
+            }
+        }
+    }
+    document.getElementById("createPop").style.display = "";
+	var ExistTableListNUM=G_List.length;//表中已有数目
+	if(ExistTableListNUM >=16)
+	{
+		showErr("error_list_num","errorinfo_list_num",I18N("j","Err_Parentcontrol_TableListNum"));
+		document.getElementById("addbutton").disabled=true;
+	}
+}
+
+function hideAllErrorInfo()
+{
+	for(var i=1;i<=8;i++)
+	{
+		var errorid="error_"+i;
+		document.getElementById(errorid).style.display = "none";
+	}
+	$("#error_device").hide();
+	$("#error_time").hide();
+	$("#error_day").hide();
+	$("#error_list_num").hide();
+}
+
+function editData(id)
+	{
+		document.getElementById("addbutton").disabled=false;
+		edit=id;
+
+        //禁用已经编辑的设备
+        for(var da = 0; da<DeviceArray.length; da++){
+            for(var idx=0;idx<deviceDataArray.length;idx++)
+            {
+                if(DeviceArray[da]==deviceDataArray[idx][2])
+                {
+                    var checkid="checboxid"+idx;
+                    var devicename="device"+idx;
+
+                    document.getElementById(checkid).checked=false;
+                    document.getElementById(devicename).className = "dataElement2";
+                    document.getElementById(devicename).childNodes[0].className="dataElement_deviceName_check";
+                    document.getElementById(devicename).childNodes[1].className="dataElement_ip_check";
+                }
+            }
+        }
+
+		var deviceNma=G_List[id].Mac.split(";");
+		for(var i=0;i<deviceNma.length;i++)
+		{
+			for(var j=0;j<deviceDataArray.length;j++)
+			{
+				if(deviceNma[i]==deviceDataArray[j][2])
+				{
+					var checkid="checboxid"+j;
+					var devicename="device"+j;
+
+					document.getElementById(checkid).checked=true;
+					document.getElementById(devicename).className = "dataElement1";	
+					document.getElementById(devicename).childNodes[0].className="dataElement_deviceName_check";
+					document.getElementById(devicename).childNodes[1].className="dataElement_ip_check";
+				}
+			}
+		}
+
+		var begintime=G_List[id].StartTime.split(":");
+		var endtime=G_List[id].EndTime.split(":");
+		document.getElementById("begin_hour").value=begintime[0];
+		document.getElementById("begin_minute").value=begintime[1];
+		document.getElementById("end_hour").value=endtime[0];
+		document.getElementById("end_minute").value=endtime[1];
+		for(var d=0;d<7;d++)//初始化所有天数
+		{
+			var checkdateid="date"+d;
+			var checkboxid="checkboxdate"+d;
+			document.getElementById(checkboxid).checked=false;
+			document.getElementById(checkdateid).className="date";
+		}
+		var weekday=G_List[id].Week.split(",");
+		for(var k=0;k<weekday.length;k++)
+		{
+			for(var n=0;n<G_WeekDayrray.length;n++)
+			{
+				if(weekday[k]==G_WeekDayrray[n])
+				{
+					var checkdateid="date"+n;
+	                var checkboxid="checkboxdate"+n;
+					document.getElementById(checkboxid).checked=true;
+					document.getElementById(checkdateid).className="datecheck";					
+				}
+			}
+		
+		}
+		
+		var url_enable=G_List[id].UrlEnable;
+		if(url_enable=="1")
+		{
+			document.getElementById("url_statue").className = "checkbox_on";
+			document.getElementById("url_enable").checked=true;  
+			document.getElementById("urlcontent").style.display="";
+			document.getElementById("url_info1").style.display="none";
+			document.getElementById("url_info2").style.display="";		
+		}
+		else
+		{
+			document.getElementById("url_statue").className = "checkbox_off";
+			document.getElementById("url_enable").checked=false;
+			document.getElementById("urlcontent").style.display="none";
+			document.getElementById("url_info1").style.display="";
+			document.getElementById("url_info2").style.display="none";		
+		}
+		//var url=G_List[id][4].split(" ");
+		for(var p=1;p<=8;p++)
+		{	
+			var imagid="clean_img"+p;
+			var inputid="url_"+p;
+			if(""!=G_List[id]["URL"+p])
+			{
+				document.getElementById(inputid).value=G_List[id]["URL"+p];
+				document.getElementById(imagid).style.display="";
+			}
+		}
+        $("#begin_hour").selectbox("detach");
+		$("#begin_minute").selectbox("detach");
+	    $("#end_hour").selectbox("detach");
+	    $("#end_minute").selectbox("detach");
+	   $("#begin_hour").selectbox({width:111,float:"left"});
+		$("#begin_minute").selectbox({width:111,float:"left"});
+		$("#end_hour").selectbox({width:111,float:"left"});
+		 $("#end_minute").selectbox({width:111,float:"left"});
+		 document.getElementById("createPop").style.display = "inline";
+	}
+	
+	
+function closeCreateRulePOP()
+{
+		var mac="";
+		var checkdevice=[];
+		var date="";
+		var checkdate=[];//保存选中的星期
+		var datearray=["Sun","Mon","Tues","Wed","Thur","Fri","Sat"];
+		var url="";
+		var deviceDataNum=0;
+		var devicename="";
+		var urlenable;
+		var isdeviceSelect=false;//判断是否选择一项设备
+		var isdaySelect=false;//判断是否选择重复日期
+		hideAllErrorInfo();
+		for(var i=0;i<deviceDataArray.length;i++)
+		{
+			var devicecheckid="checboxid"+i;
+			if(document.getElementById(devicecheckid).checked==true)
+			{
+				checkdevice[deviceDataNum]=[];
+				checkdevice[deviceDataNum]=[deviceDataArray[i][0],deviceDataArray[i][2]];
+				deviceDataNum++;
+				isdeviceSelect=true;
+			}
+		}
+		if(!isdeviceSelect)//如果一个设备都不选
+		{
+			showErr("error_device","errorinfo_device",I18N("j","Err_Parentcontrol_Device"));
+			return false;
+		}
+		
+		for(var i=0;i<checkdevice.length;i++)
+		{
+			if(i==checkdevice.length-1)
+			{
+				mac+=checkdevice[i][1];
+				devicename+=checkdevice[i][0];
+				
+			}
+			else
+			{
+				mac+=checkdevice[i][1]+";";
+				devicename+=checkdevice[i][0]+";";
+			}
+		}
+
+		var checkdateNUm=0;
+		for(var i=0;i<datearray.length;i++)
+		{
+			var devicecheckid="checkboxdate"+i;
+			if(document.getElementById(devicecheckid).checked==true)
+			{
+				checkdate[checkdateNUm]=datearray[i];
+				checkdateNUm++;
+				isdaySelect=true;
+			}
+		
+		}
+		
+		for(var i=0;i<checkdate.length;i++)
+		{
+			if(i==checkdate.length-1)
+			{
+				date+=checkdate[i];
+				
+			}
+			else
+			{
+				date+=checkdate[i]+",";
+			}
+		}
+			
+		var begin_hour=document.getElementById("begin_hour").value;
+		var begin_minute=document.getElementById("begin_minute").value;
+		var starttime=begin_hour+":"+begin_minute+":"+"00";
+		var end_hour=document.getElementById("end_hour").value;
+		var end_minute=document.getElementById("end_minute").value;		
+		var endtime=end_hour+":"+end_minute+":"+"00";
+		
+		if("00"==begin_hour	&& "00"==begin_minute && "00"==end_hour && "00"==end_minute)//如果一个时间段都不选
+		{
+			showErr("error_time","errorinfo_time",I18N("j","Err_Parentcontrol_TimeEmpty"));
+			return false;
+		}
+		else if(begin_hour > end_hour)
+		{
+			showErr("error_time","errorinfo_time",I18N("j","Err_Parentcontrol_Time"));
+			return false;
+		}
+		else if(begin_hour == end_hour)
+		{
+			if(begin_minute >= end_minute)
+			{
+				showErr("error_time","errorinfo_time",I18N("j","Err_Parentcontrol_Time"));
+				return false;
+			}
+		}
+		
+		if(!isdaySelect)//如果没有选择重复日期
+		{
+			showErr("error_day","errorinfo_day",I18N("j","Err_Parentcontrol_Day"));
+			return false;
+		}
+	
+		if(document.getElementById("url_enable").checked==true)
+		{
+			urlenable="1";
+		}
+		
+		else
+		{
+			urlenable="0";
+		}
+		var isURLEmpty=true;
+		$("#urlcontent input[id^='url_']").each(function(){
+			if($(this).val()!="")
+			{
+				isURLEmpty=false;
+				return false;//结束each循环
+			}
+		});
+		if("1"==urlenable && isURLEmpty)
+		{
+			showErr("error_1","errorinfo_1",I18N("j","Err_Parentcontrol_URLEmpty"));
+			return false;
+		}
+    var urlarray=[];
+	if(document.getElementById("url_enable").checked==true)
+	{
+		var ExistURLArray=[];
+		//var urlarrayNum=0;
+		var errorNum=0;
+		for(var i=1;i<=8;i++)
+		{
+			var urlid="url_"+i;
+			var urlvalue=document.getElementById(urlid).value;
+			var test_result=(/^((\w)+:\/\/)\w+/).test(urlvalue);
+			if(test_result)
+			{
+				var index=urlvalue.indexOf('\:\/\/');
+				if(-1!=index)
+				{
+					urlvalue=urlvalue.substring(index+3);
+				}
+			}
+			if(urlvalue.length>0)
+			{
+				var verifySpaceResult=checkInputStr(urlvalue);//验证URL有效性，不含有空格
+				if(CORRECT==verifySpaceResult)//不含有空格
+				{
+					if(checkParentControlIpFormat(urlvalue))//形如ip
+					{
+						if(CORRECT==checkIpAddr(urlvalue))
+						{
+							if($.inArray(urlvalue.toLowerCase(),ExistURLArray)!=-1)//和已有冲突判断
+							{
+								showErr("error_"+i,"errorinfo_"+i,I18N("j","Err_Parentcontrol_URLSameInput"));
+								errorNum++;
+								//return false;
+							}
+							else
+							{
+								ExistURLArray[i]=urlvalue;
+								urlarray[i]=urlvalue;
+							}
+						}
+						else
+						{
+							showErr("error_"+i,"errorinfo_"+i,I18N("j","Err_Parentcontrol_URLFormat"));
+							errorNum++;
+							//return false;
+						}
+					}
+					else//其他格式
+					{
+						var verifyFormatResult=verifyDomain(urlvalue);
+						if(verifyFormatResult)
+						{
+							if($.inArray(urlvalue.toLowerCase(),ExistURLArray)!=-1)//和已有冲突判断
+							{
+								showErr("error_"+i,"errorinfo_"+i,I18N("j","Err_Parentcontrol_URLSameInput"));
+								errorNum++;
+								//return false;
+							}
+							else
+							{
+								ExistURLArray[i]=urlvalue.toLowerCase();
+								urlarray[i]=urlvalue;
+							}
+						}
+						else
+						{
+							showErr("error_"+i,"errorinfo_"+i,I18N("j","Err_Parentcontrol_URLFormat"));
+							errorNum++;
+							//return false;
+						}	
+					}
+				}
+				else//含有空格
+				{
+					showErr("error_"+i,"errorinfo_"+i,I18N("j","Err_Parentcontrol_URLSpace"));
+					errorNum++;
+					//return false;
+				}
+			}else{
+                urlarray[i]="";
+            }
+		}
+		if(errorNum!=0)
+		{
+			return false;
+		}
+	}
+		if(edit < 0)
+		{
+			//G_List.push(["1","",mac,urlenable,url,starttime,endtime,date,devicename]);
+           /* var len = G_List.length;*/
+            G_List.push({
+            /*    GroupId     : */
+                HostName    : devicename,
+                Mac         : mac,
+                IndexEnable : "1",
+                StartTime   : starttime,
+                EndTime     : endtime,
+                Week        : date,
+                UrlEnable   : urlenable,
+                URL1        : urlarray[1]?urlarray[1]:"",
+                URL2        : urlarray[2]?urlarray[2]:"",
+                URL3        : urlarray[3]?urlarray[3]:"",
+                URL4        : urlarray[4]?urlarray[4]:"",
+                URL5        : urlarray[5]?urlarray[5]:"",
+                URL6        : urlarray[6]?urlarray[6]:"",
+                URL7        : urlarray[7]?urlarray[7]:"",
+                URL8        : urlarray[8]?urlarray[8]:""
+            })
+		}
+		else
+		{
+           /* var groupID = G_List[edit].GroupId;*/
+			//G_List.splice(edit,1,["1","",mac,urlenable,url,starttime,endtime,date,devicename]);
+			G_List.splice(edit,1,{
+               /* GroupId     : groupID,*/
+                HostName    : devicename,
+                Mac         : mac,
+                IndexEnable : "1",
+                StartTime   : starttime,
+                EndTime     : endtime,
+                Week        : date,
+                UrlEnable   : urlenable,
+                URL1        : urlarray[1]?urlarray[1]:"",
+                URL2        : urlarray[2]?urlarray[2]:"",
+                URL3        : urlarray[3]?urlarray[3]:"",
+                URL4        : urlarray[4]?urlarray[4]:"",
+                URL5        : urlarray[5]?urlarray[5]:"",
+                URL6        : urlarray[6]?urlarray[6]:"",
+                URL7        : urlarray[7]?urlarray[7]:"",
+                URL8        : urlarray[8]?urlarray[8]:""
+            });
+		}
+		
+
+		resetRulePOP();
+		
+		CreateParentTable();
+        save_button_changed();
+}//end of closeCreateRulePOP
+
+
+    //实时验证输入框的错误
+    function checkUrl(id){
+        var urlid="url_"+id;
+        var urlvalue=document.getElementById(urlid).value;
+        var test_result=(/^((\w)+:\/\/)\w+/).test(urlvalue);
+        if(test_result)
+        {
+            var index=urlvalue.indexOf('\:\/\/');
+            if(-1!=index)
+            {
+                urlvalue=urlvalue.substring(index+3);
+            }
+        }
+        if(urlvalue.length>0)
+        {
+            var verifySpaceResult=checkInputStr(urlvalue);//验证URL有效性，不含有空格
+            if(CORRECT==verifySpaceResult)//不含有空格
+            {
+                if(checkParentControlIpFormat(urlvalue))//形如ip
+                {
+                    if(CORRECT!=checkIpAddr(urlvalue))
+                    {
+                        showErr("error_"+id,"errorinfo_"+id,I18N("j","Err_Parentcontrol_URLFormat"));
+                        return false;
+                    }
+                }
+                else//其他格式
+                {
+                    var verifyFormatResult=verifyDomain(urlvalue);
+                    if(!verifyFormatResult)
+                    {
+                        showErr("error_"+id,"errorinfo_"+id,I18N("j","Err_Parentcontrol_URLFormat"));
+                        return false;
+                    }
+                }
+            }
+            else//含有空格
+            {
+                showErr("error_"+id,"errorinfo_"+id,I18N("j","Err_Parentcontrol_URLSpace"));
+                return false;
+            }
+        }
+        document.getElementById("error_"+id).style.display = "none";
+    }
+
+
+
+	function resetRulePOP()
+	{
+		document.getElementById("createPop").style.display = "none";
+	for(var i=0;i<7;i++)
+	{
+		var checkdateid="date"+i;
+	    var checkboxid="checkboxdate"+i;
+		document.getElementById(checkboxid).checked=false;
+		document.getElementById(checkdateid).className="date";
+	}
+	document.getElementById("begin_hour").value="00";
+	document.getElementById("begin_minute").value="00";
+	document.getElementById("end_hour").value="23";
+	document.getElementById("end_minute").value="59";
+	for(var i=0;i<deviceDataArray.length;i++)
+	{
+		var devicecheckid="checboxid"+i;
+		var deviceid="device"+i;
+		document.getElementById(devicecheckid).checked=false;
+		document.getElementById(deviceid).className	= "dataElement";
+		document.getElementById(deviceid).childNodes[0].className="dataElement_deviceName";
+	   document.getElementById(deviceid).childNodes[1].className="dataElement_ip";
+	}
+	for(var i=1;i<=8;i++)
+	{
+		var imagid="clean_img"+i;
+		var inputid="url_"+i;
+		document.getElementById(inputid).value="";
+		document.getElementById(imagid).style.display="none";
+	}
+	
+		document.getElementById("url_enable").checked=false;
+		document.getElementById("url_statue").className = "checkbox_off";
+		document.getElementById("urlcontent").style.display="none";
+		document.getElementById("url_info1").style.display="";
+		document.getElementById("url_info2").style.display="none";
+		
+        $("#begin_hour").selectbox("detach");
+		$("#begin_minute").selectbox("detach");
+	    $("#end_hour").selectbox("detach");
+	    $("#end_minute").selectbox("detach");
+	   $("#begin_hour").selectbox({width:111,float:"left"});
+	   $("#begin_minute").selectbox({width:111,float:"left"});
+	   $("#end_hour").selectbox({width:111,float:"left"});
+	  $("#end_minute").selectbox({width:111,float:"left"});
+	}
+	
+	function  AddList()
+	{
+	  closeCreateRulePOP();
+      // save_button_changed()
+	}
+	
+	function deleteData(id)
+	{
+		document.getElementById("addbutton").disabled=false;
+		G_List.splice(id,1)
+		CreateParentTable();
+        save_button_changed()
+		//IschangeFlag();
+	}
+
+function SetXML() {
+	//document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	//document.getElementById("waitSettingFinish").style.display = "inline";
+    var parentControlInfoSettings = new SOAPSetParentControlInfo();
+    var soapAction = new SOAPAction();
+    for(var i = 0;i<G_List.length;i++){
+        G_List[i].GroupId = i+1;
+        G_List[i].HostName = XMLEncode(G_List[i].HostName);
+    }
+    parentControlInfoSettings.UsersInfo = G_List;
+    soapAction.sendSOAPAction("SetParentsControlInfo",parentControlInfoSettings,null).done(function(obj){
+        if(obj.SetParentsControlInfoResult == "OK"){
+            //setTimeout("waitSettingFinished()", 1000);
+            waitSettingFinished();
+        }else{
+            document.getElementById("CreatePopAlertMessage").style.display = "none";
+            document.getElementById("waitSettingFinish").style.display = "none";
+            document.getElementById("DetectRouterConnection").style.display = "inline";
+        }
+    }).fail(function(){
+        document.getElementById("CreatePopAlertMessage").style.display = "none";
+        document.getElementById("waitSettingFinish").style.display = "none";
+        document.getElementById("DetectRouterConnection").style.display = "inline";
+    });
+}
+
+function waitSettingFinished() 
+{
+	window.location.reload();
+}
+
+function save_button_changed()
+{
+    $("#btn_save").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+}
+
+</script>
+</body>
+</html>

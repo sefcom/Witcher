@@ -1,0 +1,195 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta http-equiv="Pragma" content="no-cache">
+<meta HTTP-equiv="Cache-Control" content="no-cache">
+<meta HTTP-EQUIV="Expires" CONTENT="Mon, 01 Jan 1990 00:00:01 GMT">
+
+<title>WAN LIST Settings</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+	var wanListNum = <%	getMultiWanIndex("WANIfaceNum")%>;
+	var wanListArray = new Array;
+	
+	var wanListItems_num = 5;
+	/*for(var i=0;i<wanListNum;i++)
+		wanListArray[i] = new Array(false,"WAN"+i,"DHCP Client","INTERNET");
+	wanListArray[0] = new Array(true,"WAN1","DHCP Client","INTERNET");
+	wanListArray[1] = new Array(false,"WAN2","Static IP","INTERNET");
+	wanListArray[2] = new Array(true,"WAN3","PPPOE","TR069");
+	wanListArray[3] = new Array(false,"WAN4","Bridge","INTERNET");*/
+	<%getWanList();%>
+	//var upnpEnabled = false;
+	//var igmpproxyEnabled = false;
+	var pingWanAccess = false;
+	var webWanAccess =false;
+	var WANPassThru1 = false;
+	//var ipv6_passthru_enabled = false;
+	
+	function get_by_id(id)
+	{
+		with(document)
+		{
+			return getElementById(id);
+		}
+	}
+
+	
+	function Load_Setting()
+	{
+		//get mib settings
+		//upnpEnabled = <% getIndex("upnpEnabled") %>;
+		//igmpproxyEnabled = <% getIndex("igmpproxyDisabled") %>;
+		//if ( <% getIndex("igmpproxyDisabled"); %> == 0 )
+		//	igmpproxyEnabled = true;
+		pingWanAccess = <% getIndex("pingWanAccess") %>;
+		webWanAccess = <% getIndex("webWanAccess") %>;
+		WANPassThru1 = <% getIndex("VPNPassThruIPsec") %>;
+		ipv6_passthru_enabled = <% getIndex("ipv6passthrouh") %>;
+		Appaly_setting();
+		
+	}
+
+	function Appaly_setting()
+	{
+
+		//get_by_id("upnpEnabledId").checked = upnpEnabled;
+		//get_by_id("igmpproxyEnabledId").checked =igmpproxyEnabled;
+		get_by_id("pingWanAccessId").checked = pingWanAccess;
+		get_by_id("webWanAccessId").checked = webWanAccess;
+		get_by_id("WANPassThru1Id").checked = WANPassThru1;
+		//get_by_id("ipv6_passthru_enabledId").checked = ipv6_passthru_enabled;
+	}
+	
+	function page_submit(id)
+	{
+		//set_mib id
+		document.forms.mainform.currentWanIndex.value=id;
+		//alert("id="+id+" value="+document.forms.mainform.currentWanIndex.value);
+		//document.forms.mainform.submit();
+		//window.location = "wanEdit.html"
+	}
+	
+	function show_wan_list()
+	{
+		document.write("<input type='hidden' name='currentWanIndex'>");
+		document.write("<input type='hidden' name='submit-url-wanIntface' value='/tcpip_multiwan.htm'>");
+		for(var i=0;i<wanListNum;i++)
+		{
+			document.write("<tr><td align = center bgcolor='#C0C0C0'>"+wanListArray[i][0]+"</td>");
+			document.write("<td align=center bgcolor='#C0C0C0'>"+wanListArray[i][1]+"</td>");
+			document.write("<td align=center bgcolor='C0C0C0'>"+wanListArray[i][2]+"</td>\
+		<td align=center bgcolor='C0C0C0'>"+wanListArray[i][3]+"</td>\
+		<td align=center bgcolor='C0C0C0'><input type='submit' id='wan_edit"+i+"' value='edit' onclick='page_submit("+i+");'>&nbsp;&nbsp;</td></tr>");
+		}
+	}
+	
+	function page_reset()
+	{
+		//upnpEnabled = false;
+		igmpproxyEnabled = false;
+		pingWanAccess = false;
+		webWanAccess = false;
+		WANPassThru1 = false;
+		ipv6_passthru_enabled = false;
+		
+		Appaly_setting();
+	}
+	
+</script>
+</head>
+  
+  <body onload="Load_Setting();">
+  <blockquote>
+  <form action=/boafrm/formMultiWanListTcpip method=POST name="mainform">
+    <h2><font>WAN Interfaces list</font></h2>
+	<table border=0 width="550" cellspacing=4 cellpadding=0>
+	<tr><td><p><font size=2>
+	  Entries in below table are used to config wan interfaces. 
+	  </font></p>
+	    <p>&nbsp;</p></td></tr>
+
+    <tr><td><hr size="1" align="top" noshade="noshade"></td></tr>    
+    
+  	
+  	
+  </table>
+    
+    
+    <table border="0" width=550>
+  
+  <tr>
+  	<td height="30"align=center width="20%" bgcolor="#808080"><font size="2"><b>&nbsp;Enable&nbsp;</b></font></td>
+  	<td align=center width="20%" bgcolor="#808080"><font size="2"><b>&nbsp;Wan name &nbsp;</b></font></td>
+  	<td align=center width="25%" bgcolor="#808080"><font size="2"><b>WAN Access Type</b></font></td>
+	<td align=center width="20%" bgcolor="#808080"><font size="2"><b>Service Type</b></font></td>
+	<td align=center width="15%" bgcolor="#808080"><font size="2"><b>&nbsp;edit&nbsp;</b></font></td>
+		
+	</tr>
+	
+    <script> show_wan_list()</script>
+      
+    
+	
+		<br>
+		<tr><td>&nbsp;</td></tr>
+  </table>
+  
+    <table border="0" width=480>
+	<h3><font color="#0000FF">Others</font></h3>
+ <!--
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="upnpEnabledId" name="upnpEnabled" value="ON">&nbsp;&nbsp;Enable uPNP</b></td>
+
+    </tr>
+    -->
+    <!--
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="igmpproxyEnabledId" name="igmpproxyEnabled" value="ON">&nbsp;&nbsp;Enable IGMP Proxy</b></td>
+    </tr>
+    -->
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="pingWanAccessId" name="pingWanAccess" value="ON">&nbsp;&nbsp;Enable Ping Access on WAN</b></td>
+    </tr>        
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="webWanAccessId" name="webWanAccess" value="ON">&nbsp;&nbsp;Enable Web Server Access on WAN</b></td>
+    </tr>        
+    <tr>
+      <td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="WANPassThru1Id" name="WANPassThru1" value="ON">&nbsp;&nbsp;Enable IPsec pass through on VPN connection</b></td>
+    </tr>
+    
+	<!-- disable ipv6 pass throuth for release jungle sdk v2.2, add "<" before %if (getIndex... enable it-->
+    <!--<td width="100%" colspan="2"><font size=2>
+        <b><input type="checkbox" id="ipv6_passthru_enabledId" name="ipv6_passthru_enabled" value="ON">&nbsp;&nbsp;Enable IPv6 pass through on VPN connection</b></td>
+    </tr>-->
+
+   </table>
+	<BR><BR>&nbsp;&nbsp;
+  <tr>
+	<td>
+<% getInfo("apply_prompt_comment_start");%>	  
+    <input type="submit" name="apply" value='Apply Changes' onclick="page_submit(-1);">&nbsp;&nbsp;
+	<input type="hidden" value="/tcpip_multiwanlist.htm" name="submit-url">
+    <input type="reset" value="Reset" onclick="page_reset()">
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+    <input type="submit" name="apply" value='Save' onclick="page_submit(-1);">&nbsp;&nbsp;
+    <input type="submit" name="save_apply" value='Save & Apply' onclick="page_submit(-1);">&nbsp;&nbsp;
+	<input type="hidden" value="/tcpip_multiwanlist.htm" name="submit-url">
+    <input type="reset" value="Reset" onclick="page_reset()">
+<% getInfo("apply_direct_comment_end");%>
+  </td></tr>
+	</form>
+ 	<br>
+  <br>
+  <br>
+    
+  </blockquote>
+  </body></html>

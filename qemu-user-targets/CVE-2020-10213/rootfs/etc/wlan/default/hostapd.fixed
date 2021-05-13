@@ -1,0 +1,8 @@
+driver=madwifi
+logger_syslog=0
+logger_syslog_level=0
+logger_stdout=0
+logger_stdout_level=0
+debug=0
+eapol_key_index_workaround=0
+eap_reauth_period=0

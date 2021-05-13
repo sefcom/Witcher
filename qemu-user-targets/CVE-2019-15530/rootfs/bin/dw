@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+
+if [ $# -lt 1 ]; then echo "Usage: $0 <addr> <len>";  exit 1 ; fi
+if [ $# -eq 1 ]; then
+	echo read $1 4 > /proc/rtl865x/memory
+else
+	a=4
+	echo read $1 `expr $2 \* $a` > /proc/rtl865x/memory
+fi
+

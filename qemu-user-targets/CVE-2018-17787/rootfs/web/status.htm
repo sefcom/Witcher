@@ -1,0 +1,833 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+<% getIndex("no-cache"); %>
+<title>Access Point Status</title>
+<% getInfo("include_css"); %>
+<script>
+var wlanmode, wlanclientnum;
+var isAP = <% getIndex("isPureAP"); %>;
+function showWan()
+{	
+	var MultiPppoeEnable= <% getIndex("multiPppoe"); %>;
+	var number = <% getIndex("pppoeNo"); %>;
+	var dhcptype = <% getIndex("wanDhcp"); %>;
+	var ipv6Enable = <% getIndex("ipv6"); %>;
+	
+	var multipleWanEnable = <% getIndex("multiWanSupport"); %>; 
+	var wan1Enable = <% getIndex("WanEnabled","first"); %>; 
+	var wan2Enable = <% getIndex("WanEnabled","second"); %>; 
+	var wan3Enable = <% getIndex("WanEnabled","third"); %>; 
+	var wan4Enable = <% getIndex("WanEnabled","forth"); %>;
+	
+	if(multipleWanEnable)
+	{
+		if(wan1Enable)
+		{
+			document.write('\
+			 <tr>\
+			 <td width=100% colspan=2 class=\"tbl_title\">WAN1 Configuration</td>\
+		  	 </tr>');
+	  
+		  document.write('<tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Attain IP Protocol</b></td>\
+		    <td width=60%><font size=2>\
+		            <% getInfo("multiWan-current","first"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>IP Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-ip","first"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Subnet Mask</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-mask","first"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>Default Gateway</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-gateway","first"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>MAC Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-hwaddr","first"); %></td>\
+		  </tr>');
+		}
+		
+		if(wan2Enable)
+		{
+			document.write('\
+			 <tr>\
+			 <td width=100% colspan=2 class=\"tbl_title\">WAN2 Configuration</td>\
+		  	 </tr>');
+	  
+		  document.write('<tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Attain IP Protocol</b></td>\
+		    <td width=60%><font size=2>\
+		            <% getInfo("multiWan-current","second"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>IP Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-ip","second"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Subnet Mask</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-mask","second"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>Default Gateway</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-gateway","second"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>MAC Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-hwaddr","second"); %></td>\
+		  </tr>');			
+		}
+		
+		if(wan3Enable)
+		{
+			document.write('\
+			 <tr>\
+			 <td width=100% colspan=2 class=\"tbl_title\">WAN3 Configuration</td>\
+		  	 </tr>');
+	  
+		  document.write('<tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Attain IP Protocol</b></td>\
+		    <td width=60%><font size=2>\
+		            <% getInfo("multiWan-current","third"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>IP Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-ip","third"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Subnet Mask</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-mask","third"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>Default Gateway</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-gateway","third"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>MAC Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-hwaddr","third"); %></td>\
+		  </tr>');				
+		}
+		
+		if(wan4Enable)
+		{
+			document.write('\
+			 <tr>\
+			 <td width=100% colspan=2 class=\"tbl_title\">WAN4 Configuration</td>\
+		  	 </tr>');
+	  
+		  document.write('<tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Attain IP Protocol</b></td>\
+		    <td width=60%><font size=2>\
+		            <% getInfo("multiWan-current","forth"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>IP Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-ip","forth"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>Subnet Mask</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-mask","forth"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#DDDDDD">\
+		    <td width=40%><font size=2><b>Default Gateway</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-gateway","forth"); %></td>\
+		  </tr>\
+		  <tr bgcolor="#EEEEEE">\
+		    <td width=40%><font size=2><b>MAC Address</b></td>\
+		    <td width=60%><font size=2><% getInfo("wan-hwaddr","forth"); %></td>\
+		  </tr>');				
+		}		
+	}
+	else
+	{
+		document.write('\
+		 <tr>\
+		 <td width=100% colspan=2 class=\"tbl_title\">WAN Configuration</td>\
+	  </tr>');
+	  document.write('<tr bgcolor="#EEEEEE">\
+	    <td width=40%><font size=2><b>Attain IP Protocol</b></td>\
+	    <td width=60%><font size=2>\
+	            <% getInfo("wanDhcp-current"); %></td>\
+	  </tr>\
+	  <tr bgcolor="#DDDDDD">\
+	    <td width=40%><font size=2><b>IP Address</b></td>\
+	    <td width=60%><font size=2><% getInfo("wan-ip"); %></td>\
+	  </tr>\
+	  <tr bgcolor="#EEEEEE">\
+	    <td width=40%><font size=2><b>Subnet Mask</b></td>\
+	    <td width=60%><font size=2><% getInfo("wan-mask"); %></td>\
+	  </tr>\
+	  <tr bgcolor="#DDDDDD">\
+	    <td width=40%><font size=2><b>Default Gateway</b></td>\
+	    <td width=60%><font size=2><% getInfo("wan-gateway"); %></td>\
+	  </tr>\
+	  <tr bgcolor="#EEEEEE">\
+	    <td width=40%><font size=2><b>MAC Address</b></td>\
+	    <td width=60%><font size=2><% getInfo("wan-hwaddr"); %></td>\
+	  </tr>');		
+	}
+	
+	if(ipv6Enable)
+	{
+		document.write('\
+		 <tr>\
+		 <td width=100% colspan=2 class=\"tbl_title\">LAN IPv6 Configuration</td>\
+	  	</tr>');  	
+
+	  	document.write('<tr bgcolor="#DDDDDD">\
+	    	<td width=40%><font size=2><b>Global Address</b></td>\
+	    	<td width=60%><font size=2><% getIPv6Status("lan_addr6_global"); %></td>\
+	  		</tr>\
+	 		<tr bgcolor="#EEEEEE">\
+	    	<td width=40%><font size=2><b>LL Address</b></td>\
+	    	<td width=60%><font size=2><% getIPv6Status("lan_addr6_ll"); %></td>\
+	  		</tr>\
+	  		<tr bgcolor="#DDDDDD">\
+	    	<td width=40%><font size=2><b>Default Gateway</b></td>\
+	    	<td width=60%><font size=2><% getIPv6Status("lan_addr6_ll"); %></td>\
+	 		</tr>\
+	  		<tr bgcolor="#EEEEEE">\
+	    	<td width=40%><font size=2><b>MAC Address</b></td>\
+	    	<td width=60%><font size=2><% getInfo("hwaddr"); %></td>\
+	  		</tr>');	
+	  		
+		document.write('\
+		 <tr>\
+		 <td width=100% colspan=2 class=\"tbl_title\">WAN IPv6 Configuration</td>\
+	  	</tr>');
+	
+	  		document.write('<tr bgcolor="#EEEEEE">\
+	    	<td width=40%><font size=2><b>Link Type</b></td>\
+	    	<td width=60%><font size=2><%getIPv6Status("ipv6LinkType");%></td>\
+	  		</tr>');
+		
+			document.write('<tr bgcolor="#DDDDDD">\
+	    	<td width=40%><font size=2><b>Connection Type</b></td>\
+	    	<td width=60%><font size=2><%getIPv6Status("ipv6Origin");%></td>\
+	  		</tr>');  	
+
+	  	document.write('<tr bgcolor="#EEEEEE">\
+	    	<td width=40%><font size=2><b>Global Address</b></td>\
+	    	<td width=60%><font size=2><% getIPv6Status("wan_addr6_global"); %></td>\
+	  		</tr>\
+	 		<tr bgcolor="#DDDDDD">\
+	    	<td width=40%><font size=2><b>LL Address</b></td>\
+	    	<td width=60%><font size=2><% getIPv6Status("wan_addr6_ll"); %></td>\
+	  		</tr>\
+	  		<tr bgcolor="#EEEEEE">\
+	    	<td width=40%><font size=2><b>Default Gateway</b></td>\
+	    	<td width=60%><font size=2><% getIPv6Status("gw_addr6"); %></td>\
+	 		</tr>\
+			<tr bgcolor="#DDDDDD">\
+			<td width=40%><font size=2><b>DNS server</b></td>\
+			<td width=60%><font size=2><% getIPv6Status("wan-dns-ipv6"); %></td>\
+			</tr>\
+			<tr bgcolor="#EEEEEE">\
+	    	<td width=40%><font size=2><b>MAC Address</b></td>\
+	    	<td width=60%><font size=2><% getInfo("wan-hwaddr"); %></td>\
+	  		</tr>');	  	
+	}
+}
+</script>
+
+</head>
+<body>
+<blockquote>
+
+<h2>Access Point Status</h2>
+
+<table border=0 width="400" cellspacing=0 cellpadding=0>
+<tr><td><font size=2>
+ This page shows the current status and some basic settings of the device.
+</font></td></tr>
+
+<% getInfo("status_warning"); %>
+
+<tr><td><hr size=1 noshade align=top><br></td></tr>
+</table>
+
+
+<table width=400 border=0">
+  <tr>
+    <td width=100% colspan="2" class="tbl_title">System</td>
+  </tr>
+  <tr bgcolor="#DDDDDD">
+    <td width=40%><font size=2><b>Uptime</b></td>
+    <td width=60%><font size=2><% getInfo("uptime"); %></td>
+  </tr>
+  <tr bgcolor="#EEEEEE">
+    <td width=40%><font size=2><b>Firmware Version</b></td>
+    <td width=60%><font size=2><% getInfo("fwVersion"); %></td>
+  </tr>
+  <tr bgcolor="#DDDDDD">
+    <td width=40%><font size=2><b>Build Time</b></td>
+    <td width=60%><font size=2><% getInfo("buildTime"); %></td>
+  </tr>
+  <script>
+ 	var wlan_num = <% getIndex("wlan_num"); %>;
+ 	var isNewMeshUI =  <% getIndex("isNewMeshUI"); %> ;
+  	var wlanMode =new Array();
+  	var networkType =new Array();
+  	var band=new Array();
+  	var ssid_drv=new Array();
+  	var channel_drv=new Array();
+  	var wep=new Array();
+  	var wdsEncrypt=new Array();
+  	var meshEncrypt=new Array();
+  	var bssid_drv=new Array();
+  	var clientnum=new Array();
+  	var state_drv=new Array();
+  	var rp_enabled=new Array();
+	var rp_mode=new Array();
+  	var rp_encrypt=new Array();
+  	var rp_clientnum=new Array();
+  	var rp_ssid=new Array();
+  	var rp_bssid=new Array();
+  	var rp_state=new Array();
+	var wlanDisabled=new Array();
+	
+	var mssid_num=<%getIndex("wlan_mssid_num");%>;
+	
+	var mssid_disable=new Array(wlan_num);
+	var mssid_bssid_drv=new Array(wlan_num);
+	var mssid_clientnum=new Array(wlan_num);
+	var mssid_band=new Array(wlan_num);
+	var mssid_ssid_drv=new Array(wlan_num);
+	var mssid_wep=new Array(wlan_num);
+	
+	for(i=0; i<wlan_num; i++)
+	{
+		mssid_disable[i] = new Array(mssid_num);
+		mssid_bssid_drv[i] = new Array(mssid_num);
+		mssid_clientnum[i] = new Array(mssid_num);
+		mssid_band[i] = new Array(mssid_num);
+		mssid_ssid_drv[i] = new Array(mssid_num);
+		mssid_wep[i] = new Array(mssid_num);		
+	}
+  	
+	if (wlan_num > 0)
+	{
+		<%getInfo("wlan0-status");%>
+		wlanMode[0] =<%getIndex("wlanMode");%>;
+		networkType[0] =<%getIndex("networkType");%>;
+		band[0] =<%getIndex("band");%>;
+		ssid_drv[0] ='<%getInfo("ssid_drv");%>';
+		channel_drv[0] ='<%getInfo("channel_drv");%>';
+		wep[0] ='<%getInfo("wep");%>';
+		wdsEncrypt[0] ='<%getInfo("wdsEncrypt");%>';
+ 		if (<%getIndex("isMeshDefined");%> == 1)
+			meshEncrypt[0] ='<%getInfo("meshEncrypt");%>';
+		else
+			meshEncrypt[0] ='';
+
+		bssid_drv[0] ='<%getInfo("bssid_drv");%>';
+		clientnum[0] ='<%getInfo("clientnum");%>';
+		state_drv[0] ='<%getInfo("state_drv");%>';
+		wlanDisabled[0] =<%getIndex("wlanDisabled");%>;
+
+		rp_enabled[0] =<%getIndex("isRepeaterEnabled");%>;
+		rp_mode[0] =<%getIndex("repeaterMode");%>;
+		rp_encrypt[0] ='<%getVirtualInfo("wep", "5");%>';
+		rp_ssid[0] ='<%getInfo("repeaterSSID_drv");%>';
+		rp_bssid[0] ='<%getInfo("repeaterBSSID");%>';
+		rp_state[0] ='<%getInfo("repeaterState");%>';
+		rp_clientnum[0] ='<%getInfo("repeaterClientnum");%>';
+		
+		if (mssid_num > 0) {
+			mssid_ssid_drv[0][0] ='<%getVirtualInfo("ssid_drv", "1");%>';
+			mssid_band[0][0] =<%getVirtualIndex("band", "1");%>;
+			mssid_disable[0][0] =<%getVirtualIndex("wlanDisabled", "1");%>;
+			mssid_bssid_drv[0][0] ='<%getVirtualInfo("bssid_drv", "1");%>';
+			mssid_clientnum[0][0] ='<%getVirtualInfo("clientnum", "1");%>';
+			mssid_wep[0][0] ='<%getVirtualInfo("wep", "1");%>';
+		}
+
+		if (mssid_num > 1) {
+			mssid_ssid_drv[0][1] ='<%getVirtualInfo("ssid_drv", "2");%>';
+			mssid_band[0][1] =<%getVirtualIndex("band", "2");%>;
+			mssid_disable[0][1] =<%getVirtualIndex("wlanDisabled", "2");%>;
+			mssid_bssid_drv[0][1] ='<%getVirtualInfo("bssid_drv", "2");%>';
+			mssid_clientnum[0][1] ='<%getVirtualInfo("clientnum", "2");%>';
+			mssid_wep[0][1] ='<%getVirtualInfo("wep", "2");%>';
+		}
+		
+		if (mssid_num > 2) {
+			mssid_ssid_drv[0][2] ='<%getVirtualInfo("ssid_drv", "3");%>';
+			mssid_band[0][2] =<%getVirtualIndex("band", "3");%>;
+			mssid_disable[0][2] =<%getVirtualIndex("wlanDisabled", "3");%>;
+			mssid_bssid_drv[0][2] ='<%getVirtualInfo("bssid_drv", "3");%>';
+			mssid_clientnum[0][2] ='<%getVirtualInfo("clientnum", "3");%>';
+			mssid_wep[0][2] ='<%getVirtualInfo("wep", "3");%>';
+		}
+		
+		if (mssid_num > 3) {
+			mssid_ssid_drv[0][3] ='<%getVirtualInfo("ssid_drv", "4");%>';
+			mssid_band[0][3] =<%getVirtualIndex("band", "4");%>;
+			mssid_disable[0][3] =<%getVirtualIndex("wlanDisabled", "4");%>;
+			mssid_bssid_drv[0][3] ='<%getVirtualInfo("bssid_drv", "4");%>';
+			mssid_clientnum[0][3] ='<%getVirtualInfo("clientnum", "4");%>';
+			mssid_wep[0][3] ='<%getVirtualInfo("wep", "4");%>';
+		}
+
+		if (mssid_num > 4) {
+			mssid_ssid_drv[0][4] ='<%getVirtualInfo("ssid_drv", "5");%>';
+			mssid_band[0][4] =<%getVirtualIndex("band", "5");%>;
+			mssid_disable[0][4] =<%getVirtualIndex("wlanDisabled", "5");%>;
+			mssid_bssid_drv[0][4] ='<%getVirtualInfo("bssid_drv", "5");%>';
+			mssid_clientnum[0][4] ='<%getVirtualInfo("clientnum", "5");%>';
+			mssid_wep[0][4] ='<%getVirtualInfo("wep", "5");%>';
+		}
+		
+		if (mssid_num > 5) {
+			mssid_ssid_drv[0][5] ='<%getVirtualInfo("ssid_drv", "6");%>';
+			mssid_band[0][5] =<%getVirtualIndex("band", "6");%>;
+			mssid_disable[0][5] =<%getVirtualIndex("wlanDisabled", "6");%>;
+			mssid_bssid_drv[0][5] ='<%getVirtualInfo("bssid_drv", "6");%>';
+			mssid_clientnum[0][5] ='<%getVirtualInfo("clientnum", "6");%>';
+			mssid_wep[0][5] ='<%getVirtualInfo("wep", "6");%>';
+		}
+		
+		if (mssid_num > 6) {
+			mssid_ssid_drv[0][6] ='<%getVirtualInfo("ssid_drv", "7");%>';
+			mssid_band[0][6] =<%getVirtualIndex("band", "7");%>;
+			mssid_disable[0][6] =<%getVirtualIndex("wlanDisabled", "7");%>;
+			mssid_bssid_drv[0][6] ='<%getVirtualInfo("bssid_drv", "7");%>';
+			mssid_clientnum[0][6] ='<%getVirtualInfo("clientnum", "7");%>';
+			mssid_wep[0][6] ='<%getVirtualInfo("wep", "7");%>';
+		}
+		
+		if (mssid_num > 7) {
+			mssid_ssid_drv[0][7] ='<%getVirtualInfo("ssid_drv", "8");%>';
+			mssid_band[0][7] =<%getVirtualIndex("band", "8");%>;
+			mssid_disable[0][7] =<%getVirtualIndex("wlanDisabled", "8");%>;
+			mssid_bssid_drv[0][7] ='<%getVirtualInfo("bssid_drv", "8");%>';
+			mssid_clientnum[0][7] ='<%getVirtualInfo("clientnum", "8");%>';
+			mssid_wep[0][7] ='<%getVirtualInfo("wep", "8");%>';
+		}
+	} /*if (wlan_num > 0)*/
+
+	if (wlan_num > 1)
+	{
+		<%getInfo("wlan1-status");%>
+		wlanMode[1] =<%getIndex("wlanMode");%>;
+		networkType[1] =<%getIndex("networkType");%>;
+		band[1] =<%getIndex("band");%>;
+		ssid_drv[1] ='<%getInfo("ssid_drv");%>';
+		channel_drv[1] ='<%getInfo("channel_drv");%>';
+		wep[1] ='<%getInfo("wep");%>';
+		wdsEncrypt[1] ='<%getInfo("wdsEncrypt");%>';
+ 		if (<%getIndex("isMeshDefined");%> == 1)
+			meshEncrypt[1] ='<%getInfo("meshEncrypt");%>';
+		else
+			meshEncrypt[1] ='';
+
+		bssid_drv[1] ='<%getInfo("bssid_drv");%>';
+		clientnum[1] ='<%getInfo("clientnum");%>';
+		state_drv[1] ='<%getInfo("state_drv");%>';
+		wlanDisabled[1] =<%getIndex("wlanDisabled");%>;
+
+		rp_enabled[1] =<%getIndex("isRepeaterEnabled");%>;
+		rp_mode[1] =<%getIndex("repeaterMode");%>;
+		rp_encrypt[1] ='<%getVirtualInfo("wep", "5");%>';
+		rp_ssid[1] ='<%getInfo("repeaterSSID_drv");%>';
+		rp_bssid[1] ='<%getInfo("repeaterBSSID");%>';
+		rp_state[1] ='<%getInfo("repeaterState");%>';
+		rp_clientnum[1] ='<%getInfo("repeaterClientnum");%>';
+
+		if (mssid_num > 0) {
+			mssid_ssid_drv[1][0] ='<%getVirtualInfo("ssid_drv", "1");%>';
+			mssid_band[1][0] =<%getVirtualIndex("band", "1");%>;
+			mssid_disable[1][0] =<%getVirtualIndex("wlanDisabled", "1");%>;
+			mssid_bssid_drv[1][0] ='<%getVirtualInfo("bssid_drv", "1");%>';
+			mssid_clientnum[1][0] ='<%getVirtualInfo("clientnum", "1");%>';
+			mssid_wep[1][0] ='<%getVirtualInfo("wep", "1");%>';
+		}
+
+		if (mssid_num > 1) {
+			mssid_ssid_drv[1][1] ='<%getVirtualInfo("ssid_drv", "2");%>';
+			mssid_band[1][1] =<%getVirtualIndex("band", "2");%>;
+			mssid_disable[1][1] =<%getVirtualIndex("wlanDisabled", "2");%>;
+			mssid_bssid_drv[1][1] ='<%getVirtualInfo("bssid_drv", "2");%>';
+			mssid_clientnum[1][1] ='<%getVirtualInfo("clientnum", "2");%>';
+			mssid_wep[1][1] ='<%getVirtualInfo("wep", "2");%>';
+		}
+		
+		if (mssid_num > 2) {
+			mssid_ssid_drv[1][2] ='<%getVirtualInfo("ssid_drv", "3");%>';
+			mssid_band[1][2] =<%getVirtualIndex("band", "3");%>;
+			mssid_disable[1][2] =<%getVirtualIndex("wlanDisabled", "3");%>;
+			mssid_bssid_drv[1][2] ='<%getVirtualInfo("bssid_drv", "3");%>';
+			mssid_clientnum[1][2] ='<%getVirtualInfo("clientnum", "3");%>';
+			mssid_wep[1][2] ='<%getVirtualInfo("wep", "3");%>';
+		}
+		
+		if (mssid_num > 3) {
+			mssid_ssid_drv[1][3] ='<%getVirtualInfo("ssid_drv", "4");%>';
+			mssid_band[1][3] =<%getVirtualIndex("band", "4");%>;
+			mssid_disable[1][3] =<%getVirtualIndex("wlanDisabled", "4");%>;
+			mssid_bssid_drv[1][3] ='<%getVirtualInfo("bssid_drv", "4");%>';
+			mssid_clientnum[1][3] ='<%getVirtualInfo("clientnum", "4");%>';
+			mssid_wep[1][3] ='<%getVirtualInfo("wep", "4");%>';
+		}
+
+		if (mssid_num > 4) {
+			mssid_ssid_drv[1][4] ='<%getVirtualInfo("ssid_drv", "5");%>';
+			mssid_band[1][4] =<%getVirtualIndex("band", "5");%>;
+			mssid_disable[1][4] =<%getVirtualIndex("wlanDisabled", "5");%>;
+			mssid_bssid_drv[1][4] ='<%getVirtualInfo("bssid_drv", "5");%>';
+			mssid_clientnum[1][4] ='<%getVirtualInfo("clientnum", "5");%>';
+			mssid_wep[1][4] ='<%getVirtualInfo("wep", "5");%>';
+		}
+		
+		if (mssid_num > 5) {
+			mssid_ssid_drv[1][5] ='<%getVirtualInfo("ssid_drv", "6");%>';
+			mssid_band[1][5] =<%getVirtualIndex("band", "6");%>;
+			mssid_disable[1][5] =<%getVirtualIndex("wlanDisabled", "6");%>;
+			mssid_bssid_drv[1][5] ='<%getVirtualInfo("bssid_drv", "6");%>';
+			mssid_clientnum[1][5] ='<%getVirtualInfo("clientnum", "6");%>';
+			mssid_wep[1][5] ='<%getVirtualInfo("wep", "6");%>';
+		}
+		
+		if (mssid_num > 6) {
+			mssid_ssid_drv[1][6] ='<%getVirtualInfo("ssid_drv", "7");%>';
+			mssid_band[1][6] =<%getVirtualIndex("band", "7");%>;
+			mssid_disable[1][6] =<%getVirtualIndex("wlanDisabled", "7");%>;
+			mssid_bssid_drv[1][6] ='<%getVirtualInfo("bssid_drv", "7");%>';
+			mssid_clientnum[1][6] ='<%getVirtualInfo("clientnum", "7");%>';
+			mssid_wep[1][6] ='<%getVirtualInfo("wep", "7");%>';
+		}
+		
+		if (mssid_num > 7) {
+			mssid_ssid_drv[1][7] ='<%getVirtualInfo("ssid_drv", "8");%>';
+			mssid_band[1][7] =<%getVirtualIndex("band", "8");%>;
+			mssid_disable[1][7] =<%getVirtualIndex("wlanDisabled", "8");%>;
+			mssid_bssid_drv[1][7] ='<%getVirtualInfo("bssid_drv", "8");%>';
+			mssid_clientnum[1][7] ='<%getVirtualInfo("clientnum", "8");%>';
+			mssid_wep[1][7] ='<%getVirtualInfo("wep", "8");%>';
+		}
+	} /*if (wlan_num > 1)*/
+			
+	for(i=0; i < wlan_num ; i++)
+   	{
+		if(ssid_drv[i]=="")
+			mssid_num=0;
+		else
+			mssid_num=<%getIndex("wlan_mssid_num");%>;
+   		
+		if(wlanDisabled[i] == 1)
+			continue;
+
+		document.write('<tr bgcolor="#EEEEEE">\
+		<td width=100% colspan="2" class=\"tbl_title\">');
+
+		if (wlan_num > 1) {
+			var num = i + 1;
+			document.write("Wireless " + num + " Configuration");
+		}
+		else
+			document.write("Wireless Configuration");
+		document.write('</td></tr>');
+	
+		document.write('<tr bgcolor="#EEEEEE">\
+		<td width=40%><font size=2><b>Mode</b></td>\
+		<td width=60%><font size=2>' );
+		/* mode */
+		if(wlanMode[i] == 0)
+			document.write("AP");
+		if (wlanMode[i] == 1) {
+			if (networkType[i] == 0)
+				document.write( "Infrastructure Client");
+			else
+				document.write( "Ad-hoc Client");
+		}
+		if ( wlanMode[i] == 2 )
+			document.write( "WDS");
+		if ( wlanMode[i] == 3 )
+			document.write( "AP+WDS");
+		/*#ifdef CONFIG_NEW_MESH_UI*/
+		if( isNewMeshUI ==1 )
+		{
+			if ( wlanMode[i] == 4 )
+				document.write( "AP+MESH");  	
+			if ( wlanMode[i] == 5 )
+				document.write( "MESH");
+		}
+		else
+		{
+			if ( wlanMode[i] == 4 )
+				document.write( "AP+MPP");  	
+			if ( wlanMode[i] == 5 )
+				document.write( "MPP");
+			if ( wlanMode[i] == 6 )
+				document.write( "MAP");	
+			if ( wlanMode[i] == 7 )
+				document.write( "MP");  
+		} 	
+		/* band */
+		document.write('</td>\
+			<tr bgcolor="#DDDDDD">\
+	    		<td width=40%><font size=2><b>Band</b></td>\
+	    		<td width=60%><font size=2>');
+		if (band[i] == 1)
+   			document.write( "2.4 GHz (B)");
+    	else
+    	if (band[i] == 2)
+   			document.write( "2.4 GHz (G)");
+    	else
+    	if (band[i] == 8)
+   		{
+    			if(channel_drv[i] > 14)
+    				document.write( "5 GHz (N)");
+    			else
+   				document.write( "2.4 GHz (N)");   		
+   		}
+   		else
+   		if (band[i] == 3)
+   			document.write( "2.4 GHz (B+G)");
+    	else
+    	if (band[i] == 4)
+   			document.write( "5 GHz (A)");
+   		else
+   		if (band[i] == 10)
+   			document.write( "2.4 GHz (G+N)");
+   		else
+   		if (band[i] == 11)
+   			document.write( "2.4 GHz (B+G+N)");		
+   		else
+		if (band[i] == 75)
+			document.write( "2.4 GHz (B+G+N+AC)");
+		else
+   		if (band[i] == 12)
+   			document.write( "5 GHz (A+N)");
+		else
+		if (band[i] == 15)
+   			document.write( "2.4GHz+5 GHz (A+B+G+N)");
+   		else
+   		if (band[i] == 76)
+   			document.write( "5 GHz (A+N+AC)");
+   		else
+   		if (band[i] == 64)
+   			document.write( "5 GHz (AC)");
+   		else
+   		if (band[i] == 72)
+   			document.write( "5 GHz (N+AC)");
+   		else
+   		if (band[i] == 68)
+   			document.write( "5 GHz (A+AC)");
+		document.write('</tr>\
+			<tr bgcolor="#EEEEEE">\
+    			<td width=40%><font size=2><b>SSID</b></td>\
+    			<td width=60%><font size=2>');
+		if (wlanMode[i] != 2) {
+			document.write(ssid_drv[i]);
+		}
+		document.write('</td>\
+			</tr>\
+			<tr bgcolor="#DDDDDD">\
+			<td width=40%><font size=2><b>Channel Number</b></td>\
+			<td width=60%><font size=2>'+channel_drv[i] +'</td>\
+			</tr>\
+			<tr bgcolor="#EEEEEE">\
+			<td width=40%><font size=2><b>Encryption</b></td>\
+			<td width=60%><font size=2>');
+		if (wlanMode[i] == 0 || wlanMode[i] == 1)
+    			document.write(wep[i]);
+		else if (wlanMode[i] == 2)
+    			document.write(wdsEncrypt[i]);
+		else if (wlanMode[i] == 3)
+    			document.write(wep[i] + '(AP),  ' + wdsEncrypt[i] + '(WDS)');
+		else if (wlanMode[i] == 4 || wlanMode[i] == 6)
+    			document.write(wep[i] + '(AP),  ' + meshEncrypt[i] + '(Mesh)');    	
+    		else if (wlanMode[i] == 5|| wlanMode[i] == 7)
+    			document.write( meshEncrypt[i] + '(Mesh)');
+
+		document.write('</td>\
+  			</tr>\
+  			<tr bgcolor="#DDDDDD">\
+    			<td width=40%><font size=2><b>BSSID</b></td>\
+    			<td width=60%><font size=2>'+bssid_drv[i]+'</td>\
+  			</tr>');
+		if (wlanMode[i]!=2) {	//2 means WDS mode
+			document.write('<tr bgcolor="#EEEEEE">\n');
+			if (wlanMode[i]==0 || wlanMode[i]==3 || wlanMode[i]==4) {
+				document.write("<td width=40%%><font size=2><b>Associated Clients</b></td>\n");
+				document.write("<td width=60%%><font size=2>"+clientnum[i]+"</td></tr>");
+			}
+			else {
+				document.write("<td width=40%%><font size=2><b>State</b></td>\n");
+				document.write('<td width=60%%><font size=2>'+state_drv[i]+'</td></tr>');
+			}
+        	}
+
+		/* mesh does not support virtual ap */
+		if (!wlanDisabled[i] && (wlanMode[i]==0 || wlanMode[i]==3 )) {
+			for (idx=0; idx<mssid_num; idx++) {
+				if (!mssid_disable[i][idx]) {
+					document.write('\
+						<tr bgcolor="#EEEEEE">\
+						<td width=100% colspan="2" class=\"tbl_title\"><font color="#FFFFFF" size=2>\
+						<b>Virtual AP'+(idx+1)+' Configuration</td>\
+						</tr>\
+						<tr bgcolor="#EEEEEE">\
+	    					<td width=40%><font size=2><b>Band</b></td>\
+			    			<td width=60%><font size=2>');
+					if (mssid_band[i][idx] == 1)
+			   			document.write( "2.4 GHz (B)");
+					else if (mssid_band[i][idx] == 2)
+			   			document.write( "2.4 GHz (G)");
+					else if (mssid_band[i][idx] == 8){
+						if(channel_drv[i] > 14)
+							document.write( "5 GHz (N)"); 
+						else
+			   				document.write( "2.4 GHz (N)"); 
+			   		}
+					else if (mssid_band[i][idx] == 3)
+			   			document.write( "2.4 GHz (B+G)");
+					else if (mssid_band[i][idx] == 4)
+			   			document.write( "5 GHz (A)");
+					else if (mssid_band[i][idx] == 10)
+			   			document.write( "2.4 GHz (G+N)");
+					else if (mssid_band[i][idx] == 11)
+			   			document.write( "2.4 GHz (B+G+N)");		
+					else if (mssid_band[i][idx] == 12)
+						document.write( "5 GHz (A+N)");
+					else if (mssid_band[i][idx] == 75)
+						document.write( "2.4 GHz (B+G+N+AC)");
+					else if (mssid_band[i][idx] == 76)
+						document.write( "5 GHz (A+N+AC)");	
+					else if (mssid_band[i][idx] == 64)
+						document.write( "5 GHz (AC)");
+					else if (mssid_band[i][idx] == 68)
+						document.write( "5 GHz (A+AC)");
+					else if (mssid_band[i][idx] == 72)
+						document.write( "5 GHz (N+AC)");
+	
+					document.write('</td></tr>\
+						<tr bgcolor="#DDDDDD">\
+			    			<td width=40%><font size=2><b>SSID</b></td>\
+			    			<td width=60%><font size=2>');
+					document.write(mssid_ssid_drv[i][idx]+'</td>');
+
+					document.write('</tr>\
+						<tr bgcolor="#EEEEEE">\
+						<td width=40%><font size=2><b>Encryption</b></td>\
+						<td width=60%><font size=2>'+mssid_wep[i][idx]+'</td>');
+			
+					document.write('</tr>\
+						<tr bgcolor="#DDDDDD">\
+						<td width=40%><font size=2><b>BSSID</b></td>\
+						<td width=60%><font size=2>'+mssid_bssid_drv[i][idx]+'</td>');
+				
+					document.write('</tr>\
+						<tr bgcolor="#EEEEEE">\
+						<td width=40%%><font size=2><b>Associated Clients</b></td>\
+						<td width=60%%><font size=2>'+mssid_clientnum[i][idx]+'</td></tr>');
+				}
+			}
+		}
+
+		//    document.write('</table>\
+		if (rp_enabled[i])	// start of repeater
+		{
+			document.write('<tr bgcolor="#EEEEEE">\
+				<td width=100% colspan="2" class=\"tbl_title\">');
+
+			if (wlan_num > 1) {
+				var num = i + 1;
+				document.write("Wireless " + num + " Repeater Interface Configuration");
+			}
+			else
+				document.write("Wireless Repeater Interface Configuration");
+			document.write('</td></tr>');
+
+			document.write('<tr bgcolor="#EEEEEE">\
+				<td width=40%><font size=2><b>Mode</b></td>\
+				<td width=60%><font size=2>' );
+			/* mode */
+			if(rp_mode[i] == 0)
+				document.write("AP");
+			else
+				document.write( "Infrastructure Client");
+			document.write('</td>\
+				</tr>\
+				<tr bgcolor="#DDDDDD">\
+				<td width=40%><font size=2><b>SSID</b></td>\
+				<td width=60%><font size=2>'+rp_ssid[i] +'</td>\
+				</tr>\
+				<tr bgcolor="#EEEEEE">\
+				<td width=40%><font size=2><b>Encryption</b></td>\
+				<td width=60%><font size=2>'+rp_encrypt[i] +'</td>\
+				</tr>\
+				<tr bgcolor="#DDDDDD">\
+				<td width=40%><font size=2><b>BSSID</b></td>\
+				<td width=60%><font size=2>'+rp_bssid[i] +'</td>\
+				</tr>');
+			document.write('<tr bgcolor="#EEEEEE">\n');
+			if (rp_mode[i]==0 || rp_mode[i]==3) {
+				document.write("<td width=40%%><font size=2><b>Associated Clients</b></td>\n");
+				document.write("<td width=60%%><font size=2>"+rp_clientnum[i]+"</td></tr>");
+			}
+			else {
+				document.write("<td width=40%%><font size=2><b>State</b></td>\n");
+				document.write('<td width=60%%><font size=2>'+rp_state[i]+'</td></tr>');
+			}
+		}	// end of repeater
+	}//end of wlan_num for
+</script>
+
+<% getInfo("pocketRouter_html_lan_hide_s"); %>  
+  <tr>
+    <td width=100% colspan="2" class="tbl_title">TCP/IP Configuration</td>
+  </tr>
+  <tr bgcolor="#EEEEEE">
+    <td width=40%><font size=2><b>Attain IP Protocol</b></td>
+    <td width=60%><font size=2><% getInfo("dhcp-current"); %></td>
+  </tr>
+
+  <tr bgcolor="#DDDDDD">
+    <td width=40%><font size=2><b>IP Address</b></td>
+    <td width=60%><font size=2><% getInfo("ip"); %></td>
+  </tr>
+  <tr bgcolor="#EEEEEE">
+    <td width=40%><font size=2><b>Subnet Mask</b></td>
+    <td width=60%><font size=2><% getInfo("mask"); %></td>
+  </tr>
+  <tr bgcolor="#DDDDDD">
+    <td width=40%><font size=2><b>Default Gateway</b></td>
+    <td width=60%><font size=2><% getInfo("gateway"); %></td>
+  </tr>
+  <tr bgcolor="#EEEEEE">
+    <td width=40%><font size=2><b>DHCP Server</b></td>
+    <td width=60%><font size=2>
+	<SCRIPT>
+      		choice=<%getIndex("dhcp-current");%>;
+      		if ( choice == 0 ) document.write( "Disabled" );
+    		if ( choice == 2 ) document.write( "Enabled" );
+    		if ( choice == 15 ) document.write( "Auto" );
+    		if ( choice == 19 ) document.write( "Auto" );    		
+	</SCRIPT></td>
+  </tr>
+
+  <tr bgcolor="#DDDDDD">
+    <td width=40%><font size=2><b>MAC Address</b></td>
+    <td width=60%><font size=2><% getInfo("hwaddr"); %></td>
+  </tr>
+<% getInfo("pocketRouter_html_lan_hide_e"); %>
+
+<% getInfo("pocketRouter_html_wan_hide_s"); %>
+<SCRIPT>
+	if(isAP == 0)
+		showWan();
+</SCRIPT>
+<% getInfo("pocketRouter_html_wan_hide_e"); %>  
+  <% getInfo("voip_status"); %>
+</table>
+<br>
+</blockquote>
+</body>
+</html>

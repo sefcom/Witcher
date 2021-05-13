@@ -1,0 +1,705 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAdvwireless.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript">
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var SSID_24;
+var SSID_5;
+
+function Load_HTML()	
+{	
+	GetXML();
+}
+
+function changecheckbox(checkbox_on_off_id,checkbox_id)
+{
+	var a = document.getElementById(checkbox_id).checked;
+	
+	if(a)
+	{
+		document.getElementById(checkbox_on_off_id).className = "checkbox_off";
+		document.getElementById(checkbox_id).checked = false;
+	}
+	else
+	{
+		document.getElementById(checkbox_on_off_id).className = "checkbox_on";
+		document.getElementById(checkbox_id).checked = true;  
+	}
+}
+
+function ChangewlanStatus()
+{
+    document.getElementById("wifi_open_off").click();
+	changecheckbox("wlan_status","wifi_open_off");
+}
+
+function ChangeWmmStatus()
+{
+    document.getElementById("wmm_open_off").click();
+	changecheckbox("wmm_status","wmm_open_off");
+}
+
+function change_mode_24(mode){
+	if (mode == "b/g") {
+		document.getElementById("band_24").style.display = "none";
+		document.getElementById("empty_1").style.display = "none";
+		document.getElementById("gi_24").style.display = "none";
+		document.getElementById("empty_2").style.display = "none";
+	} else {
+		document.getElementById("band_24").style.display = "";
+		document.getElementById("empty_1").style.display = "";
+		document.getElementById("gi_24").style.display = "";
+		document.getElementById("empty_2").style.display = "";
+	}
+}
+
+function hideChannel(channel)
+{
+	if("40"==channel || "80"==channel || "20/40"==channel)//隐藏165信道
+	{
+		if($("#channel_165").length >0 )
+		{
+			$("#channel_165").remove();
+		}
+	}
+	else if($("#channel_165").length ==0)//显示165信道
+	{
+		$("#5gwlan_channel").append('<option id="channel_165" value="165">165</option>');
+	}
+	$("#5gwlan_channel").selectbox('detach');
+	$("#5gwlan_channel").selectbox();
+}
+
+function ChangewlanStatus5g()
+{
+    document.getElementById("5gwifi_open_off").click();
+	changecheckbox("5gwlan_status","5gwifi_open_off");
+}
+
+function ChangeWmmStatus5g()
+{
+    document.getElementById("5gwmm_open_off").click();
+	changecheckbox("5gwmm_status","5gwmm_open_off");
+}
+
+function change_mode_5(mode)
+{
+	if (mode == "a") {
+		document.getElementById("band_5").style.display = "none";
+		document.getElementById("empty_3").style.display = "none";
+		document.getElementById("gi_5").style.display = "none";
+		document.getElementById("empty_4").style.display = "none";
+		if($("#channel_165").length ==0)//显示165信道
+		{
+			$("#5gwlan_channel").append('<option id="channel_165" value="165">165</option>');
+		}
+	} else {
+		document.getElementById("band_5").style.display = "";
+		document.getElementById("empty_3").style.display = "";
+		document.getElementById("gi_5").style.display = "";
+		document.getElementById("empty_4").style.display = "";
+		var channel = document.getElementById("5gwlan_band").value;
+		if("40"==channel || "80"==channel || "20/40"==channel)//隐藏165信道
+		{
+			if($("#channel_165").length >0 )
+			{
+				$("#channel_165").remove();
+			}
+		}
+	}
+	$("#5gwlan_channel").selectbox('detach');
+	$("#5gwlan_channel").selectbox();
+}
+function GetXML(){
+    //初始化下拉框
+    $("#wlan_channel").selectbox();
+    $("#wlan_mode").selectbox();
+    $("#wlan_band").selectbox();
+    $("#wlan_11ngi").selectbox();
+    $("#2gpw_mode").selectbox();
+
+	var WLanRadio24G = getWLanRadio24G();
+	var WLanRadio5G = getWLanRadio5G();
+    $.when(WLanRadio24G,WLanRadio5G).done(function(WLanRadio24G,WLanRadio5G){
+        GetResult(WLanRadio24G,WLanRadio5G);
+    });
+}
+
+function getWLanRadio24G() {
+    var dtd = $.Deferred();
+    var soapAction = new SOAPAction();
+    var settings = new Object();
+    var WLanInfo24 = new SOAPGetWLanRadioSettingsResponse();
+    settings.RadioID = "RADIO_2.4GHz";
+    soapAction.sendSOAPAction("GetWLanRadioSettings",settings,WLanInfo24).done(function(obj){
+        dtd.resolve(obj);
+    }).fail(function(){
+        dtd.reject();
+    });
+    return dtd.promise();
+}
+
+function getWLanRadio5G(){
+    var dtd = $.Deferred();
+    var soapAction = new SOAPAction();
+    var settings = new Object();
+    var WLanInfo5 = new SOAPGetWLanRadioSettingsResponse();
+    settings.RadioID = "RADIO_5GHz";
+    soapAction.sendSOAPAction("GetWLanRadioSettings",settings,WLanInfo5).done(function(obj){
+        dtd.resolve(obj);
+    }).fail(function(){
+        dtd.reject();
+    });;
+    return dtd.promise();
+}
+
+function GetResult(WLanRadio24G,WLanRadio5G) {
+
+	var mode_24;
+	var channel_24;
+	var bandwidth_24;
+	var guard_intv_24;
+	var wmm_24;
+	var SSIDBroadcast_24;
+    var power_24;
+
+	var mode_5;
+	var channel_5;
+	var bandwidth_5;
+	var guard_intv_5;
+	var wmm_5;
+	var SSIDBroadcast_5;
+	var power_5;
+
+    mode_24 = WLanRadio24G.Mode;
+    channel_24 = WLanRadio24G.Channel;
+    bandwidth_24 = WLanRadio24G.ChannelWidth;
+    guard_intv_24 = WLanRadio24G.GuardInt;
+    wmm_24 = WLanRadio24G.WMM;
+    SSIDBroadcast_24 = WLanRadio24G.SSIDBroadcast;
+    power_24 = WLanRadio24G.TXPower;
+    SSID_24 = WLanRadio24G.SSID;
+
+    mode_5 = WLanRadio5G.Mode;
+    channel_5 = WLanRadio5G.Channel;
+    bandwidth_5 = WLanRadio5G.ChannelWidth;
+    guard_intv_5 = WLanRadio5G.GuardInt;
+    wmm_5 = WLanRadio5G.WMM;
+    SSIDBroadcast_5 = WLanRadio5G.SSIDBroadcast;
+    power_5 = WLanRadio5G.TXPower;
+    SSID_5 = WLanRadio5G.SSID;
+
+
+    document.getElementById("wlan_channel").value = channel_24;
+    document.getElementById("wlan_mode").value = mode_24;
+    document.getElementById("wlan_band").value = bandwidth_24;
+    document.getElementById("wlan_11ngi").value = guard_intv_24;
+    document.getElementById("2gpw_mode").value = power_24;
+
+    if (SSIDBroadcast_24 == "false"){
+        document.getElementById("wifi_open_off").checked = false;
+    } else {
+        document.getElementById("wifi_open_off").checked = true;
+    }
+
+    if (wmm_24 == "true") {
+        document.getElementById("wmm_open_off").checked = false;
+    } else {
+        document.getElementById("wmm_open_off").checked = true;
+    }
+
+    document.getElementById("5gwlan_channel").value = channel_5;
+    document.getElementById("5gwlan_mode").value = mode_5;
+    document.getElementById("5gwlan_band").value = bandwidth_5;
+    document.getElementById("5gwlan_11ngi").value = guard_intv_5;
+    document.getElementById("5gpw_mode").value = power_5;
+
+    if (SSIDBroadcast_5 == "false") {
+        document.getElementById("5gwifi_open_off").checked = false;
+    } else {
+        document.getElementById("5gwifi_open_off").checked = true;
+    }
+
+    if (wmm_5 == "true") {
+        document.getElementById("5gwmm_open_off").checked = false;
+    } else {
+        document.getElementById("5gwmm_open_off").checked = true;
+    }
+
+    change_mode_24(mode_24);
+    change_mode_5(mode_5);
+
+    hideChannel(bandwidth_5);//隐藏165信道
+
+    $("#wlan_channel").selectbox('detach');
+    $("#wlan_mode").selectbox('detach');
+    $("#wlan_band").selectbox('detach');
+    $("#wlan_11ngi").selectbox('detach');
+    $("#2gpw_mode").selectbox('detach');
+
+    $("#wlan_channel").selectbox();
+    $("#wlan_mode").selectbox();
+    $("#wlan_band").selectbox();
+    $("#wlan_11ngi").selectbox();
+    $("#2gpw_mode").selectbox();
+
+    $("#5gwlan_mode").selectbox();
+    $("#5gwlan_band").selectbox();
+    $("#5gwlan_11ngi").selectbox();
+    $("#5gpw_mode").selectbox();
+
+    changecheckbox("wlan_status","wifi_open_off");
+    changecheckbox("wmm_status","wmm_open_off");
+    changecheckbox("5gwlan_status","5gwifi_open_off");
+    changecheckbox("5gwmm_status","5gwmm_open_off");
+    document.getElementById("right_content").style.display="";
+    document.getElementById("CreateOnloadMessage").style.display="none";
+}
+
+function SaveWlan()
+{
+	//有效性检查
+	
+	//提交数据
+	//CheckConnectionStatus();
+    SetXML();
+}
+
+function CheckConnectionStatus() {
+  $.ajax({
+    cache: false,
+    url: "./js/CheckConnection",
+    timeout: 5000,
+    type: "GET",
+    success: function(data) {
+    SetXML();
+    },
+    error: function() {
+      document.getElementById("DetectRouterConnection").style.display = "inline";
+    }
+  });
+}
+
+function SetXML() {
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	SetResult();
+}
+
+function createWLanRadio(radioID,mode,channel,bandwidth,guard,power,SSIDBroadcast,wmm,SSID){
+    var setting = new SOAPSetWLanRadioSettings();
+    setting.RadioID = radioID;
+    setting.Mode = mode;
+    setting.Channel = channel;
+    setting.ChannelWidth = bandwidth;
+    setting.GuardInt = guard;
+    setting.TXPower = power;
+    setting.SSIDBroadcast = SSIDBroadcast;
+    setting.WMM = wmm;
+    setting.Enabled = true;
+    setting.SSID = SSID;
+    return setting;
+}
+
+function SetResult() {
+    var soapAction = new SOAPAction();
+    var setting;
+
+    var mode_24 = document.getElementById("wlan_mode").value;
+    var channel_24 = document.getElementById("wlan_channel").value;
+    var bandwidth_24 = document.getElementById("wlan_band").value;
+    var guard_intv_24 = document.getElementById("wlan_11ngi").value;
+    var power_24 = document.getElementById("2gpw_mode").value;
+    var wmm_24;
+    var SSIDBroadcast_24;
+    if (document.getElementById("wifi_open_off").checked) {
+        SSIDBroadcast_24 = false;
+    } else {
+        SSIDBroadcast_24 = true;
+    }
+    if (document.getElementById("wmm_open_off").checked) {
+        wmm_24 = true;
+    } else {
+        wmm_24 = false;
+    }
+
+    var mode_5 = document.getElementById("5gwlan_mode").value;
+    var channel_5 = document.getElementById("5gwlan_channel").value;
+    var bandwidth_5 = document.getElementById("5gwlan_band").value;
+    var guard_intv_5 = document.getElementById("5gwlan_11ngi").value;
+    var power_5 = document.getElementById("5gpw_mode").value;
+    var wmm_5;
+    var SSIDBroadcast_5;
+    if (document.getElementById("5gwifi_open_off").checked) {
+        SSIDBroadcast_5 = false;
+    } else {
+        SSIDBroadcast_5 = true;
+    }
+    if (document.getElementById("5gwmm_open_off").checked) {
+        wmm_5 = true;
+    } else {
+        wmm_5 = false;
+    }
+
+    setting = createWLanRadio("RADIO_2.4GHz", mode_24, channel_24, bandwidth_24, guard_intv_24, power_24, SSIDBroadcast_24, wmm_24,SSID_24);
+    soapAction.SetMultipleSOAP("SetWLanRadioSettings",setting,null);
+    setting = createWLanRadio("RADIO_5GHz",mode_5, channel_5, bandwidth_5, guard_intv_5, power_5, SSIDBroadcast_5, wmm_5,SSID_5);
+    soapAction.SetMultipleSOAP("SetWLanRadioSettings",setting,null);
+    soapAction.SendMultipleSOAPAction("SetMultipleActions").done(function(obj,status){
+        if(status == 'OK'){
+            setTimeout("waitSettingFinished()", 20000);
+        }else{
+            document.getElementById("CreatePopAlertMessage").style.display = "none";
+            document.getElementById("DetectRouterConnection").style.display = "inline";
+        }
+    }).fail(function(){
+        document.getElementById("CreatePopAlertMessage").style.display = "none";
+        document.getElementById("DetectRouterConnection").style.display = "inline";
+    });
+}
+
+function waitSettingFinished() {
+    window.location.reload();
+}
+
+function save_button_changed()
+{
+    $("#savebutton").attr("disabled",false).removeClass("styled_button_s").addClass("styled_button_s_active");
+}
+
+$(document).ready( function() {
+
+	document.getElementById("right_content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	MoreContainMiniheight();
+	Load_HTML();
+	checkTimeout();
+	document.getElementById("savebutton").value = I18N("j","Commom_Save");//保存
+    $("#savebutton").attr("disabled",true).removeClass("styled_button_s_active").addClass("styled_button_s");
+	$("#option_channel_auto_2g").html(I18N("j","Advwireless_Automatic_Channel"));//自动信道
+	$("#option_bw_auto_2g").html(I18N("j","Advwireless_Auto_Bandwidth"));//自动带宽
+	$("#option_distance_auto_2g").html(I18N("j","Advwireless_Auto_Distance"));//自动间距
+	$("#option_distance_long_2g").html(I18N("j","Advwireless_Long_Distance"));//长间距
+	$("#option_sleep_2g").html(I18N("j","Advwireless_Sleep"));//睡眠
+	$("#option_normal_2g").html(I18N("j","Advwireless_Normal"));//普通
+	$("#option_strong_2g").html(I18N("j","Advwireless_Strong"));//增强
+	//5G无线网络
+	$("#option_channel_auto_5g").html(I18N("j","Advwireless_Automatic_Channel"));//自动信道
+	//$("#option_bw_auto_5g").html(I18N("j","Advwireless_Auto_Bandwidth"));//自动带宽 去掉
+	$("#option_distance_auto_5g").html(I18N("j","Advwireless_Auto_Distance"));//自动间距
+	$("#option_distance_long_5g").html(I18N("j","Advwireless_Long_Distance"));//长间距
+	$("#option_sleep_5g").html(I18N("j","Advwireless_Sleep"));//睡眠
+	$("#option_normal_5g").html(I18N("j","Advwireless_Normal"));//普通
+	$("#option_strong_5g").html(I18N("j","Advwireless_Strong"));//增强
+
+
+    $("input, select").change(function () {
+        save_button_changed();
+    });
+
+    $("input").keypress(function () {
+        save_button_changed();
+    });
+});
+	
+	
+	
+
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container">
+				<script>initialLeftMenu();</script>
+				 </div>
+				<div id="right_content"  class="pull-left" style="display:none; ">
+					<table border="0"  class="clearboth tablemoreheader" cellpadding="0" cellspacing="0" align="left">
+						<tr>
+							<th><script>I18N("h","Commom_Advance_Settings");</script><!-- 高级设置 --></th>
+						</tr>
+					</table>
+					<div class="moreline1 clearboth"></div>
+					<div class="moredescription"><script>I18N("h","Advwireless_Description");</script><!-- 您可以对无线网络做更多个性化的设置，适应各种无线网络坏境。 --></div>
+					<div align="left">
+					  <div  class="clearboth headerline2" style="padding-top:48px; padding-bottom:12px; ">
+						<script>I18N("h","Wireless_24G_Network");</script><!-- 2.4G无线网络 -->
+					  </div>
+					  <div class="clearboth moreline1"></div>
+					  <table border="0" style="margin-top:36px;" class="clearboth block" cellpadding="0" cellspacing="0" align="left">
+						<tbody>
+						  <tr>
+							<th>
+							  <script>I18N("h","Advwireless_Channel");</script><!-- 无线信道 -->
+							</th>
+							<td>
+								<select name="wlan_channel" id="wlan_channel">
+									<!-- <option value="0">自动信道</option> -->
+									<option id="option_channel_auto_2g" value="0"></option>
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>											 
+									<option value="10">10</option>
+									<option value="11">11</option>
+									<option value="12">12</option>
+									<option value="13">13</option>
+								 </select>
+							</td>
+						  </tr>
+						  <tr class="space">
+						  </tr>
+						  <tr>
+							<th>
+							  <script>I18N("h","Advwireless_Mode");</script><!-- 无线模式 -->
+							</th>
+							<td>
+								<select name="wlan_mode" id="wlan_mode" onchange="change_mode_24(this.value)">
+									<option value="b/g/n">802.11b/g/n</option>
+									<option value="b/g">802.11b/g</option>	
+								</select>
+							</td>
+						  </tr>
+						  <tr class="space">
+						  </tr>
+						  <tr id = "band_24">
+							<th>
+							  <script>I18N("h","Advwireless_Frequency");</script><!-- 频段带宽 -->
+							</th>
+							<td>
+								<select name="wlan_band" id="wlan_band">
+									<!-- <option value="20/40">自动带宽</option> -->
+									<option id="option_bw_auto_2g" value="20/40"></option>
+									<option value="20">20MHz</option>
+									<option value="40">40MHz</option>
+									<!-- <option value="20/40">20/40MHz</option> -->
+								 </select>							
+							</td>
+						  </tr>
+						  <tr class="space" id = "empty_1">
+						  </tr>
+						  <tr id = "gi_24">
+							<th>
+							  <script>I18N("h","Advwireless_Leading_Interval");</script><!-- 11n前导间隔设置 -->
+							</th>
+							<td>
+								<select name="wlan_11ngi" id="wlan_11ngi">
+									<!-- <option value="1">自动间距</option>
+									<option value="0">长间距</option> -->
+									<option id="option_distance_auto_2g" value="1"></option>
+									<option id="option_distance_long_2g" value="0"></option>
+									<!-- <option value="1">短间距</option> -->
+								</select>							
+							</td>
+						  </tr>		
+ 						<tr class="space" id = "empty_2"></tr>							 
+						  <tr>
+							<th>
+							  <script>I18N("h","Advwireless_Efficiency");</script><!-- Wi-Fi 功率模式 -->
+							</th>
+							<td>
+								<select name="2gpw_mode" id="2gpw_mode">
+									<!-- <option value="25">睡眠</option>
+									<option value="50">普通</option>
+									<option value="100">增强</option> -->
+									<option id="option_sleep_2g" value="50"></option>
+									<option id="option_normal_2g" value="70"></option>
+									<option id="option_strong_2g" value="100"></option>
+								</select>							
+							</td>
+						  </tr>									  
+						  <tr class="space">
+						  </tr>
+						  <tr>
+							<th>
+							 <script>I18N("h","Advwireless_Hide");</script><!-- 无线隐身 -->
+							</th>
+							<td class="tdcheckbox">
+							   <div id="wlan_status" class="checkbox_off" onclick="ChangewlanStatus()">
+									<input type="checkbox" id="wifi_open_off" name="wifi_open_off" class="checkbox_on">
+								</div>
+							</td>
+						  </tr>
+						  <tr class="space"></tr>	
+						  <tr>
+							<th>
+							  WMM
+							</th>
+							<td class="tdcheckbox">
+							    <div id="wmm_status" class="checkbox_off" onclick="ChangeWmmStatus()">
+									<input type="checkbox" id="wmm_open_off" name="wmm_open_off" class="checkbox_on">
+								</div>
+							</td>
+						  </tr>						
+						 </tbody>
+					  </table>
+					</div>
+
+		<div align="left">
+		  <div class="clearboth headerline2" style="padding-top:64px;padding-bottom:12px;">
+			<script>I18N("h","Wireless_5G_Network");</script><!-- 5G无线网络 -->
+		  </div>
+		  <div class="clearboth moreline1"></div>
+		  <table border="0" class="block" cellpadding="0" cellspacing="0" style="margin-top:48px;" align="left">
+				<tbody>
+						  <tr>
+							<th>
+							  <script>I18N("h","Advwireless_Channel");</script><!-- 无线信道 -->
+							</th>
+							<td>
+								<select name="5gwlan_channel" id="5gwlan_channel">
+									<!-- <option value="0">自动信道</option> -->
+									<option id="option_channel_auto_5g" value="0"></option>
+									<option value="36">36</option>
+									<option value="40">40</option>
+									<option value="44">44</option>
+									<option value="48">48</option>
+									<option value="149">149</option>
+									<option value="153">153</option>
+									<option value="157">157</option>
+									<option value="161">161</option>
+									<option id="channel_165" value="165">165</option>							
+								 </select>
+							</td>
+						  </tr>
+						  <tr class="space">
+						  </tr>
+						  <tr>
+							<th>
+							 <script>I18N("h","Advwireless_Mode");</script><!-- 无线模式 -->
+							</th>
+							<td>
+								<select name="5gwlan_mode" id="5gwlan_mode" onchange="change_mode_5(this.value)">
+									<option value="a/n/ac">802.11a/n/ac</option>
+									<option value="a">802.11a</option>
+								</select>
+							</td>
+						  </tr>
+						  <tr class="space">
+						  </tr>
+						  <tr id = "band_5">
+							<th>
+							  <script>I18N("h","Advwireless_Frequency");</script><!-- 频段带宽 -->
+							</th>
+							<td>
+								<select name="5gwlan_band" id="5gwlan_band" onchange="hideChannel(this.value)">
+									<!-- <option value="20/40">自动带宽</option> -->
+									<!-- <option id="option_bw_auto_5g" value="20/40"></option> -->
+									<option value="20">20MHz</option>
+									<option value="40">40MHz</option>
+									<!-- <option value="20/40">20/40MHz</option> -->
+									<option value="80">80MHz</option>
+								 </select>							
+							</td>
+						  </tr>
+ 							<tr class="space" id = "empty_3"></tr>							 
+						  <tr id = "gi_5">
+							<th>
+							  <script>I18N("h","Advwireless_Leading_Interval");</script><!-- 11n前导间隔设置 -->
+							</th>
+							<td>
+								<select name="5gwlan_11ngi" id="5gwlan_11ngi">
+									<!-- <option value="1">自动间距</option>
+									<option value="0">长间距</option> -->
+									<option id="option_distance_auto_5g" value="1"></option>
+									<option id="option_distance_long_5g" value="0"></option>
+									<!-- <option value="1">短间距</option> -->
+								</select>							
+							</td>
+						  </tr>		
+ 							<tr class="space"  id = "empty_4"></tr>							 
+						  <tr>
+							<th>
+							  <script>I18N("h","Advwireless_Efficiency");</script><!-- Wi-Fi 功率模式 -->
+							</th>
+							<td>
+								<select name="5gpw_mode" id="5gpw_mode">
+									<!-- <option value="25">睡眠</option>
+									<option value="50">普通</option>
+									<option value="100">增强</option> -->
+									<option id="option_sleep_5g" value="50"></option>
+									<option id="option_normal_5g" value="70"></option>
+									<option id="option_strong_5g" value="100"></option>
+								</select>							
+							</td>
+						  </tr>								 
+						  <tr class="space"></tr>							  
+						 <tr>
+							<th>
+							  <script>I18N("h","Advwireless_Hide");</script><!-- 无线隐身 -->
+							</th>
+							<td class="tdcheckbox">
+							   <div id="5gwlan_status" class="checkbox_off" onclick="ChangewlanStatus5g()">
+									<input type="checkbox" id="5gwifi_open_off" name="5gwifi_open_off" class="checkbox_on">
+								</div>
+							</td>
+						  </tr>
+ 						 <tr class="space"></tr>	
+  						  <tr>
+							<th>
+							  WMM
+							</th>
+							<td class="tdcheckbox">
+							   <div id="5gwmm_status" class="checkbox_off" onclick="ChangeWmmStatus5g()">
+									<input type="checkbox" id="5gwmm_open_off" name="5gwmm_open_off" class="checkbox_on">
+								</div>
+							</td>
+						  </tr>			
+				</tbody>
+			  </table>
+		</div>
+
+			 <table style="margin-left:168px; margin-top:36px;" class="clearboth" align="left">
+				<tr>
+					<!-- <td><input type="button" value="保存" id="savebutton" class="styled_button_s" onClick="SaveWlan();"></td> -->
+					<td><input type="button" value="" id="savebutton" class="styled_button_s" onClick="SaveWlan();"></td>
+				</tr>
+			</table>
+
+	  
+	  </div>
+
+					
+				</div><!--end right_content -->
+			</div>
+	   </div>
+ 	   <div class="footer_placeholder"></div>  
+   </div>
+	
+	<div id="footer"></div>
+
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="/image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

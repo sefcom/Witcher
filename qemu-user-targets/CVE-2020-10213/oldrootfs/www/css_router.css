@@ -1,0 +1,486 @@
+/* Copyright 2004 D-Link Systems, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------- */
+
+html, body, div, h1, h2, h3, h4, p, ul, ol, li, dl, dt, dd, td, input, select, textarea{
+	font-family: Tahoma, Helvetica, Geneva, Arial, sans-serif;
+	font-size: 12px;
+}
+
+input, select, textarea
+{
+	font-family: Tahoma, Helvetica, Geneva, Arial, sans-serif;
+	font-size: 11px;
+}
+
+#topnav_container
+{
+	background-color: #404343;
+	border-color: #FFFFFF;
+	border-width: 0 1px;
+	border-style: none solid none solid;
+}
+
+#topnavoff
+{
+	font-size: 11px;
+	font-weight: bold;
+	letter-spacing: 1;
+	/* for IE */
+	width: 140px;
+	border-color: #FFFFFF;
+}
+
+#topnavoff a:link, #topnavoff a:visited, #topnavoff a:active
+{
+	display: block;
+	color: #FFFFFF;
+	background-color: transparent;
+	font-size: 11px;
+	font-weight: bold;
+	text-decoration: none;
+	letter-spacing: 1;
+	padding: 5px;
+	text-transform: uppercase;
+	text-align: center;
+	border-color: #FFFFFF;
+}
+
+#topnavoff a:hover
+{
+	display: block;
+	color: #404343;
+	background-color: #F1F1F1;
+	font-size: 11px;
+	font-weight: bold;
+	text-decoration: underline;
+	padding: 5px;
+	text-transform: uppercase;
+	text-align: center;
+}
+
+#topnavon
+{
+	font-size: 11px;
+	font-weight: bold;
+	letter-spacing: 1;
+	/* for IE */
+	width: 140px;
+	border-color: #FFFFFF;
+}
+
+#topnavon a:hover
+{
+	display: block;
+	color: #404343;
+	background-color: #F1F1F1;
+	font-size: 11px;
+	font-weight: bold;
+	text-decoration: underline;
+	padding: 5px;
+	text-transform: uppercase;
+	text-align: center;
+}
+
+#topnavon a:link, #topnavon a:visited, #topnavon a:active
+{
+	display: block;
+	color: #404343;
+	background-color: #F1F1F1;
+	font-size: 11px;
+	font-weight: bold;
+	text-decoration: none;
+	padding: 5px;
+	text-transform: uppercase;
+	text-align: center;
+}
+
+#sidenav_basic
+{
+	background-color: #404343;
+	height: 25px;
+}
+
+#sidenav_container
+{
+	background-color: #404343;
+	border-color: #FFFFFF;
+	border-width: 1 1px;
+	border-style: none none none none;
+	width: 125px;
+}
+
+#sidenav
+{
+	font-size: 10px;
+	/* for IE */
+	width: 125px;
+}
+
+#sidenav ul
+{
+	margin: 0;
+	padding: 0;
+}
+
+#sidenav li
+{
+	list-style: none;
+	text-transform: uppercase;
+	border-bottom: 1px solid #F1F1F1;
+}
+
+#sidenav li a:link, #sidenav li a:visited, #sidenav li a:active
+{
+	display: block;
+	color: #FFFFFF;
+	background-color: transparent;
+	font-size: 11px;
+	text-decoration: none;
+	padding: 5px;
+}
+
+#sidenav li a:hover
+{
+	display: block;
+	color: #404343;
+	background-color: #F1F1F1;
+	font-size: 11px;
+	text-decoration: underline;
+	padding: 5px;
+}
+
+#sidenavoff
+{
+	text-transform: uppercase;
+	font-size: 10px;
+	/* for IE */
+	width: 125px;
+}
+
+#sidenavoff ul
+{
+	margin: 0;
+	padding: 0;
+}
+
+#sidenavoff
+{
+	text-transform: uppercase;
+	color: #404343;
+	background-color: #F1F1F1;
+	font-size: 11px;
+	padding: 5px;
+}
+
+#sidehelp_container
+{
+	background-color: #404343;
+	border-color: #FFFFFF;
+	border-width: 1 1px;
+	border-style: none none none none;
+	width: 137px;
+	color: #FFFFFF;
+	vertical-align: top;
+}
+
+#help_text {
+	background-color: #404343;
+	color: #FFFFFF;
+	font-size: 11px;
+	padding: 5px;
+}
+#help_text p {
+	font-size: inherit;
+}
+#help_text a:link, #help_text a:visited, #help_text a:active {
+	color: rgb(226,152,97);
+	background-color: transparent;
+	font-size: 11px;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+#help_text a:hover {
+	color: #404343;
+	background-color: rgb(226,152,97);
+	font-size: 11px;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+/*
+ * Main content area of page
+ *-------------------------------------------------------------------------------- 
+ */
+#maincontent_container {
+	color: #000000;
+	background-color: #FFFFFF;
+	vertical-align: top;
+}
+
+#maincontent, #maincontent_1col, #rebootcontent, #rebootcontent_1col, #warnings_section {
+	color: #000000;
+	background-color: #FFFFFF;
+	padding: 5px;
+}
+
+#box_header
+{
+	border: 1px solid #FF6F00;
+	padding: 0 10px 10px 10px;
+	background-color: #DFDFDF;
+}
+
+.box
+{
+	border: 1px solid #333333;
+	margin: 5px 0 0 0;
+	padding: 0 10px 10px 10px;
+	background-color: #FFFFFF;
+}
+
+h1
+{
+	color: #000000;
+	background-color: #FF6F00;
+	font-size: 12px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	margin: 0 -10px 5px -10px;
+	padding: 5px 5px 5px 10px;
+}
+
+h2
+{
+	color: #FFFFFF;
+	background-color: #333333;
+	font-size: 12px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	margin: 0 -10px 5px -10px;
+	padding: 5px 5px 5px 10px;
+}
+
+h3
+{
+	margin: 0 0 4px 0;
+	padding: 18px 0 4px 0;
+	color: #13376B;
+	background-color: transparent;
+	font-size: 12px;
+	font-weight: bold;
+	border-bottom: gray;
+	border-width: 0 0 1px 0;
+	border-style: none none solid none;
+}
+
+.red
+{
+	color: #CC0000;
+	background-color: transparent;
+}
+
+#footer_container
+{
+	background-color: #404343;
+	border-color: #FFFFFF;
+	border-width: 0 1px;
+	border-style: none solid none solid;
+	border-bottom: #FFFFFF;
+	height: 40px;
+	color: #FFFFFF;
+}
+
+#header_container
+{
+	background-color: #404343;
+	border-color: #FFFFFF;
+	border-width: 0 1px 0 1px;
+	border-style: none solid none solid;
+	border-bottom: #FFFFFF;
+	height: 20px;
+	color: white;
+}
+
+#header_container a:link, #header_container a:visited, #header_container a:active
+{
+	color: #FFFFFF;
+	font-size: 12px;
+	text-decoration: none;
+}
+
+#header_container a:hover
+{
+	color: #FFFFFF;
+	font-size: 12px;
+	text-decoration: underline;
+}
+
+.button
+{
+	width: 24; 
+	height: 24
+}
+
+.wansts {
+	FONT-SIZE: 12px; VERTICAL-ALIGN: middle; COLOR: #f1f1f1
+}
+
+.c_tb {
+	FONT-SIZE: 12px; FONT-FAMILY: Tahoma, Helvetica, Geneva, Arial, sans-serif; TEXT-ALIGN: center
+}
+
+.duple {
+	BORDER-TOP-WIDTH: 0px; PADDING-RIGHT: 0px; DISPLAY: block; PADDING-LEFT: 0px; FONT-WEIGHT: bold; BORDER-LEFT-WIDTH: 0px; FLOAT: left; BORDER-BOTTOM-WIDTH: 0px; PADDING-BOTTOM: 0px; MARGIN: 1px 8px 4px 0px; WIDTH: 183px; PADDING-TOP: 0px; TEXT-ALIGN: right; BORDER-RIGHT-WIDTH: 0px
+}
+
+.output {
+	position: relative;
+	top: 1px;
+}
+
+#copyright {
+	font-size: 11px;
+	color: #FFFFFF;
+	text-align: center;
+	margin: 0 auto ;
+	padding: 10px 0 10px 0;
+}
+
+/* 
+ * Other miscellaneous styles
+ * --------------------------------------------------------------------------------
+ */
+img {
+	display: block;
+	border-width: 0;
+	border-style: none;
+}
+
+form {
+	margin: 0 auto 0 auto;
+}
+
+dt {
+	font-weight: bold;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+dd {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-left: 0;
+}
+
+dd p {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+dd dl {
+	margin-left: 30px;
+}
+
+span.option {
+	font-weight: bold;
+}
+
+span.button_ref {
+	color: #111111;
+	background-color: #99CCEE;
+	font-size: 9px;
+	font-weight: bold;
+	white-space: nowrap;
+	line-height: 12px;
+	margin: 0 2px;
+	padding: 0px 4px;
+}
+
+code {
+	font-family: "Letter Gothic MT", "Lucida Console", "Courier New", Courier, monospace;
+	font-weight: bold;
+}
+
+div.centered, p.centered, h1.centered {
+	text-align: center;
+}
+
+.box_msg {
+	color: #13376B;
+	background-color: transparent;
+	font-weight: bold;
+}
+
+.box_alert {
+	color: #CC0000;
+	background-color: transparent;
+	font-weight: bold;
+}
+
+/* 
+ * Help Section
+ * -------------------------------------------------------------------------------- 
+ */
+
+.help_example dl {
+	background-color: #DFDFDF;
+	padding: 0 0 0 4px;
+	border: gray;
+	border-width: 1px;
+	border-style: solid;
+}
+
+dd .help_example dl {
+	margin-left: 0;
+}
+
+.help_screen_shot {
+	text-align: center;
+}
+
+.help_example dl dl {
+	border: 0;
+}
+
+/* 
+ * Buttons
+ * --------------------------------------------------------------------------------
+ */
+
+.button_submit {
+	margin: 0 10px 0 0;
+	padding: 2px 4px;
+	white-space: nowrap;
+}
+
+
+.button_submit_padleft {
+	margin: 0 0 0 10px;
+	padding: 2px 4px;
+	white-space: nowrap;
+}
+
+ /* Must follow the classes it overrides */
+.button_disabled {
+	background-color: #999;
+	color: #CCC;
+	border: 2px solid #999;
+}
+
+/* << button */
+input.arrow {
+	margin: 0;
+	padding: 2px 0;
+	white-space: nowrap;
+}
+button {
+	font-size: 11px;
+	padding: 2px;
+}
+button p {
+	font-size: 11px;
+	margin: auto;
+}

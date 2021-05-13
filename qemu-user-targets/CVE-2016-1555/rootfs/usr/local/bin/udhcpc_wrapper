@@ -1,0 +1,17 @@
+DHCPC_INTERFACE=$1
+FALLBACK_IP=$2
+HOSTNAME=$3
+
+ifconfig $DHCPC_INTERFACE 0.0.0.0 up
+ifconfig $DHCPC_INTERFACE:1 $FALLBACK_IP up
+
+/sbin/udhcpc -b -i $DHCPC_INTERFACE -h $HOSTNAME
+#dhclient $DHCPC_INTERFACE
+
+DHCP_IP=`ifconfig $DHCPC_INTERFACE | grep "inet addr" | awk '{printf $2}' | awk -F : '{print $2}'`
+if [ $DHCP_IP ]; then
+	/usr/local/bin/destroy_secondary_ip $DHCPC_INTERFACE &
+else
+	ifconfig $DHCPC_INTERFACE:1 down
+	ifconfig $DHCPC_INTERFACE $FALLBACK_IP up
+fi

@@ -1,0 +1,235 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>URL Filtering</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+function addClick()
+{
+  if (!document.formFilterAdd.enabled.checked)
+  	return true;
+  var str = document.formFilterAdd.url.value;
+  	if(document.formFilterAdd.urlFilterWhite.checked == true)
+		document.formFilterAdd.urlFilterMode.value = 1;
+	else
+		document.formFilterAdd.urlFilterMode.value = 0;
+	for (var i=0; i<str.length; i++) {
+     		if ( str.charAt(i) == ';')
+     		{
+     			alert("Error character: \";\"");
+			return false;
+     		}
+	}
+
+	if ( <% getIndex("urlFilterUserModeSupport"); %> )
+	{
+		if(document.formFilterAdd.userModeAll.checked == true)
+			document.formFilterAdd.urlFilterUserMode.value=0;
+		else if(document.formFilterAdd.userModeIp.checked == true)
+			document.formFilterAdd.urlFilterUserMode.value=1;
+		else if(document.formFilterAdd.userModeMac.checked == true)
+			document.formFilterAdd.urlFilterUserMode.value=2;
+	}
+			
+  if (document.formFilterAdd.url.value=="")
+	return true;
+
+  return true;
+}
+
+function deleteClick()
+{
+  if ( !confirm('Do you really want to delete the selected entry?') ) {
+	return false;
+  }
+  else
+	return true;
+}
+
+function deleteAllClick()
+{
+   if ( !confirm('Do you really want to delete the all entries?') ) {
+	return false;
+  }
+  else
+	return true;
+}
+
+function disableDelButton()
+{
+	disableButton(document.formFilterDel.deleteSelFilterUrl);
+	disableButton(document.formFilterDel.deleteAllFilterUrl);
+}
+
+function urlFilterModeBlack()
+{
+  document.formFilterAdd.urlFilterMode.value=0;
+  document.formFilterAdd.urlFilterWhite.checked = false;
+  document.formFilterAdd.urlFilterBlack.checked = true;
+}
+
+function urlFilterModeWhite()
+{
+  document.formFilterAdd.urlFilterMode.value=1;
+  document.formFilterAdd.urlFilterWhite.checked = true;
+  document.formFilterAdd.urlFilterBlack.checked = false;
+}
+function urlFilterUserModeAll()
+{
+	document.formFilterAdd.urlFilterUserMode.value=0;
+	document.formFilterAdd.userModeAll.checked=true;
+	document.formFilterAdd.userModeIp.checked=false;
+	document.formFilterAdd.userModeMac.checked=false;
+	disableTextField(document.formFilterAdd.ip);
+	disableTextField(document.formFilterAdd.mac);
+}
+function urlFilterUserModeIP()
+{
+	document.formFilterAdd.urlFilterUserMode.value=1;
+	document.formFilterAdd.userModeAll.checked=false;
+	document.formFilterAdd.userModeIp.checked=true;
+	document.formFilterAdd.userModeMac.checked=false;
+	enableTextField(document.formFilterAdd.ip);
+	disableTextField(document.formFilterAdd.mac);
+}
+function urlFilterUserModeMac()
+{	
+	document.formFilterAdd.urlFilterUserMode.value=2;
+	document.formFilterAdd.userModeAll.checked=false;
+	document.formFilterAdd.userModeIp.checked=false;
+	document.formFilterAdd.userModeMac.checked=true;
+	disableTextField(document.formFilterAdd.ip);
+	enableTextField(document.formFilterAdd.mac);
+}
+function updateState()
+{
+  if (document.formFilterAdd.enabled.checked){
+ 	enableTextField(document.formFilterAdd.url);  
+	enableTextField(document.formFilterAdd.urlFilterWhite); 
+	enableTextField(document.formFilterAdd.urlFilterBlack); 
+  }
+  else{
+ 	disableTextField(document.formFilterAdd.url); 
+	disableTextField(document.formFilterAdd.urlFilterWhite); 
+	disableTextField(document.formFilterAdd.urlFilterBlack); 
+  }
+  	if ( <% getIndex("urlFilterUserModeSupport"); %> )
+  	{
+  		if(document.formFilterAdd.enabled.checked){
+			document.formFilterAdd.userModeAll.disabled=false;
+			document.formFilterAdd.userModeIp.disabled=false;
+			document.formFilterAdd.userModeMac.disabled=false;	
+			document.formFilterAdd.urlFilterUserMode.value=1;
+			document.formFilterAdd.userModeIp.checked=true;
+			enableTextField(document.formFilterAdd.ip);
+  		}
+		else{
+			document.formFilterAdd.userModeAll.disabled=true;
+			document.formFilterAdd.userModeIp.disabled=true;
+			document.formFilterAdd.userModeMac.disabled=true;
+			disableTextField(document.formFilterAdd.ip);
+		}
+  	}
+}
+
+function Load_Setting()
+{
+	if ( <% getIndex("urlFilterEnabled"); %> )
+		document.formFilterAdd.enabled.checked = true;
+	if ( <% getIndex("urlFilterMode"); %> )
+		document.formFilterAdd.urlFilterWhite.checked = true;
+	else
+		document.formFilterAdd.urlFilterBlack.checked = true;
+	updateState();
+}
+</script>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<h2>URL Filtering</h2>
+
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><td><font size=2>
+ URL filter is used to deny LAN users from accessing the internet. Block those URLs which contain keywords listed below.
+</font></td></tr>
+
+<tr><td><hr size=1 noshade align=top></td></tr>
+
+<form action=/boafrm/formFilter method=POST name="formFilterAdd">
+<tr><td><font size=2><b>
+   	<input type="checkbox" name="enabled" value="ON" ONCLICK=updateState()>&nbsp;&nbsp;Enable URL Filtering</b><br>
+    </td>
+</tr>
+<input type="hidden" name="urlFilterMode">
+<%getIndex("usrSpecificUrlCommand_start");%>
+<input type="hidden" name="urlFilterUserMode">
+<%getIndex("usrSpecificUrlCommand_end");%>
+<tr>
+    <td width="100%" colspan="2"><font size=2>
+		<input type="radio" value="blackList" name="urlFilterBlack" onClick="urlFilterModeBlack()">deny url address(black list)      
+	</td>
+</tr>
+<tr>
+    <td width="100%" colspan="2"><font size=2>
+        <input type="radio" value="whiteList" name="urlFilterWhite" onClick="urlFilterModeWhite()">allow url address(white list)      
+	</td>
+</tr>
+<tr><td>
+     <font size=2><b>URL Address: </b> <input type="text" name="url" size="30" maxlength="30">&nbsp;&nbsp;</font>
+<%getIndex("usrSpecificUrlCommand_start");%>
+	 <p>
+     	<font size=2><b>User mode: </b>&nbsp;&nbsp;</font>
+	 </p>
+     <p>
+   	 	<input type="radio" checked="true" value="usrIP" name="userModeIp" onClick="urlFilterUserModeIP()" disabled="true">Ip Address:   <input type="text"  disabled="true" name="ip" size="20" maxlength="20">&nbsp;&nbsp;&nbsp;
+	 </p>
+	 <p>
+	 	<input type="radio" value="usrMac" name="userModeMac" onClick="urlFilterUserModeMac()" disabled="true">Mac Address: <input type="text" disabled="true" name="mac" size="20" maxlength="20">&nbsp;&nbsp;
+     </p>	 
+     <p>
+	 	<input type="radio" value="usrAll" name="userModeAll" onClick="urlFilterUserModeAll()" disabled="true">All users (default rule)     
+	 </p>
+
+	 <%getIndex("usrSpecificUrlCommand_end");%>
+<% getInfo("apply_prompt_comment_start");%>	 
+     <p><input type="submit" value="Apply Changes" name="addFilterUrl" onClick="return addClick()">&nbsp;&nbsp;
+       <input type="reset" value="Reset" name="reset">
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+     <p><input type="submit" value="Save" name="addFilterUrl" onClick="return addClick()">&nbsp;&nbsp;
+	   <input type="submit" value="Save & Apply" name="save_apply" onClick="return addClick()">&nbsp;&nbsp;	   
+       <input type="reset" value="Reset" name="reset">
+       <input type="hidden" value="1" name="addFilterUrlFlag">  	   
+<% getInfo("apply_direct_comment_end");%>
+        <input type="hidden" value="/urlfilter.htm" name="submit-url">
+     </p>
+     </td>
+<tr>
+  <script> updateState(); </script>
+</form>
+</table>
+
+<br>
+<form action=/boafrm/formFilter method=POST name="formFilterDel">
+  <table border="0" width=500>
+  <tr><font size=2><b>Current Filter Table:</b></font></tr>
+  <% urlFilterList(); %>
+  </table>
+  <br>
+  <input type="submit" value="Delete Selected" name="deleteSelFilterUrl" onClick="return deleteClick()">&nbsp;&nbsp;
+  <input type="submit" value="Delete All" name="deleteAllFilterUrl" onClick="return deleteAllClick()">&nbsp;&nbsp;&nbsp;
+  <input type="reset" value="Reset" name="reset">
+  <input type="hidden" value="/urlfilter.htm" name="submit-url">
+ <script>
+	if ( <% getIndex("urlFilterNum"); %> == 0 )
+		disableDelButton();
+ </script>
+</form>
+
+</blockquote>
+</body>
+</html>

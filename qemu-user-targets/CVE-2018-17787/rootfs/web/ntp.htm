@@ -1,0 +1,237 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2004. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Time Zone Setting</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+function checkEmpty(field){
+	if(field.value.length == 0){
+		alert(field.name + " field can't be empty\n");
+		field.value = field.defaultValue;
+		field.focus();
+		return false;
+	}
+	else
+		return true;
+}
+function checkNumber(field){
+    str =field.value ;
+    for (var i=0; i<str.length; i++) {
+    	if ( (str.charAt(i) >= '0' && str.charAt(i) <= '9'))
+                        continue;
+	field.value = field.defaultValue;
+        alert("Invalid " +field.name + " Number. It should be in  number (0-9).");
+        return false;
+    }	
+	return true;
+}
+function saveChanges(form){
+	var Month_num;
+	var Day_num;
+	var Hour_num;
+	var Min_num;
+	var Sec_num;
+	if((checkEmpty(form.year)& checkEmpty(form.month) & checkEmpty(form.hour)
+	 & checkEmpty(form.day) &checkEmpty(form.minute) & checkEmpty(form.second))== false)
+	 	return false;
+
+	if((checkNumber(form.year)& checkNumber(form.month) & checkNumber(form.hour)
+	 & checkNumber(form.day) &checkNumber(form.minute) & checkNumber(form.second))== false)
+	 	return false;
+	if(form.month.value == '0'){
+		form.month.value = form.month.defaultValue;
+        	alert("Invalid month Number. It should be in  number (1-9).");
+		return false;
+	}
+	Month_num =parseInt(form.month.value, 10);
+	Day_num =parseInt(form.day.value, 10);
+	Hour_num =parseInt(form.hour.value, 10);
+	Min_num =parseInt(form.minute.value, 10);
+	Sec_num =parseInt(form.second.value, 10);
+	if((Month_num<=0) || (Month_num > 12) || (Day_num <= 0) || (Day_num > 31) || (Hour_num < 0)  || (Hour_num > 23) || (Min_num < 0) || (Min_num > 59) || (Sec_num < 0) || (Sec_num > 59)){
+			alert("Invalid Time value!");
+		return false;
+	}
+	if (form.enabled.checked) {
+		if(form.ntpServerId[1].checked == true){ 
+			if(form.ntpServerIp2.value != ""){
+				if ( checkIpAddr(form.ntpServerIp2, 'Invalid IP address') == false )
+			    	return false;
+			}
+			else{
+				//form.ntpServerIp2.value = "0.0.0.0" ;	
+				alert("Invalid NTP Server IP address! It can not be empty.");
+				return false; 
+			}
+		}
+	}	
+	return true;
+}
+function updateState(form)
+{
+	if(form.enabled.checked){
+		enableTextField(form.ntpServerIp1);
+		form.dlenabled.disabled=false;
+		form.ntpServerId[0].disabled=false;
+		form.ntpServerId[1].disabled=false;
+		if(form.ntpServerIp2 != null)
+			enableTextField(form.ntpServerIp2);
+	}
+	else{
+		disableTextField(form.ntpServerIp1);
+		form.dlenabled.disabled=true;
+		form.ntpServerId[0].disabled=true;
+		form.ntpServerId[1].disabled=true;
+		if(form.ntpServerIp2 != null)
+			disableTextField(form.ntpServerIp2);
+	}
+}
+
+/** Copy time from the host computer.*/
+function copy_computer_time()
+{
+	var date = new Date();
+	document.time.year.value = date.getFullYear();
+	document.time.month.value = date.getMonth()+1;
+	document.time.day.value = date.getDate();
+	document.time.hour.value = date.getHours();
+	document.time.minute.value = date.getMinutes();
+	document.time.second.value = date.getSeconds();
+}
+
+function init()
+{
+	//var cf = document.forms[0];
+	var cf = document.time;
+	var ntpEnabled = <%getIndex("ntpEnabled");%>;
+	var DaylightSave = <%getIndex("DaylightSave");%>;
+	var ntpServerId = <%getIndex("ntpServerId");%>;
+
+    	if(ntpEnabled) 
+        	cf.enabled.checked = true;
+        else
+        	cf.enabled.checked = false;
+
+	if(DaylightSave)
+        	cf.dlenabled.checked = true;
+        else
+        	cf.dlenabled.checked = false;
+        	
+	if(ntpServerId == 0)
+		cf.ntpServerId[0].checked = true;
+	else if(ntpServerId == 1)
+        	cf.ntpServerId[1].checked = true;
+        updateState(document.time);
+}
+</script>
+</head>
+<body onload="init();">
+<blockquote>
+<h2>Time Zone Setting</h2>
+<table border=0 width="500" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+  You can maintain the system time by synchronizing with a public time server over the Internet.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<form action=/boafrm/formNtp method=POST name="time">
+<table border="0" width=520>
+	<tr>
+	<td width ="25%">
+	<font size=2> <b> Current Time : </b> </font>
+	</td>
+	<td width ="75%">
+                <font size =2> <b>
+                Yr <input type="text" name="year" value="<% getInfo("year"); %>" size="4" maxlength="4">
+                Mon <input type="text" name="month" value="<% getInfo("month"); %>" size="2" maxlength="2">
+                Day <input type="text" name="day" value="<% getInfo("day"); %>" size="2" maxlength="2">
+                Hr <input type="text" name="hour" value="<% getInfo("hour"); %>" size="2" maxlength="2">
+                Mn <input type="text" name="minute" value="<% getInfo("minute"); %>" size="2" maxlength="2">
+                Sec <input type="text" name="second" value="<% getInfo("second"); %>" size="2" maxlength="2">
+                </b> </font>
+        </td>
+	</tr>
+	
+	<tr>
+		<td width ="25%">&nbsp;</td>
+		<td width ="75%"><input type="button" class="button_submit" id="copy_computer_time_button" value="Copy Computer Time" onclick="copy_computer_time();"/></td>
+	</tr>
+	
+	<tr><td width="25%"><font size=2> <b>Time Zone Select : </b> </font></td>
+	    <td width="75%">
+            <select name="timeZone">
+            	<script language="javascript">
+            	var i;
+            	for(i=0;i<ntp_zone_array.length;i++){
+			if (i == ntp_zone_index)
+				document.write('<option value="',ntp_zone_array[i].value,'" selected>',ntp_zone_array[i].name,'</option>');
+			else
+				document.write('<option value="',ntp_zone_array[i].value,'">',ntp_zone_array[i].name,'</option>');
+            	}
+		</script>
+            </select>
+	    </td>
+	</tr>	
+	<tr><td colspan="2"><font size=2><b>
+		<input type="checkbox" name="dlenabled" value="ON">
+		&nbsp;Automatically Adjust Daylight Saving </b><br>
+	    </td>
+	</tr>
+	<tr ><td height=10> </td> </tr>
+
+	<tr><td colspan="2"><font size=2><b>
+		<input type="checkbox" name="enabled" value="ON" 
+		ONCLICK=updateState(document.time)>&nbsp;&nbsp;Enable NTP client update </b><br>
+	    </td>
+	</tr>
+	
+	<tr>
+	<td width ="25%">
+	<font size=2> <b> NTP server : </b> </font>
+	</td>
+	<td width ="75%">
+		<input type="radio" value="0" name="ntpServerId"></input>
+		<select name="ntpServerIp1">
+			<option value="131.188.3.220">131.188.3.220  - Europe</option>
+			<option value="130.149.17.8">130.149.17.8   - Europe</option>
+			<!--<option value="203.117.180.36"> 203.117.180.36 - Asia Pacific</option>-->
+			</select>
+		</td>
+	</tr>
+	<td width ="25%"> <font size=2><b> </b></font>
+	</td>
+	<td width ="75%">
+	<input type="radio" value="1" name="ntpServerId"></input>
+	<input type="text" name="ntpServerIp2" size="15" maxlength="15" value=<% getInfo("ntpServerIp2"); %>> <font size=2> (Manual IP Setting) </font>
+		</td>
+	</tr>
+</table>
+<input type="hidden" value="/ntp.htm" name="submit-url">
+<% getInfo("apply_prompt_comment_start");%>
+  <p><input type="submit" value="Apply Change" name="save" onClick="return saveChanges(document.time)">
+&nbsp;&nbsp;
+	<input type="reset" value="Reset" name="set" >
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+  <p><input type="submit" value="Save" name="save" onClick="return saveChanges(document.time)">
+	&nbsp;&nbsp;
+	<input type="submit" value="Save & Apply" name="save_apply" onClick="return saveChanges(document.time)">
+	&nbsp;&nbsp;	
+	<input type="reset" value="Reset" name="set" >
+<% getInfo("apply_direct_comment_end");%>
+&nbsp;&nbsp;
+  <input type="button" value="Refresh" name="refresh" onClick="javascript: window.location.reload()">
+</form>
+<script>
+		setTimeZone(document.time.timeZone, "<% getInfo("ntpTimeZone"); %>");
+		setNtpServer(document.time.ntpServerIp1, "<% getInfo("ntpServerIp1"); %>");	
+		updateState(document.time);
+</script>
+</blockquote>
+</font>
+</body>
+
+</html>

@@ -1,0 +1,164 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Disk Setup </title>
+<script language="javascript" type="text/javascript" src="util_gw.js"> </script>
+<script>
+
+function init()
+{
+	
+}
+
+function SelectClick(index)
+{
+	var num = document.formDiskCreateShare.DirNum.value;
+	var selectname = "select" + index;
+	var deletename = "delete" + index;
+	var value = eval("document.formDiskCreateShare."+selectname+".checked");
+	
+	if(value){
+		for(var i = 0;i < num;i++)
+		{
+			if(i != index){
+				selectname = "select" + i;
+				eval("disableTextField(document.formDiskCreateShare."+selectname+")");
+				eval("document.formDiskCreateShare."+selectname+".checked = false");
+			}
+		}
+		eval("disableTextField(document.formDiskCreateShare."+deletename+")");
+		eval("document.formDiskCreateShare."+deletename+".checked = false");
+
+		document.formDiskCreateShare.shareall.checked = false;
+		disableTextField(document.formDiskCreateShare.shareall);
+	}else{
+		for(var i = 0;i < num;i++)
+		{
+			deletename = "delete" + i;
+			if(eval("document.formDiskCreateShare."+deletename+".checked") == false){
+				selectname = "select" + i;
+				eval("enableTextField(document.formDiskCreateShare."+selectname+")");
+				eval("document.formDiskCreateShare."+selectname+".checked = false");	
+			}
+		}
+		deletename = "delete" + index;
+		eval("enableTextField(document.formDiskCreateShare."+deletename+")");
+		eval("document.formDiskCreateShare."+deletename+".checked = false");
+		
+		enableTextField(document.formDiskCreateShare.shareall);
+		document.formDiskCreateShare.shareall.value = false;
+	}
+}
+
+function ShareAll()
+{
+	var num = document.formDiskCreateShare.DirNum.value;
+	var selectname = undefined;
+	if (document.formDiskCreateShare.shareall.checked){
+		for(var i = 0;i < num;i++)
+		{
+				selectname = "select" + i;
+				eval("disableTextField(document.formDiskCreateShare."+selectname+")");
+				eval("document.formDiskCreateShare."+selectname+".checked = false");
+		}
+	}else{
+		for(var i = 0;i < num;i++)
+		{
+			selectname = "select" + i;
+			eval("enableTextField(document.formDiskCreateShare."+selectname+")");
+			eval("document.formDiskCreateShare."+selectname+".checked = false");
+		}
+	}
+}
+
+function DeleteClick(index)
+{
+	var num = document.formDiskCreateShare.DirNum.value;
+	var selectname = "select" + index;
+	var deletename = "delete" + index;
+	var flag = false;
+	var value = eval("document.formDiskCreateShare."+deletename+".checked");
+
+	if(value){
+		eval("disableTextField(document.formDiskCreateShare."+selectname+")");
+		eval("document.formDiskCreateShare."+selectname+".checked = false");
+	}else{
+		for(var i = 0;i  < num;i++)
+		{
+			selectname = "select" + i;
+			if(eval("document.formDiskCreateShare."+selectname+".checked")){
+				flag = true;
+				break;
+			}
+		}
+		if(flag == false){
+			selectname = "select" +index;
+			eval("enableTextField(document.formDiskCreateShare."+selectname+")");
+			eval("document.formDiskCreateShare."+selectname+".checked = false");
+		}
+	}
+}
+
+
+</script>
+</head>
+
+<blockquote>
+<h2><font color="#0000FF">Create Share Folder For Group</font></h2>
+
+<body onload="init();">
+<table border=0 width="550" cellspacing=0 cellpadding=0>
+  <tr><hr size=1 noshade align=top></tr>
+
+<form action=/boafrm/formDiskCreateShare method=POST name="formDiskCreateShare">
+ <table border=0 width=500>
+  <tr>
+    <td width="20%"><font size=2><b>Display Name</b></td>
+    <td width="50%"><font size=2><input type="text" name="displayname" size="20" maxlength="30"></td>
+  </tr>
+    <% Storage_GeDirRoot(); %>
+  <tr>
+    <td width="30%"><font size=2><input type="checkbox" name="shareall" onClick="ShareAll()">Share All Partition</td>
+  </tr>
+	<% FolderList(); %>
+  <tr>
+    <td width="20%"><font size=2><b>Choose Group</b></td>
+    <td width="50%">
+    <% Storage_GetGroupMember(); %>
+    </td>
+  </tr>
+  <tr>
+<% getInfo("apply_prompt_comment_start");%>	
+    <td width="30%"><font size=2><input type="submit" name="Apply Changes" value="Apply Changes"></td>
+    <td width="30%"><font size=2><input type="reset" name="reste" value="reset"</td>
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+    <td width="30%"><font size=2><input type="submit" name="save" value="Save"></td>
+    <td width="30%"><font size=2><input type="submit" name="save_apply" value="Save & Apply"></td>
+    <td width="30%"><font size=2><input type="reset" name="reste" value="reset"</td>
+<% getInfo("apply_direct_comment_end");%>
+    <input type="hidden" value="/disk.htm" name="submit-url">
+  </tr>
+</table>
+</form>
+  <tr><hr size=1 noshade align=top></tr>
+
+<form action=/boafrm/formDiskCreateFolder method=POST name="formDiskCreateFolder">
+<table border=0 width=500>
+  <tr>
+    <td width="20%"><font size=2><b>New Folder</b></td>
+    <td width="50%"><font size=2><input type="text" name="newfolder" size="20" maxlength="30"></td>
+    <td width="30%"><font size=2><input type="submit" name="createfolder" value="create" ></td>
+    <input type="hidden" value="/storage_createsharefolder.htm" name="submit-url">
+    <input type="hidden"  name="Location">
+    <script>document.formDiskCreateFolder.Location.value=document.formDiskCreateShare.Location.value;</script>
+  </tr>
+</table>
+</form>
+
+</table>
+</body>
+
+</html>

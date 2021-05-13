@@ -1,0 +1,150 @@
+#!/bin/sh
+####################################################################
+## activateVAP
+##
+## This script is used to activate a VAP that was created earlier.
+## Activation involves bringing the interface up, associating with
+## a bridge, and configuring the security mode.  The VAP MUST EXIST
+## prior to calling the activate script.
+##
+## The form of the command is
+##
+## activateVAP <vap> <BR> <Security> <SEC Args>
+##
+## Where
+##      vap:    Vap ID (e.g. ath0)
+##       BR:    Bridge to join (or - if not bridged)
+## Security:    Security mode (WEP,WPA,WSC,NONE)
+## Sec Args:    File containing security configuration.  For WPA this is the hostapd
+##              conf file.  For WEP this is a list of iwconfig commands setting the
+##              keys.
+##
+## Examples:
+##   Open Access Point
+##      activateVAP ath0 br0 NONE
+##   WPA Access Point
+##      activateVAP ath1 br0 WPA wpa2-psk.conf
+##   WEP Station
+##      activateVAP ath0 br0 WEP wep.conf
+##
+###################################################################
+
+. /etc/ath/apcfg
+
+if [ "${1}" = "" ]; then
+    echo "activateVAP usage"
+    echo "activateVAP vapid bridge Security Security_file"
+    echo
+    echo "vapid: e.g. ath0"
+    echo "bridge:  Name of bridge to add to,(typically br0)"
+    echo "Security: [ WPA | WEP | WSC | NONE ]"
+    echo "Security_file: Name of file in /etc/ath containing security config"
+    echo
+    exit
+fi
+
+APNAME=$1
+BRIDGE=$2
+SECMODE=$3
+SECFILE=$4
+
+KVER=`uname -r | cut -f 1 -d '-'`
+MODULE_PATH=/lib/modules/$KVER/net
+ESSID=`iwconfig ${APNAME} | grep ESSID | cut -f2 -d\"` 
+MODE=`iwconfig ${APNAME} | grep "Mode:Master"`
+
+##
+## First, let's see if the indicated VAP exists.  If not, it must be created
+##
+
+VAPLIST=`iwconfig | grep ${APNAME} | cut -b 1-4`
+
+if [ "${VAPLIST}" = "" ]; then
+    echo "VAP ${APNAME} must be created first!! (use makeVAP)"
+    exit
+fi
+
+##
+## Must determine if the scan modules need to be loaded.  Remember, only once!
+## This is in station mode if the MODE value is blank
+##
+
+STATIONSCAN=`lsmod | grep wlan_scan_sta`
+CHANNELSCAN=`lsmod | grep wlan_scan_ap`
+
+if [ "${MODE}" = "" -a "${STATIONSCAN}" = "" ]; then
+    insmod $MODULE_PATH/wlan_scan_sta.ko
+    
+    #
+    # Check for a specific MAC address that is specified.  Only valid for stations
+    #
+
+    if [ "${AP_REQ_MAC}" != "" ]; then
+        iwconfig $APNAME ap $AP_REQ_MAC
+    fi
+fi
+
+if [ "${AP_PRIMARY_CH}" = "11na" -o "${AP_PRIMARY_CH}" = "11ng" ]; then
+    if [ "${CHANNELSCAN}" = "" ]; then
+        insmod $MODULE_PATH/wlan_scan_ap.ko
+    fi
+fi
+
+#
+# Bring the interface up at this point!!
+# configure bridge, or set an IP address for the WLAN interface
+#
+
+if [ "${BRIDGE}" != "none" -a "${BRIDGE}" != "-" ]; then
+    ifconfig ${APNAME} up
+    brctl addif ${BRIDGE} ${APNAME}
+    #
+    # Add the arping command to ensure all nodes are updated on the network!
+    #
+    
+    arping -U -c 1 -I ${BRIDGE} $AP_IPADDR
+
+else
+    ifconfig ${APNAME} up ${WAN_IPADDR}
+fi
+
+
+if [ "${SECMODE}" = "WPA" ]; then
+    #
+    # The way to tell if this is an AP is that it's "mode" is master
+    # If not, then it's managed
+    #
+
+    if [ "${MODE}" != "" ]; then
+        #
+        # This is the sed method for changing the defaults in the file to
+        # the specifics required.
+        #
+        sed -e 's/CHANGE_ME/'${ESSID}'/g' /etc/ath/${SECFILE} | sed -e 's/ath0/'${APNAME}'/' > /tmp/sec${APNAME}
+        hostapd -B /tmp/sec${APNAME} &
+    else
+        #
+        # This is a managed (station) node
+        #
+        sed -e 's/CHANGE_ME/'${ESSID}'/g' /etc/ath/${SECFILE} | sed -e 's/ath0/'${APNAME}'/' > /tmp/sup${APNAME}
+        wpa_supplicant -i ${APNAME} -b ${BRIDGE} -c /tmp/sup${APNAME} -Dmadwifi -B
+    fi
+fi
+
+if [ "${SECMODE}" = "WEP" ]; then
+#
+# Execute the commands in SECFILE
+#
+    if [ "${APNAME}" != "ath0" ]; then
+        echo "Danger, Will Robinson"
+        echo "WEP not allowed on VAPs other than ath0"
+        echo "Configuration Denied"
+        exit
+    else
+        . /etc/ath/${SECFILE}
+    fi
+fi
+
+if [ "${SECMODE}" = "WSC" ]; then
+    wsccmd -B /etc/ath/ 1
+fi

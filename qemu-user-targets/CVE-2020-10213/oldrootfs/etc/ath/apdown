@@ -1,0 +1,6 @@
+#!/bin/sh
+##
+## Compatability scripts for older versions
+##
+
+killVAP all

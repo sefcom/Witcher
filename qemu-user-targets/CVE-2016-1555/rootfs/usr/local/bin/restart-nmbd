@@ -1,0 +1,3 @@
+/usr/bin/killall nmbd
+/bin/busybox sleep 20
+/usr/sbin/nmbd -s /etc/smb.conf -D

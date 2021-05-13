@@ -1,0 +1,40 @@
+INTERFACE=$1
+IP=$2
+NETMASK=$3
+GATEWAY=$4
+
+# stop previous instance of destroy_secondary_ip
+killall destroy_secondary_ip
+sleep 1
+
+OLD_IP=`ifconfig $INTERFACE | grep "inet addr" | awk '{printf $2}' | awk -F : '{print $2}'`
+NMBD_PID=`pidof nmbd`
+ETH_LINK_PID=`pidof eth-link-check`
+WIFIDOG_RUNNING=`/bin/grep httpRedirectStatus /var/config | /usr/bin/awk '{print $2}'`
+
+ifconfig $INTERFACE $IP up
+if [ $NETMASK ]; then
+	ifconfig $INTERFACE netmask $NETMASK
+fi
+if [ $GATEWAY ]; then
+	route del default
+	route add default gw $GATEWAY dev $INTERFACE
+fi
+
+if [ $ETH_LINK_PID ]; then
+	killall eth-link-check 
+fi
+
+if [ $OLD_IP ] && [ $OLD_IP != $IP ]; then
+	ifconfig $INTERFACE:1 $OLD_IP up
+	/usr/local/bin/destroy_secondary_ip $INTERFACE &
+fi
+
+if [ $WIFIDOG_RUNNING != 0 ]; then
+	/usr/local/bin/restart-wifidog &
+fi
+
+if [ $NMBD_PID ]; then
+	/bin/busybox sleep 10
+	/usr/local/bin/restart-nmbd &
+fi

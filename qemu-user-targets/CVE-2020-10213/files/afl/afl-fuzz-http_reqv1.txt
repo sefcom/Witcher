@@ -1,0 +1,251 @@
+http_dictionary_stage:
+
+  fprintf(aflout, "[WC-AFL] Skip AFL dict = %d\n", skip_http_dict);
+
+  if (skip_http_dict) goto havoc_stage;
+
+  stage_name  = "http extras (ins)";
+  stage_short = "ext_HT";
+  stage_cur   = 0;
+  stage_max   = extras_cnt * len;
+
+  stage_val_type = STAGE_VAL_NONE;
+
+  orig_hit_cnt = new_hit_cnt;
+  fprintf(aflout, "[WC-AFL] Start of http stuff\n");
+
+  fprintf(aflout, "[WC-AFL] Initial Input => \e[33m");
+  for (t = 0; t < len; t++) {
+    if (out_buf[t] < 128 && out_buf[t] >= 0x20) {
+      fprintf(aflout, "%c", out_buf[t]);
+    } else {
+      fprintf(aflout, "\\x%02x", out_buf[t]);
+    }
+  } // end t for
+  fprintf(aflout, " \e[0mEND INITIAL INPUT len=\n", len);
+
+  for (exptr = 0; exptr < extras_cnt; exptr++) {
+    random_items = UR(10) + 1;
+    // extras is ordered by length, last element is longest
+    add_on = ck_alloc(extras[extras_cnt-1].len*random_items + 2);
+
+    add_on[0] = '&';
+    add_on_len = 1;
+
+    zeroPntCnt = 0;
+    last_optr = 0;
+    cur_pick_len = 0;
+
+    // randomly chose X items from dictionary to add
+    for (t = 0; t < random_items; t++) {
+      if (t==0){
+        random_loc = exptr;
+      } else {
+        random_loc = UR(extras_cnt);
+      }
+      memcpy(add_on + add_on_len, extras[random_loc].data, extras[random_loc].len);
+      add_on_len += extras[random_loc].len;
+    } // end for t
+    add_on[add_on_len] = '\x00';
+    add_on_len += 1;
+    fprintf(aflout, "\t Created Random list of args add_to len=%d   max=%d\n", add_on_len, extras[extras_cnt-1].len*random_items+2);
+
+    // outbuf length + an add_on for cookies, get, and post
+
+    last_zero_ptr = 0;
+    for (optr=0; optr < len; optr++){
+      if (out_buf[optr] == '\x00'){
+        zeroPntCnt++;
+        last_zero_ptr = optr;
+        if (zeroPntCnt == 3){
+          fprintf(aflout, "breaking out \n");
+          break;
+        }
+      }
+    }
+
+    pick_len = len + add_on_len * 3 - zeroPntCnt;
+    pick_buf = ck_alloc(pick_len);
+
+    for (optr=0; optr <= last_zero_ptr; optr++){
+      if (out_buf[optr] == '\x00'){
+        memcpy(pick_buf+cur_pick_len, out_buf+last_optr, optr-last_optr);
+        added_dist = optr - last_optr;
+        memcpy(pick_buf+cur_pick_len+added_dist, add_on, add_on_len);
+        last_optr = optr +1;
+        cur_pick_len += added_dist + add_on_len;
+      }
+    }
+    // if less than 3 null bytes appear in input, then tack on for the remaining.
+    if (zeroPntCnt < 3 && len > 0){
+      optr = len;
+      fprintf(aflout, "[WC-AFL] %d < 3 :: Tacking on unused out_buf cur_pick_len=%d, last_opt=%d, unused_len=%d\n", zeroPntCnt, cur_pick_len, last_optr, optr-last_optr);
+      memcpy(pick_buf+cur_pick_len, out_buf+last_optr, optr-last_optr);
+
+      added_dist = optr - last_optr;
+      cur_pick_len += added_dist;
+      fprintf(aflout, "[WC-AFL] Adding add_on %d %d", cur_pick_len, add_on_len);
+      memcpy(pick_buf+cur_pick_len, add_on, add_on_len);
+      last_optr = optr+1;
+      zeroPntCnt++;
+
+      cur_pick_len += add_on_len;
+    }
+
+    for (x=zeroPntCnt; x < 3;x++){
+      memcpy(pick_buf+cur_pick_len, add_on, add_on_len );
+      cur_pick_len += add_on_len;
+    } //end x
+
+    fflush(aflout);
+    ck_free(add_on);
+
+    fprintf(aflout, "[WC-AFL] Final Input => ");
+    for (t = 0; t < cur_pick_len; t++) {
+      if (pick_buf[t] < 128 && pick_buf[t] >= 0x20) {
+        fprintf(aflout, "%c", pick_buf[t]);
+      } else {
+        fprintf(aflout, "\\x%02x", pick_buf[t]);
+      }
+    } // end t for
+    fprintf(aflout, " END TESTER VAR %d v %d maxlen=%d cur_pick_len=%d\n", add_on_len, t, pick_len, cur_pick_len);
+
+    fprintf(aflout, "Pick_buf start=%p ender pos= %d,%d  val= %x\n", pick_buf, ALLOC_S(pick_buf), pick_len, ALLOC_C2(pick_buf));
+    fflush(aflout);
+
+    if (common_fuzz_stuff(argv, pick_buf, cur_pick_len)) {
+      fprintf(aflout, "Aborted and now freeing\n");
+      ck_free(pick_buf);
+      goto abandon_entry;
+    }
+
+    fprintf(aflout, "Pick_buf start=%p ender pos= %d,%d  val= %x\n", pick_buf, ALLOC_S(pick_buf), pick_len, ALLOC_C2(pick_buf));
+    fflush(aflout);
+
+    ck_free(pick_buf);
+
+  } // end exptr
+
+  new_hit_cnt = queued_paths + unique_crashes;
+
+  stage_finds[STAGE_EXTRAS_HT]  += new_hit_cnt - orig_hit_cnt;
+  stage_cycles[STAGE_EXTRAS_HT] += stage_max;
+
+  fprintf(aflout, "[WC-AFL] END of HTTP dictionary fuzzing\n");
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  //      var_type_cnt = 0;
+  //      int cur_str_pos = 0;
+  //      u8 start=TRUE, changeit=FALSE;
+  //      u32 mod_str_pos=0;
+  //
+  //      for(int i =0; i<cur_len;i++){
+  //
+  //        if (tweaked[i] == '\x00'){
+  //          var_type_cnt++;
+  //          start = TRUE;
+  //          cur_str_pos=0;
+  //          changeit = FALSE;
+  //          mod_str_pos=0;
+  //        }
+  //        if (changeit ){
+  //          u8 orig = tweaked[i];
+  //          u8 newone = FALSE;
+  //          u8 found_path = FALSE;
+  //          for (u8 ch=0x20;ch<0x7f;ch++){
+  //
+  //            tweaked[i]=ch;
+  ////            for (int j=i+1;j< cur_len;j++){
+  ////              if (tweaked[j] == '&' || tweaked[j] == '\x00') {
+  ////                break;
+  ////              } else {
+  ////                if (j == i+1){
+  ////                  tweaked[j] = '&';
+  ////                } else {
+  ////                  tweaked[j] = '_';
+  ////                }
+  ////
+  ////              }
+  ////            }
+  //
+  //            current_paths = queued_paths + unique_crashes;
+  //            if (common_fuzz_stuff(argv, tweaked, cur_len)) {
+  //              fprintf(aflout, "Aborted and now freeing\n");
+  //              goto abandon_entry;
+  //            }
+  //            loopcnt++;
+  //            if ((queued_paths + unique_crashes) - current_paths > 0 ){
+  //              orig = tweaked[i];
+  //              found_path = TRUE;
+  //            }
+  //            if ((queued_paths + unique_crashes) - current_paths > 0 ){
+  //              fprintf(aflout,"\e[33m");
+  //            }
+  //            fprintf(aflout,"[WC-AFL] Tweaked(%d)  => \e[36m", cur_len);
+  //            vstrcnt=0;
+  //            var_type_cnt = 0;
+  //
+  //            for (int j=0; j < cur_len;j++){
+  //              if (vstrcnt == var_strlen[var_type_cnt]){
+  //                fprintf(aflout, "\e[0m");
+  //              }
+  //              if (tweaked[j]> 0x20 && tweaked[j] < 0x7f){
+  //                fprintf(aflout,"%c",tweaked[j]);
+  //              } else {
+  //                fprintf(aflout,"\\x%02x",tweaked[j]);
+  //              }
+  //              vstrcnt++;
+  //              if (tweaked[j] == 0x00){
+  //                fprintf(aflout, "\e[36m");
+  //                vstrcnt=0;
+  //                var_type_cnt++;
+  //              }
+  //
+  //            }
+  //            fprintf(aflout,"\e[0m<EOT>\n");
+  //            fflush (aflout);
+  //
+  //            // submitit.
+  //          } //end for loop ch
+  //
+  //          if (found_path == FALSE){
+  //            mod_str_pos = 9;
+  //          }
+  //          if (newone == FALSE){
+  //            tweaked[i] = orig;
+  //          }
+  //          mod_str_pos++;
+  //        }
+  //        if (start==TRUE && tweaked[i] == '='){
+  //          start = FALSE;
+  //          changeit = TRUE;
+  //        }
+  //        if (cur_str_pos >= var_strlen[var_type_cnt] || mod_str_pos > 3){
+  //          changeit = FALSE;
+  //        }
+  //
+  //        cur_str_pos++;
+  //
+  //      }
+  
+  
+        // Print outs to check final values
+  //      fprintf(aflout, "[WC-AFL] Starting(%d) => ", len);
+  //      for (int i =0; i< len;i++){
+  //        if (out_buf[i]> 0x20 && out_buf[i] < 0x7f){
+  //          fprintf(aflout,"%c",out_buf[i]);
+  //        } else {
+  //          fprintf(aflout,"\\x%02x",out_buf[i]);
+  //        }
+  //      }
+  //      fprintf(aflout, "<EOT>\n");
+  
+        // if new path  from last run, then change up color on output

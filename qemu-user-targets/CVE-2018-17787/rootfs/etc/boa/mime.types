@@ -1,0 +1,82 @@
+# MIME type			Extension
+application/java 		class jar
+text/html 			asp htm html cfm shtm shtml
+text/xml 			xml
+image/gif 			gif
+image/jpeg 			jpg jpeg jpe
+text/css 			css
+text/plain 			txt dat
+application/x-bzip2 		bz2
+application/x-sh 		sh h c
+application/rar 		rar
+application/msword 		doc
+application/pkix-cert 		cer
+application/vnd.ms-excel 	xls
+application/vnd.ms-powerpoint 	ppt
+application/x-javascript 	js
+application/binary 		exe
+application/compress 		z
+application/gzip 		gz
+application/octet-stream 	bin
+application/oda 		oda
+application/pdf 		pdf
+application/postscript 		ai eps ps
+application/rtf 		rtf
+application/x-bcpio 		bcpio
+application/x-cpio 		cpio
+application/x-csh 		csh
+application/x-dvi 		dvi
+application/x-gtar 		gtar
+application/x-hdf 		hdf
+application/x-latex 		latex
+application/x-mif 		mif
+application/x-netcdf 		nc cdf
+application/x-ns-proxy-autoconfig pac
+application/x-patch 		patch
+application/x-shar 		shar
+application/x-sv4cpio 		sv4cpio
+application/x-sv4crc 		sv4crc
+application/x-tar 		tar
+application/x-tcl 		tcl
+application/x-tex 		tex
+application/x-texinfo 		texinfo texi
+application/x-troff 		t tr roff
+application/x-troff-man 	man
+application/x-troff-me 		me
+application/x-troff-ms 		ms
+application/x-ustar 		ustar
+application/x-wais-source 	src
+application/zip 		zip
+audio/basic 			au snd
+audio/x-aiff 			aif aiff aifc
+audio/x-wav 			wav ram
+audio/mpeg					mpga mp2 mp2a mp3 m2a m3a
+audio/x-ms-wma					wma
+image/ief 			ief
+image/tiff 			tiff tif
+image/x-cmu-raster 		ras
+image/x-portable-anymap 	pnm
+image/x-portable-bitmap 	pbm
+image/x-portable-graymap 	pgm
+image/x-portable-pixmap 	ppm
+image/x-rgb 			rgb
+image/x-xbitmap 		xbm
+image/x-xpixmap 		xpm
+image/x-xwindowdump 		xwd
+text/richtext 			rtx
+text/tab-separated-values 	tsv
+text/x-setext 			etx
+video/mpeg 			mpeg mpg mpe
+video/quicktime 		qt mov
+video/x-msvideo 		avi
+video/x-sgi-movie 		movie
+video/mp4 			mp4
+video/x-msvideo					avi
+video/mpeg					mpeg mpg mpe m1v m2v
+video/x-m4v 			m4v
+video/3gpp 			3gp
+video/wmv 			wmv
+video/x-flv 		flv
+video/x-mkv			mkv
+video/x-matroska    mkv
+MKV-application/octet-stream mkv

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+export DIR=/usr/local/bin
+
+if [ $# -ne 1 ];
+then
+	echo "$1 <URL/filename>"
+	exit 1
+fi
+
+#Get the file from the given URL and store in /tmp directory
+	wget -P /tmp $1
+
+	if [ $? -ne 0 ]; then
+		echo "Not able to get the file from specified URL"
+		exit 1		
+	fi	
+
+	file_name=`basename $1`
+	nohup $DIR/firmware-upgrade-file /tmp/$file_name > /tmp/nohup.out
+ 
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+exit 0

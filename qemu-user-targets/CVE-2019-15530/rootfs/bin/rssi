@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+
+iwpriv wlan0 set_mib rssi_dump=$1
+

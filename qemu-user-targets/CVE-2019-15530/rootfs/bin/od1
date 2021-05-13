@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+
+if [ $# -lt 2 ]; then echo "Usage: $0 <offset> <data>";  exit 1 ; fi
+
+iwpriv wlan1 write_reg dw,$1,$2
+

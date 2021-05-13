@@ -1,0 +1,34 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003~2005. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<script type="text/javascript" src="util_gw.js"></script>
+<title>System Command</title>
+<% getInfo("include_css"); %>
+</head>
+<blockquote>
+<h2>Active Client Table</h2>
+
+<body>
+<form action=/boafrm/formMeshProxyTbl method=POST name="formMeshProxyTbl">
+<table border=0 width="550" cellspacing=4 cellpadding=0>
+          <tr><font size=2>
+		This table shows the MAC address for each proxied wired or wireless client
+          </font></tr>
+          <tr><hr size=1 noshade align=top></tr>
+</table>
+<table border="0" width=240>
+<tr><font size=4><b>Proxy Table </b></font></tr>
+<% wlMeshProxyTable(); %>
+</table>
+<br>
+<input type="hidden" value="/wlmeshproxy.htm" name="mesh-url">
+<input type="submit" value="Refresh" name="refresh">&nbsp;&nbsp;
+<input type="button" value=" Close " name="close" onClick="javascript: window.close();">
+</table>
+</form>
+
+</body>
+</blockquote>
+</html>

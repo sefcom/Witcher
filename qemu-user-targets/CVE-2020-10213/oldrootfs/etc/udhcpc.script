@@ -1,0 +1,4 @@
+#!/bin/sh
+
+/sbin/ifconfig $interface $ip broadcast $broadcast netmask $subnet up
+route add default gw $router dev $interface 

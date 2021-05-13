@@ -1,0 +1,319 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Statisitcs</title>
+<% getInfo("include_css"); %>
+</head>
+<body>
+<blockquote>
+<h2>Statistics</h2>
+
+<table border=0 width="500" cellpadding=0>
+  <tr><font size=2>
+ This page shows the packet counters for transmission and reception regarding to wireless
+ and Ethernet networks.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<form action=/boafrm/formStats method=POST name="formStats">
+<table border="1" width="360">
+  <script>
+	var wlan_num = <% getIndex("wlan_num"); %>;
+	var wlanMode = <% getIndex("wlanMode"); %>;
+	var ssid_drv=new Array();
+  	var tx_pkt_num =new Array();
+  	var rx_pkt_num =new Array();
+  	var rp_enabled=new Array();
+	var rp_tx_pkt_num =new Array();
+  	var rp_rx_pkt_num =new Array();  	
+	var mssid_num=<%getIndex("wlan_mssid_num");%>;
+	var mssid_disable=new Array();
+	var mssid_tx_pkt_num=new Array();
+	var mssid_rx_pkt_num=new Array();
+	var wlanDisabled=new Array();
+	var opMode="<% getInfo("opMode"); %>"*1;
+	var vlanOnOff = "<% getInfo("vlanOnOff"); %>"*1;
+	var isPocketRouter="<% getInfo("isPocketRouter"); %>"*1;
+	
+	for(i=0; i<wlan_num; i++)
+	{
+		mssid_disable[i] = new Array(mssid_num);
+		mssid_tx_pkt_num[i] = new Array(mssid_num);
+		mssid_rx_pkt_num[i] = new Array(mssid_num);		
+	}
+	
+	if (wlan_num > 0)
+	{
+		<%getInfo("wlan0-status");%>
+		ssid_drv[0] = '<%getInfo("ssid_drv");%>';
+		tx_pkt_num[0] = <%getInfo("wlanTxPacketNum");%>;
+		rx_pkt_num[0] = <%getInfo("wlanRxPacketNum");%>;
+		rp_enabled[0] = <%getIndex("isRepeaterEnabled");%>;
+		rp_tx_pkt_num[0] = <%getInfo("wlanRepeaterTxPacketNum");%>;
+		rp_rx_pkt_num[0] = <%getInfo("wlanRepeaterRxPacketNum");%>;
+		wlanDisabled[0] = <%getIndex("wlanDisabled");%>;
+		if (mssid_num > 0) {
+			mssid_disable[0][0] = <%getVirtualIndex("wlanDisabled", "1");%>;
+			mssid_tx_pkt_num[0][0] = <%getVirtualInfo("wlanTxPacketNum", "1");%>;
+			mssid_rx_pkt_num[0][0] = <%getVirtualInfo("wlanRxPacketNum", "1");%>;
+		}
+		if (mssid_num > 1) {
+			mssid_disable[0][1] = <%getVirtualIndex("wlanDisabled", "2");%>;
+			mssid_tx_pkt_num[0][1] = <%getVirtualInfo("wlanTxPacketNum", "2");%>;
+			mssid_rx_pkt_num[0][1] = <%getVirtualInfo("wlanRxPacketNum", "2");%>;
+		}
+		if (mssid_num > 2) {
+			mssid_disable[0][2] = <%getVirtualIndex("wlanDisabled", "3");%>;
+			mssid_tx_pkt_num[0][2] = <%getVirtualInfo("wlanTxPacketNum", "3");%>;
+			mssid_rx_pkt_num[0][2] = <%getVirtualInfo("wlanRxPacketNum", "3");%>;
+		}
+		if (mssid_num > 3) {
+			mssid_disable[0][3] = <%getVirtualIndex("wlanDisabled", "4");%>;
+			mssid_tx_pkt_num[0][3] = <%getVirtualInfo("wlanTxPacketNum", "4");%>;
+			mssid_rx_pkt_num[0][3] = <%getVirtualInfo("wlanRxPacketNum", "4");%>;
+		}
+		if (mssid_num > 4) {
+			mssid_disable[0][4] = <%getVirtualIndex("wlanDisabled", "5");%>;
+			mssid_tx_pkt_num[0][4] = <%getVirtualInfo("wlanTxPacketNum", "5");%>;
+			mssid_rx_pkt_num[0][4] = <%getVirtualInfo("wlanRxPacketNum", "5");%>;
+		}
+		if (mssid_num > 5) {
+			mssid_disable[0][5] = <%getVirtualIndex("wlanDisabled", "6");%>;
+			mssid_tx_pkt_num[0][5] = <%getVirtualInfo("wlanTxPacketNum", "6");%>;
+			mssid_rx_pkt_num[0][5] = <%getVirtualInfo("wlanRxPacketNum", "6");%>;
+		}
+		if (mssid_num > 6) {
+			mssid_disable[0][6] = <%getVirtualIndex("wlanDisabled", "7");%>;
+			mssid_tx_pkt_num[0][6] = <%getVirtualInfo("wlanTxPacketNum", "7");%>;
+			mssid_rx_pkt_num[0][6] = <%getVirtualInfo("wlanRxPacketNum", "7");%>;
+		}
+		if (mssid_num > 7) {
+			mssid_disable[0][7] = <%getVirtualIndex("wlanDisabled", "8");%>;
+			mssid_tx_pkt_num[0][7] = <%getVirtualInfo("wlanTxPacketNum", "8");%>;
+			mssid_rx_pkt_num[0][7] = <%getVirtualInfo("wlanRxPacketNum", "8");%>;
+		}
+	} /*if (wlan_num > 0)*/
+	
+	if (wlan_num > 1)
+	{
+		<%getInfo("wlan1-status");%>
+		ssid_drv[1] = '<%getInfo("ssid_drv");%>';
+		tx_pkt_num[1] = <%getInfo("wlanTxPacketNum");%>;
+		rx_pkt_num[1] = <%getInfo("wlanRxPacketNum");%>;
+		rp_enabled[1] = <%getIndex("isRepeaterEnabled");%>;
+		rp_tx_pkt_num[1] = <%getInfo("wlanRepeaterTxPacketNum");%>;
+		rp_rx_pkt_num[1] = <%getInfo("wlanRepeaterRxPacketNum");%>;
+		wlanDisabled[1] = <%getIndex("wlanDisabled");%>;
+		if (mssid_num > 0) {
+			mssid_disable[1][0] = <%getVirtualIndex("wlanDisabled", "1");%>;
+			mssid_tx_pkt_num[1][0] = <%getVirtualInfo("wlanTxPacketNum", "1");%>;
+			mssid_rx_pkt_num[1][0] = <%getVirtualInfo("wlanRxPacketNum", "1");%>;
+		}
+		if (mssid_num > 1) {
+			mssid_disable[1][1] = <%getVirtualIndex("wlanDisabled", "2");%>;
+			mssid_tx_pkt_num[1][1] = <%getVirtualInfo("wlanTxPacketNum", "2");%>;
+			mssid_rx_pkt_num[1][1] = <%getVirtualInfo("wlanRxPacketNum", "2");%>;
+		}
+		if (mssid_num > 2) {
+			mssid_disable[1][2] = <%getVirtualIndex("wlanDisabled", "3");%>;
+			mssid_tx_pkt_num[1][2] = <%getVirtualInfo("wlanTxPacketNum", "3");%>;
+			mssid_rx_pkt_num[1][2] = <%getVirtualInfo("wlanRxPacketNum", "3");%>;
+		}
+		if (mssid_num > 3) {
+			mssid_disable[1][3] = <%getVirtualIndex("wlanDisabled", "4");%>;
+			mssid_tx_pkt_num[1][3] = <%getVirtualInfo("wlanTxPacketNum", "4");%>;
+			mssid_rx_pkt_num[1][3] = <%getVirtualInfo("wlanRxPacketNum", "4");%>;
+		}
+		if (mssid_num > 4) {
+			mssid_disable[1][4] = <%getVirtualIndex("wlanDisabled", "5");%>;
+			mssid_tx_pkt_num[1][4] = <%getVirtualInfo("wlanTxPacketNum", "5");%>;
+			mssid_rx_pkt_num[1][4] = <%getVirtualInfo("wlanRxPacketNum", "5");%>;
+		}
+		if (mssid_num > 5) {
+			mssid_disable[1][5] = <%getVirtualIndex("wlanDisabled", "6");%>;
+			mssid_tx_pkt_num[1][5] = <%getVirtualInfo("wlanTxPacketNum", "6");%>;
+			mssid_rx_pkt_num[1][5] = <%getVirtualInfo("wlanRxPacketNum", "6");%>;
+		}
+		if (mssid_num > 6) {
+			mssid_disable[1][6] = <%getVirtualIndex("wlanDisabled", "7");%>;
+			mssid_tx_pkt_num[1][6] = <%getVirtualInfo("wlanTxPacketNum", "7");%>;
+			mssid_rx_pkt_num[1][6] = <%getVirtualInfo("wlanRxPacketNum", "7");%>;
+		}
+		if (mssid_num > 7) {
+			mssid_disable[1][7] = <%getVirtualIndex("wlanDisabled", "8");%>;
+			mssid_tx_pkt_num[1][7] = <%getVirtualInfo("wlanTxPacketNum", "8");%>;
+			mssid_rx_pkt_num[1][7] = <%getVirtualInfo("wlanRxPacketNum", "8");%>;
+		}
+	} /*if (wlan_num > 1)*/
+	
+  	for(i=0 ;i < wlan_num ; i++){
+		if (!wlanDisabled[i]) {
+			if(ssid_drv[i]!=""){
+				document.write(' <tr>\
+					<td width="30%" rowspan="2"><font size=2><b>');
+				if (wlan_num > 1) {
+					var num = i + 1;
+					document.write("Wireless " + num + " LAN");
+				}
+				else
+					document.write("Wireless LAN");
+				document.write("</b></td>");
+				document.write('<td width="30%"><font size=2><i>Sent Packets</i></td>\
+					<td width="20%"><font size=2>' + tx_pkt_num[i] +'</td>\
+					</tr>\
+			  		<tr>\
+			    		<td width="30%"><font size=2><i>Received Packets</i></td>\
+			    		<td width="20%"><font size=2>' + rx_pkt_num[i] + '</td>\
+			  		</tr>');
+			} else {
+				mssid_num=0;
+			}
+			  if (rp_enabled[i])
+			  {
+				document.write(' <tr>\
+					<td width="30%" rowspan="2"><font size=2><b>');
+				if (wlan_num > 1) {
+					var num = i + 1;
+					document.write("Wireless " + num + " Repeater LAN");
+				}
+				else
+					document.write("Wireless Repeater LAN");
+				document.write("</b></td>");
+			    
+			    document.write('<td width="30%"><font size=2><i>Sent Packets</i></td>\
+			    <td width="20%"><font size=2>' + rp_tx_pkt_num[i] +'</td>\
+			  </tr>\
+			  <tr>\
+			    <td width="30%"><font size=2><i>Received Packets</i></td>\
+			    <td width="20%"><font size=2>' + rp_rx_pkt_num[i] + '</td>\
+			  </tr>');
+			  }
+			
+			if (wlanMode==0 || wlanMode==3 ) {
+			 for (idx=0; idx<mssid_num; idx++) {
+				if (!mssid_disable[i][idx]) {
+				  document.write(' <tr>\
+				  	<td width="30%" rowspan="2"><font size=2><b>&nbsp;&nbsp;Virtual AP'+(idx+1)+'</b></td>\
+					<td width="30%"><font size=2><i>Sent Packets</i></td>\
+					<td width="20%"><font size=2>' + mssid_tx_pkt_num[i][idx] +'</td>\
+					</tr>\
+				  	<tr>\
+					<td width="30%"><font size=2><i>Received Packets</i></td>\
+					<td width="20%"><font size=2>' + mssid_rx_pkt_num[i][idx] + '</td>\
+					</tr>');	  	  		
+				}	  
+			}
+			}
+		}
+	 }
+	 
+		function drawLanStatistics()
+		{
+		
+			if(isPocketRouter == 1 && "<% getInfo("vlanOnOff"); %>"*1 == 1)
+				return;
+			else if(isPocketRouter == 1 && opMode == 0)
+				return;
+				
+
+			if( "<% getInfo("rtlMultiLanDev"); %>"*1 ==0 && "<% getInfo("vlanOnOff"); %>"*1 == 0)
+			{
+				var lanTx="<% getInfo("lanTxPacketNum"); %>";
+				var lanRx="<% getInfo("lanRxPacketNum"); %>";
+				
+				document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN</b></td>");
+	    	document.write("<td width='30%'><font size=2><i>Sent Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lanTx+"</td></tr>");
+	  		document.write("<tr><td width='30%'><font size=2><i>Received Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lanRx+"</td></tr>");
+    	}
+    	else
+    	{
+    		var lan1Tx="<% getInfo("lanTxPacketNum"); %>";
+				var lan1Rx="<% getInfo("lanRxPacketNum"); %>";
+				var lan2Tx="<% getInfo("lan2TxPacketNum"); %>";
+				var lan2Rx="<% getInfo("lan2RxPacketNum"); %>";
+				var lan3Tx="<% getInfo("lan3TxPacketNum"); %>";
+				var lan3Rx="<% getInfo("lan3RxPacketNum"); %>";
+				var lan4Tx="<% getInfo("lan4TxPacketNum"); %>";
+				var lan4Rx="<% getInfo("lan4RxPacketNum"); %>";
+				
+	    	document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN1</b></td>");
+	    	document.write("<td width='30%'><font size=2><i>Sent Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan1Tx+"</td></tr>");
+	  		document.write("<tr><td width='30%'><font size=2><i>Received Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan1Rx+"</td></tr>");
+	    	
+	    	document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN2</b></td>");
+	    	document.write("<td width='30%'><font size=2><i>Sent Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan2Tx+"</td></tr>");
+	  		document.write("<tr><td width='30%'><font size=2><i>Received Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan2Rx+"</td></tr>");
+	    	document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN3</b></td>");
+	    	document.write("<td width='30%'><font size=2><i>Sent Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan3Tx+"</td></tr>");
+	  		document.write("<tr><td width='30%'><font size=2><i>Received Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan3Rx+"</td></tr>");
+	    	
+	    	document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN4</b></td>");
+	    	document.write("<td width='30%'><font size=2><i>Sent Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan4Tx+"</td></tr>");
+	  		document.write("<tr><td width='30%'><font size=2><i>Received Packets</i></td>");
+	    	document.write("<td width='20%'><font size=2>"+lan4Rx+"</td></tr>");
+	    }
+			
+		}
+		
+		function drawWanStatistics()
+		{			
+			var wanTx="<% getInfo("wanTxPacketNum"); %>";
+			var wanRx="<% getInfo("wanRxPacketNum"); %>";
+			var isAP = <% getIndex("isPureAP"); %>;
+				
+			if(opMode == 1 && vlanOnOff == 0)
+				return;
+			
+			if(isPocketRouter == 1 && opMode == 1 && vlanOnOff == 1)
+				document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN</b></td>");
+			else if((opMode == 1 || opMode == 2) && vlanOnOff == 1)
+				document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN5</b></td>");
+			else if((opMode == 1 || opMode == 2) && vlanOnOff == 0)
+				return;
+			else if(vlanOnOff==1 && isAP == 1)
+				document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet LAN5</b></td>");
+			else if(vlanOnOff==0 && isAP == 1)
+				return;
+			else if(opMode == 0)
+				document.write("<tr><td width='30%' rowspan='2'><font size=2><b>Ethernet WAN</b></td>");
+				
+		  document.write("<td width='30%'><font size=2><i>Sent Packets</i></td>");
+		  document.write("<td width='20%'><font size=2>"+wanTx+"</td></tr>");
+		  document.write("<tr><td width='30%'><font size=2><i>Received Packets</i></td>");
+		  document.write("<td width='20%'><font size=2>"+wanRx+"</td></tr>");
+			
+		}
+  </script>
+  <!--
+  <tr>
+   <td width="30%" rowspan="2"><font size=2><b>Ethernet LAN</b></td>
+    <td width="30%"><font size=2><i>Sent Packets</i></td>
+    <td width="20%"><font size=2><% getInfo("lanTxPacketNum"); %></td>
+  </tr>
+  <tr>
+    <td width="30%"><font size=2><i>Received Packets</i></td>
+    <td width="20%"><font size=2><% getInfo("lanRxPacketNum"); %></td>
+  </tr>
+  -->
+  <SCRIPT >drawLanStatistics();</SCRIPT>
+  <SCRIPT >drawWanStatistics();</SCRIPT>
+</table>
+  <br>
+  <input type="hidden" value="/stats.htm" name="submit-url">
+  <input type="submit" value="Refresh" name="refresh">
+</form>
+</blockquote>
+</body>
+
+</html>

@@ -1,0 +1,420 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>802.1Q VLAN</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+function getById(id)
+{
+	with(document)
+	{
+		return getElementById(id);
+	}
+}
+
+function addClick()
+{
+	if (!document.formVlanAdd.vlanEnabled.checked)
+		return true;
+
+	if (!checkFieldDigitRange(document.formVlanAdd.vlanId, 0, 4095, 'VLAN Id'))
+		return false;
+	
+	//if (!checkFieldDigitRange(document.formVlanAdd.priority, 0, 7, 'Priority'))
+		//return false;
+	
+	return true;
+}
+
+function deleteClick()
+{
+	if (!confirm('Delete the selected VLAN entry?') ) {
+		return false;
+	}
+	else
+		return true;
+}
+
+function deleteAllClick()
+{
+	if (!confirm('Delete all the VLAN entries?') ) {
+		return false;
+	}
+	else
+		return true;
+}
+
+function changePVidClick()
+{
+	for (var i=1; i<=portNum; i++)
+	{
+		if(mssid_num==1 && i>=8 && i<=10)
+			continue;
+			
+		if(isPocketRouter==1 && i>=1 && i<=4)
+			continue;
+			
+		if(i>=6 && i<=11) //wlan0 member
+			if(!wlanValid[0])
+				continue;
+			
+		if(i>=12 && i<=17) // wlan1 member
+			if(!wlan_support_92D || wlBandMode!=2 || !wlanValid[1]) 
+				continue;
+			
+		if (!checkFieldDigitRange(getById("vlan_pvid_" + i), 0, 4095, 'VLAN Id'))
+			return false;
+	}
+	
+	return true;
+}
+
+function disableDelButton()
+{
+	disableButton(document.formVlanDel.deleteSelVlan);
+	disableButton(document.formVlanDel.deleteAllVlan);
+}
+
+function updateState()
+{
+	if (document.formVlanAdd.vlanEnabled.checked) {
+		document.formVlanAdd.vlanEnabledFlag.value = 1;
+		enableTextField(document.formVlanAdd.vlanType);
+		enableTextField(document.formVlanAdd.vlanId);
+		//enableTextField(document.formVlanAdd.priority);
+		enableTextField(document.formPVidChange.PVidEnabled);
+		
+		enableButton(document.formVlanDel.deleteSelVlan);
+		enableButton(document.formVlanDel.deleteAllVlan);
+		enableButton(document.formVlanDel.reset);
+	}
+	else {
+		document.formVlanAdd.vlanEnabledFlag.value = 0;
+		disableTextField(document.formVlanAdd.vlanType);
+		disableTextField(document.formVlanAdd.vlanId);
+		//disableTextField(document.formVlanAdd.priority);
+		disableTextField(document.formPVidChange.PVidEnabled);
+		
+		disableButton(document.formVlanDel.deleteSelVlan);
+		disableButton(document.formVlanDel.deleteAllVlan);
+		disableButton(document.formVlanDel.reset);
+		
+		document.formPVidChange.PVidEnabled.checked = false;
+		getById("PVidSetting").style.display = 'none';
+		getById("changePVid").style.visibility = 'hidden';	
+		getById("resetPVid").style.visibility = 'hidden';
+	}
+}
+
+function onHwNatCheck()
+{
+	if (document.formVlanAdd.hwNatCheck.checked) {
+		document.formVlanAdd.hwNatFlag.value = 1;
+	}
+	else {
+		document.formVlanAdd.hwNatFlag.value = 0;
+	}
+}
+
+function PVidEnabledCheck()
+{
+	if (document.formPVidChange.PVidEnabled.checked) {
+		document.formPVidChange.PVidEnabledFlag.value = 1;
+		getById("PVidSetting").style.display = 'block';
+		getById("changePVid").style.visibility = 'visible';	
+		getById("resetPVid").style.visibility = 'visible';	
+	}
+	else{
+		document.formPVidChange.PVidEnabledFlag.value = 0;
+		getById("PVidSetting").style.display = 'none';
+		getById("changePVid").style.visibility = 'hidden';	
+		getById("resetPVid").style.visibility = 'hidden';	
+	}
+}
+
+function Load_Setting()
+{
+	if (<%getVlanInfo("vlanEnabled");%>)
+		document.formVlanAdd.vlanEnabled.checked = true;
+	
+	getById("PVidSetting").style.display = 'none';
+	getById("changePVid").style.visibility = 'hidden';	
+	getById("resetPVid").style.visibility = 'hidden';	
+	
+	updateState();
+	
+	/*for (var i=1; i<=portNum; i++)
+	{
+		if(i>=6 && i<=11 && !wlanValid[0]) //wlan0 member
+		{
+			disableTextField(getById("port_member_"+i));
+			disableTextField(getById("port_tagged_"+i));
+			disableTextField(getById("vlan_pvid_"+i));
+			continue;
+		}
+			
+		if(i>=12 && i<=17 && wlan_support_92D && wlBandMode==2 && !wlanValid[1]) // wlan1 member
+		{
+			disableTextField(getById("port_member_"+i));
+			disableTextField(getById("port_tagged_"+i));
+			disableTextField(getById("vlan_pvid_"+i));
+			continue;
+		}
+	}*/
+}
+
+var portDisplayName = new Array();
+var vlanTable = new Array();
+var vlanEntry = new Array();
+var PVidArray = new Array();
+var wlanValid = new Array();
+
+var opMode = <%getIndex("opMode");%>;
+var portNum = <%getVlanInfo("portNum");%>;
+var vlanNum = <%getVlanInfo("vlanNum");%>;
+var wlan_num = <% getIndex("wlan_num"); %>;
+var mssid_num = <%getIndex("wlan_mssid_num");%>;
+var isPocketRouter = "<%getInfo("isPocketRouter");%>"*1;
+var wlan_support_92D = <%getIndex("wlan_support_92D");%> ;
+var wlBandMode = <%getIndex("wlanBand2G5GSelect");%> ;
+var wanPortId = <%getVlanInfo("wanPortId");%>;
+var isSrcTagMode = <%getVlanInfo("isSrcTagMode");%>;
+var isHwNatEnabled = <%getVlanInfo("isHwNatEnabled");%>;
+
+<%getPortList();%>
+<%getVlanTable();%>
+<%getPVidArray();%>
+<%getWlanValid();%>
+
+function VlanPortList()
+{
+	for (var i=1; i<=portNum; i++)
+	{
+		if(mssid_num==1 && i>=8 && i<=10)
+			continue;
+			
+		if(isPocketRouter==1 && i>=1 && i<=4)
+			continue;
+		
+		if(i>=6 && i<=11) //wlan0 member
+			if(!wlanValid[0])
+				continue;
+			
+		if(i>=12 && i<=17) // wlan1 member
+			if(!wlan_support_92D || wlBandMode!=2 || !wlanValid[1]) 
+				continue;
+		
+		document.write("<tr class=\"tbl_body\">");
+		
+		document.write("<td><input type='hidden' name='vlan_iface_"+i+"val' value='"+portDisplayName[i]+"'>");	
+		if(i == wanPortId)
+			document.write("<font size='2'>&nbsp;&nbsp;&nbsp;"+portDisplayName[i]+" (WAN)"+"</font></td>");
+		else
+			document.write("<font size='2'>&nbsp;&nbsp;&nbsp;"+portDisplayName[i]+"</font></td>");
+		
+		document.write("<td align = center><input type='hidden' id='port_member_"+i+"_val' name='port_member_"+i+"_val' value='0'>");
+		document.write("<input type='checkbox' id='port_member_"+i+"' name='port_member_"+i+"' onclick='portMemberSelect("+i+");'></td>");
+		
+		document.write("<td align = center><input type='hidden' id='port_tagged_"+i+"_val' name='port_tagged_"+i+"_val' value='0'>");
+		document.write("<input type='checkbox' id='port_tagged_"+i+"' name='port_tagged_"+i+"' onclick='portTaggedSelect("+i+");'></td></tr>");
+	}
+}
+
+function VlanTableList()
+{
+	for (var i=1; i<=vlanNum; i++)
+	{
+		/*VlanType/VlanId/Priority/MemberPort/TaggedPort*/
+		vlanEntry = vlanTable[i].split("|");
+		
+		document.write("<tr class=\"tbl_body\">");
+		document.write("<td align = center><font size='2'>" + vlanEntry[0] + "</font></td>");
+		//document.write("<td align = center><font size='2'>" + vlanEntry[1] + "</font></td>");
+		document.write("<td align = center><font size='2'>" + vlanEntry[2] + "</font></td>");
+		document.write("<td><font size='2'>" + vlanEntry[3] + "</font></td>");
+		document.write("<td><font size='2'>" + vlanEntry[4] + "</font></td>");
+		document.write("<td align = center><input type='checkbox' id='vlan_select_"+i+"' name='vlan_select_"+i+"' value='ON'></td></tr>");
+	}
+}
+
+function PVidList()
+{
+	for (var i=1; i<=portNum; i++)
+	{
+		if(mssid_num==1 && i>=8 && i<=10)
+			continue;
+			
+		if(isPocketRouter==1 && i>=1 && i<=4)
+			continue;
+		
+		if(i>=6 && i<=11) //wlan0 member
+			if(!wlanValid[0])
+				continue;
+			
+		if(i>=12 && i<=17) // wlan1 member
+			if(!wlan_support_92D || wlBandMode!=2 || !wlanValid[1]) 
+				continue;
+		
+		document.write("<tr class=\"tbl_body\">");
+		
+		if(i == wanPortId)
+			document.write("<td><font size='2'>&nbsp;&nbsp;&nbsp;"+portDisplayName[i]+" (WAN)"+"</font></td>");
+		else
+			document.write("<td><font size='2'>&nbsp;&nbsp;&nbsp;"+portDisplayName[i]+"</font></td>");
+			
+		document.write("<td align = center><input type='text' id='vlan_pvid_"+i+"' name='vlan_pvid_"+i+"' value='"+PVidArray[i]+"' size='6' maxlength='4'></td></tr>");
+	}
+}
+
+function portMemberSelect(port_idx)
+{
+	if(getById("port_member_" + port_idx).checked)
+		getById("port_member_" + port_idx + "_val").value = 1;
+	else
+		getById("port_member_" + port_idx + "_val").value = 0;
+}
+
+function portTaggedSelect(port_idx)
+{
+	if(getById("port_tagged_" + port_idx).checked)
+		getById("port_tagged_" + port_idx + "_val").value = 1;
+	else
+		getById("port_tagged_" + port_idx + "_val").value = 0;
+}
+
+function vlanTypeByOpMode()
+{
+	document.write("<font size=2><b>Forwarding Rule:&nbsp;</b>");
+	document.write("<select name='vlanType' onclick='updateState();'>");
+	
+	if(opMode == 0)
+	{
+		document.write("<option select value='0'>NAT</option>");
+		document.write("<option value='1'>Bridge</option>");
+	}
+	else if(opMode == 1)
+	{
+		document.write("<option select value='1'>Bridge</option>");
+	}
+
+	document.write("</select></font>");			
+}
+
+function hwNatCheck()
+{
+	if(opMode==0 && isHwNatEnabled /*&& !isSrcTagMode*/)
+	{
+		document.write("<font size=2><b>Hardware NAT:&nbsp;</b>");
+		document.write("<input type='hidden' name='hwNatFlag' value='0'>");
+		document.write("<input type='checkbox' name='hwNatCheck' onclick='onHwNatCheck();'>");
+		document.write("</select></font>");	
+	}	
+}
+
+</script>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<form action=/boafrm/formVlan method=POST name="formVlanAdd">
+<h2>802.1Q VLAN</h2>
+
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><td><font size=2>
+ Entries in below table are used to config vlan settings. 
+ VLANs are created to provide the segmentation services traditionally provided by routers. 
+ VLANs address issues such as scalability, security, and network management.
+</font></td></tr>
+<tr><td><hr size=1 noshade align=top></td></tr>
+<tr><td><font size=2><b>
+	<input type='hidden' name='vlanEnabledFlag' value='<% getVlanInfo("vlanEnabled"); %>'>
+   	<input type="checkbox" name="vlanEnabled" onclick='updateState();'>&nbsp;Enable 802.1Q VLAN</b><br>
+    </td>
+</tr>
+<tr><td>
+     <p>
+		<font size=2><b>VLAN ID(1-4095):&nbsp;</b><input type="text" name="vlanId" value="0" size="4" maxlength="4"></font>
+	 </p>
+	 <p>
+		<script>vlanTypeByOpMode();</script>&nbsp;
+		<script>hwNatCheck();</script>&nbsp;
+		<!--<font size=2><b>Priority(0-7):&nbsp;</b><input type="text" name="priority" value="0" size="4" maxlength="1"></font>-->
+	 </p>
+</td></tr>
+</table>
+
+<table border="0" width=280>
+<tr class="tbl_head">
+  	<td align=center width="150"><font size="2"><b>Port</b></font></td>
+  	<td align=center width="65" ><font size="2"><b>Member</b></font></td>
+  	<td align=center width="65" ><font size="2"><b>Tagged</b></font></td>
+</tr>
+<script>VlanPortList();</script>	
+</table>
+
+<br>
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><td>
+     <p>
+        <input type="submit" value="Save" name="addVlan" onClick="return addClick()">&nbsp;
+	    <input type="submit" value="Save & Apply" name="save_apply" onClick="return addClick()">&nbsp;
+        <input type="reset" value="Reset" name="reset">
+		<input type="hidden" value="1" name="addVlanFlag">	
+        <input type="hidden" value="/8021q_vlan.htm" name="submit-url">
+     </p>
+</td></tr>
+<script> updateState(); </script>
+</table>
+</form>
+
+<br>
+<form action=/boafrm/formVlan method=POST name="formVlanDel">
+<table border="0" width=560>
+	<tr><font size=2><b>Current VLAN Table:</b></font></tr>
+	<tr class="tbl_head">
+		<td align=center width="70"><font size="2"><b>VLAN ID</b></font></td>
+		<!--<td align=center width="70"><font size="2"><b>Priority</b></font></td>-->
+		<td align=center width="120"><font size="2"><b>Forwarding Rule</b></font></td>
+		<td align=center width="160"><font size="2"><b>Tagged Ports</b></font></td>
+		<td align=center width="160"><font size="2"><b>Untagged Ports</b></font></td>
+		<td align=center width="50"><font size="2"><b>Select</b></font></td>
+	</tr>
+	<script>VlanTableList();</script>
+</table>
+<br>
+	<input type="submit" value="Delete Selected" name="deleteSelVlan" onClick="return deleteClick()">&nbsp;
+	<input type="submit" value="Delete All" name="deleteAllVlan" onClick="return deleteAllClick()">&nbsp;
+	<input type="reset" value="Reset" name="reset">
+	<input type="hidden" value="/8021q_vlan.htm" name="submit-url">
+<script>
+	if (vlanNum == 0)
+		disableDelButton();
+</script>
+</form>
+
+<br>
+<form action=/boafrm/formVlan method=POST name="formPVidChange">
+<tr><td><font size=2><b>
+	<input type='hidden' name='PVidEnabledFlag' value='0'>
+   	<input type="checkbox" name="PVidEnabled" onclick='PVidEnabledCheck();'>&nbsp;Change PVID Setting</b><br>
+    </td>
+</tr>
+<table border="0" width=280 id="PVidSetting" >
+	<tr class="tbl_head">
+		<td align=center width="150"><font size="2"><b>Port</b></font></td>
+		<td align=center width="130"><font size="2"><b>Default VID</b></font></td>
+	</tr>
+	<script>PVidList();</script>
+</table>
+<br>
+	<input type="submit" value="Save" id="changePVid" name="changePVid" onClick="return changePVidClick()">&nbsp;
+	<input type="reset" value="Reset" id="resetPVid" name="reset">
+	<input type="hidden" value="/8021q_vlan.htm" name="submit-url">
+</form>
+
+</blockquote>
+</body>
+</html>

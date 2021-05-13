@@ -1,0 +1,67 @@
+# Simple Config Configuration File
+# Lines that start with # are treated as comments
+# Each line should not exceed 80 characters
+# Format: TYPE=value
+#
+# Configured Mode: 1=Unconfigured AP, 2=Client, 3=Registrar,
+# 4=AP with Proxy, 5 = AP with Proxy and Registrar
+CONFIGURED_MODE=1
+# Is the standalone Registrar (mode 3) wireless-enabled
+# Yes: 1, No:0
+REGISTRAR_WIRELESS=0
+# Should UPnP be used (for modes 1 and 3)
+# Yes: 1, No:0
+USE_UPNP=1
+UUID=0x565aa94967c14c0eaa8ff349e6f59311
+VERSION=0x10
+DEVICE_NAME=Atheros AP
+# Primary Device Categories: Please refer to the SC spec for
+# values for the following types
+PRI_DEV_CATEGORY=6
+PRI_DEV_OUI=0x50f204
+PRI_DEV_SUB_CATEGORY=1
+# MAC Address of the local device, 6 byte value
+MAC_ADDRESS=0x00037f00ceca
+MANUFACTURER=Atheros
+MODEL_NAME=Sample String 1
+MODEL_NUMBER=1234
+SERIAL_NUMBER=5678
+# Config Methods: bitwise OR of values
+CONFIG_METHODS=0x84
+# Auth type flags: bitwise OR of values
+AUTH_TYPE_FLAGS=0x1
+# Encr type flags: bitwise OR of values
+ENCR_TYPE_FLAGS=0x1
+CONN_TYPE_FLAGS=0x1
+RF_BAND=3
+OS_VER=0x80000000
+FEATURE_ID=0x80000000
+# SSID:
+# For unconfigured client: What it should connect to when
+# starting EAP-WSC
+# Example: SSID=WscSecureAP
+# For unconfigured AP: Initial broadcast SSID
+# Example: SSID=WscNewAP
+# For Registrar: SSID that the supplicant must connect to when
+# starting EAP-WSC
+# Example: SSID=WscNewAP
+# For AP with Registrar: Broadcast SSID
+# Example: SSID=WscSecureAP
+SSID=WscAtherosAP
+# Key Mgmt for Supplicant (Client, Registrar):
+# Unconfigured, doing WSC: WPA-EAP IEEE8021X
+# Configured after WSC (will be done by the s/w): WPA-PSK
+# Key Mgmt for Hostapd (AP, AP with Registrar):
+# Unconfigured, doing WSC: WPA-EAP
+# Configured after WSC (will be done by the s/w): WPA-PSK
+# Configured, plus Registrar: WPA-EAP WPA-PSK
+KEY_MGMT=OPEN
+# Are we using a USB key to transfer PIN/Credential?
+# Yes: 1, No:0
+USB_KEY=0
+# Is the Network Key set?
+# Yes: 0xValue or passphrase, No: comment out line
+# NW_KEY=0x000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F
+# NW_KEY=passphrase
+NW_KEY=
+

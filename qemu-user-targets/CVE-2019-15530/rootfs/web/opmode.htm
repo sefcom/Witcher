@@ -1,0 +1,126 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Operation Mode</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+var wlan_num =<% getIndex("show_wlan_num"); %> ;
+var wispWanId = <% getIndex("wispWanId"); %> ;
+var isPocketRouter="<% getInfo("isPocketRouter"); %>"*1;
+function opModeClick()
+{
+	if(wlan_num > 1){
+		if(document.fmOpMode.opMode[2].checked)
+			enableTextField(document.fmOpMode.wispWanId);
+		else
+			disableTextField(document.fmOpMode.wispWanId);
+	}
+}
+</script>
+</head>
+<body>
+<blockquote>
+<h2>Operation Mode</h2>
+
+
+<table border=0 width="500" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+  You can setup different modes to LAN and WLAN interface for NAT and bridging function. 
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<form action=/boafrm/formOpMode method=POST name="fmOpMode">
+<table border="0" width=500>
+	<tr>
+		<td width ="23%" valign="top">
+		<input type="radio" value="0" name="opMode" onClick="opModeClick()" ></input>
+		<font size=2> <b> Gateway: </b> </font>
+		</td>
+		<td width ="77%">
+			<font size=2>In this mode, the device is supposed to connect to internet via ADSL/Cable Modem. The NAT is enabled and PCs in  LAN ports share the same IP to ISP through WAN port. The connection type can be setup in WAN page by using PPPOE, DHCP client, PPTP client , L2TP client or static IP.</font>
+		</td>
+	</tr>
+	<td colspan="2" height="10"></tr>
+	<tr>
+		<td width ="23%" valign="top">
+		<input type="radio" value="1" name="opMode" onClick="opModeClick()" ></input>
+		<font size=2> <b> Bridge: </b> </font>
+		</td>
+		<td width ="77%">
+			<font size=2>In this mode, all ethernet ports and wireless interface are bridged together and NAT function is disabled. All the WAN related function and firewall are not supported.</font>
+		</td>
+	</tr>
+	<td colspan="2" height="10"></tr>
+
+	<tr>
+		<td width ="23%" valign="top">
+		<input type="radio" value="2" name="opMode" onClick="opModeClick()" ></input>
+		<font size=2> <b> Wireless ISP: </b> </font>
+		</td>
+		<td width ="77%">
+			<font size=2>In this mode, all  ethernet ports  are bridged together and the wireless client will connect to ISP access point. The NAT is enabled and PCs in ethernet ports share the same IP to ISP through wireless LAN. You can connect to the ISP AP in Site-Survey page.  The connection type can be setup in WAN page by using PPPOE, DHCP client, PPTP client , L2TP client or static IP.</font>
+		</td>
+	</tr>
+
+	<tr>
+		<td width ="23%" valign="top"> </td>
+		<td width ="77%">
+			<script>
+			if(wlan_num > 1){
+				document.write('<font size=2><b>WAN Interface : </b>');
+				document.write('<select size="1" name="wispWanId">');
+				for(i=0 ; i < wlan_num ; i++)
+					document.write('<option value="'+i+'">wlan'+(i+1)+'</option>');
+				document.write('</select>');
+			}
+			</script>
+		</td>
+	</tr>
+	
+</table>
+<script>
+	opmode = <% getIndex("opMode"); %> ;
+	document.fmOpMode.opMode[opmode].defaultChecked= true;
+	document.fmOpMode.opMode[opmode].checked= true;
+	
+	if(isPocketRouter == 1)
+	{
+		document.fmOpMode.opMode[0].disabled =true;
+		document.fmOpMode.opMode[1].disabled =true;
+		document.fmOpMode.opMode[2].disabled =true;
+	}
+		
+	var isWispDisplay =  <% getIndex("isWispDisplay"); %> ;
+	if(isWispDisplay == 0)
+		document.fmOpMode.opMode[2].disabled =true;
+		
+	if(wlan_num > 1){
+		document.fmOpMode.wispWanId.defaultSelected= wispWanId;
+		document.fmOpMode.wispWanId.selectedIndex= wispWanId;
+	}
+	opModeClick();
+</script>
+			<input type="hidden" value="/opmode.htm" name="submit-url">
+<% getInfo("apply_prompt_comment_start");%>			
+  <p><input type="submit" value="Apply Changes" name="apply">
+&nbsp;&nbsp;
+  <input type="reset" value="Reset" name="set" >
+  &nbsp;&nbsp;
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+  <p><input type="submit" value="Save" name="apply">
+	&nbsp;&nbsp;
+	<input type="submit" value="Save & Apply" name="save_apply">
+	&nbsp;&nbsp;	
+  <input type="reset" value="Reset" name="set" >
+  &nbsp;&nbsp;
+<% getInfo("apply_direct_comment_end");%>
+</form>
+</blockquote>
+</font>
+</body>
+
+</html>

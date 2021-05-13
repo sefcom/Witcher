@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPDmz.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+<script type="text/javascript">
+
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+var lanip="";
+var dmzenable="";
+var dmzipaddr="";
+var arraydevice=[];
+var isDmzSelect=false;//是否开启Dmz
+var DebugMode = 0;
+var endIPStatue=false;
+var soapAction = new SOAPAction();
+$(document).ready( function() {
+	document.getElementById("right_content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	Load_HTML();
+	GetXML();	
+	checkTimeout();
+	document.getElementById("savebutton").value = I18N("j","Commom_Save");//保存
+});
+function Load_HTML(){
+    MoreContainMiniheight();
+}
+//页面获取数据
+function GetXML()	{
+    GetResult_1st();
+}
+function GetResult_1st(){
+    var getAPDmzSettings=new SOAPGetDmzSettingsResponse();
+    var getAPLANSettings=new SOAPLANInfoResponse();
+    var getArr=[];
+    var arr1= soapAction.sendSOAPAction("GetDMZSettings", null, getAPDmzSettings);
+    var arr2=soapAction.sendSOAPAction("GetNetworkSettings", null, getAPLANSettings);
+    $.when(arr1,arr2).done(function(r1,r2){
+        getArr.push(r1); getArr.push(r2);
+        GetResult_2nd(getArr);
+    })
+}
+
+function GetResult_2nd(result_xml){
+		dmzenable=result_xml[0].Enabled;
+		dmzipaddr=result_xml[0].IPAddress;
+        lanip=result_xml[1].IPAddress;
+		if(dmzenable=="true"){
+			document.getElementById("dmz_enable").checked = true;
+			document.getElementById("dmz_statue").className = "checkbox_on";
+			document.getElementById("dmzcontent").style.display="";
+			isDmzSelect=true;
+		}else{
+			document.getElementById("dmz_enable").checked = false;
+			document.getElementById("dmz_statue").className = "checkbox_off";
+			document.getElementById("dmzcontent").style.display="none";
+			isDmzSelect=false;
+			$("#error_1").hide();
+		}
+        document.getElementById("preLanIp").innerHTML = lanip.substring(0,lanip.lastIndexOf(".") + 1);
+        document.getElementById("endLanIp").value=dmzipaddr.substring(dmzipaddr.lastIndexOf(".") + 1,dmzipaddr.length);
+//		if(dmzipaddr.length==0)
+//		document.getElementById("preLanIp").innerHTML = lanip.substring(0,lanip.lastIndexOf(".") + 1);
+//		else{
+//			document.getElementById("preLanIp").innerHTML = lanip.substring(0,lanip.lastIndexOf(".") + 1);
+//			document.getElementById("endLanIp").value=dmzipaddr.substring(dmzipaddr.lastIndexOf(".") + 1,dmzipaddr.length);
+//		}
+		
+		if(dmzenable=="false"){
+			//document.getElementById("dmzstatue").innerHTML="未生效";
+			document.getElementById("dmzstatue").innerHTML=I18N("j","DMZ_not_Effective");
+		}else if(dmzenable=="true"&& dmzipaddr.length>0){
+			//document.getElementById("dmzstatue").innerHTML="IP地址"+dmzipaddr+"已生效";
+            //判断lan的ip的前3段和返回的dmzipaddr前3段是否相同；
+           if(dmzipaddr.substring(0,dmzipaddr.lastIndexOf(".") + 1)==lanip.substring(0,lanip.lastIndexOf(".") + 1)){
+               document.getElementById("dmzstatue").innerHTML=I18N("j","DMZ_IP_Address")+dmzipaddr+I18N("j","DMZ_is_Effective");
+           }else{
+               document.getElementById("dmzstatue").innerHTML=I18N("j","DMZ_not_Effective");
+           }
+		}else{
+			//document.getElementById("dmzstatue").innerHTML="未生效";
+			document.getElementById("dmzstatue").innerHTML=I18N("j","DMZ_not_Effective");
+		}
+		document.getElementById("right_content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+}
+//保存按钮
+function SaveDMZ(){
+	var result=verifyDmzHostIp();
+    if(result){
+        SetXML2();
+    }
+//	if(result){
+//		$.ajax({
+//			cache: false,
+//			url: "./js/CheckConnection",
+//			timeout: 5000,
+//			type: "GET",
+//			success: function(data) {
+//				SetXML2();
+//			},
+//			error: function() {
+//				document.getElementById("DetectRouterConnection").style.display = "inline";
+//			}
+//		});
+//	}
+	
+}
+function SetXML2() {
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("waitSettingFinish").style.display = "inline";
+	SetResult_3st();
+}
+
+function SetResult_3st() {
+    var SOAPSetDMZ=new SOAPSetDmzSettings();
+    var SOAPDmzSetResult=new SOAPDmzSetResponse();
+    SOAPSetDMZ.Enabled=document.getElementById("dmz_enable").checked==true?"true":"false";
+    var preip=document.getElementById("preLanIp").innerHTML;
+    var ipend=document.getElementById("endLanIp").value;
+    var ipaddr=preip+ipend;
+    SOAPSetDMZ.IPAddress=ipaddr;
+    soapAction.sendSOAPAction("SetDMZSettings", SOAPSetDMZ, SOAPDmzSetResult)
+            .done(function(obj){
+                if(SOAPDmzSetResult.SetDMZSettingsResult=="OK"){
+                    waitSettingFinished()
+                }else if(SOAPDmzSetResult.SetDMZSettingsResult=="ERROR"){
+                    document.getElementById("CreatePopAlertMessage").style.display = "none";
+                    document.getElementById("DetectRouterConnection").style.display = "inline";
+                }
+
+            });
+}
+//验证endLanIp
+function setEed(){
+    var DmzInputValue=$("#endLanIp").val();
+    var result=isPositiveInteger(DmzInputValue);//是否为正整数
+    var subLanIp=lanip.split(".");
+    var statue=false;
+    $("#savebutton").attr("disabled", false);
+    $("#savebutton").removeClass().addClass("styled_buttonSet");
+    if(isDmzSelect){ //开启DMZ
+        if(""==DmzInputValue){
+            showErr("error_1","errorinfo_1",I18N("j","Err_Dmz_IpAddrEmpty"));
+            statue=true;
+            endIPStatue=true;
+            $("#endLanIp").focus();
+            return false;
+        }else if(!result || parseInt(DmzInputValue)>254){
+            showErr("error_1","errorinfo_1",I18N("j","Err_Dmz_IpAddrFormat"));
+            statue=true;
+            endIPStatue=true;
+            $("#endLanIp").focus();
+            return false;
+        }else if(DmzInputValue==subLanIp[3]){  //和网关192.168.1.x冲突
+            showErr("error_1","errorinfo_1",I18N("j","Err_Dmz_IpAddrConflict"));
+            statue=true;
+            endIPStatue=true;
+            $("#endLanIp").focus();
+            return false;
+        }
+    }
+    if(statue==false){
+        endIPStatue=false;
+        OffErr("error_1","errorinfo_1");
+    }
+}
+
+//DMZ开关按钮
+function ChangDmzStatus(){
+	var a = document.getElementById("dmz_enable").checked;
+	if(a){
+		document.getElementById("dmz_statue").className = "checkbox_off";
+		document.getElementById("dmz_enable").checked=false;
+		document.getElementById("dmzcontent").style.display="none";
+		isDmzSelect=false;
+		$("#error_1").hide();
+	}else{
+		document.getElementById("dmz_statue").className = "checkbox_on";
+		document.getElementById("dmz_enable").checked=true;
+		document.getElementById("dmzcontent").style.display="";
+		isDmzSelect=true;
+	}
+	if(dmzipaddr.length==0){
+		return ;
+	}
+    SetXML1();
+//	$.ajax({
+//			cache: false,
+//			url: "./js/CheckConnection",
+//			timeout: 5000,
+//			type: "GET",
+//			success: function(data) {
+//				SetXML1();
+//			},
+//			error: function() {
+//				document.getElementById("DetectRouterConnection").style.display = "inline";
+//			}
+//		});
+}
+
+function SetXML1() {
+	document.getElementById("CreatePopAlertMessage").style.display = "inline";
+	document.getElementById("waitSettingFinish").style.display = "inline";
+	SetResult_1st();
+}
+
+function SetResult_1st() {
+    var SOAPSetDMZ=new SOAPSetDmzSettings();
+    var SOAPDmzSetResult=new SOAPDmzSetResponse();
+    SOAPSetDMZ.Enabled=document.getElementById("dmz_enable").checked==true?"true":"false";
+    soapAction.sendSOAPAction("SetDMZSettings", SOAPSetDMZ, SOAPDmzSetResult)
+            .done(function(obj){
+                if(SOAPDmzSetResult.SetDMZSettingsResult=="OK"){
+//                    setTimeout("waitSettingFinished()", 1000);
+                    waitSettingFinished()
+                }else if(SOAPDmzSetResult.SetDMZSettingsResult=="ERROR"){
+                    document.getElementById("CreatePopAlertMessage").style.display = "none";
+                    document.getElementById("DetectRouterConnection").style.display = "inline";
+                }
+
+            });
+}
+function waitSettingFinished() {
+	window.location.reload();
+}	
+
+
+
+function verifyDmzHostIp(){
+   if(endIPStatue==true){
+       $("#endLanIp").focus();
+       return false;
+   }
+	return true;
+}
+
+
+</script>
+</head>
+
+<body>
+<!-------------------- Logo menu------------------------->
+	<div class="wrapper">  
+		<div id="header"></div>
+		<div class="clearboth" align="center" id="content">
+			<div class="morecontent" align="center" id="basiccontent">
+		 		<div class="pull-left" id="sub_menu_container">
+				<script>initialLeftMenu();</script>
+				 </div>
+				<div id="right_content"  class="pull-left" style="display:none; ">
+					<table border="0"  class="tablemoreheader clearboth" cellpadding="0" cellspacing="0" align="left">
+						<tr>
+							<th><script>I18N("h","DMZ_Headline");</script><!-- DMZ 主机 --> </th>
+							<td class="tdcheckbox">
+								 <div id="dmz_statue" class="checkbox_off" onclick="ChangDmzStatus()">
+                       				 <input type="checkbox" id="dmz_enable" name="dmz_enable">
+                      			</div>
+							</td>
+						</tr>
+					</table>
+					<div class="moreline1 clearboth"></div>
+					<div id="dmzcontent" style="display:none; ">
+					<div class="moredescription" style="text-align:justify;"><script>I18N("h","DMZ_Description");</script><!-- 开启此功能将内网中的某个设备设置为DMZ主机，此时该设备对外完全开放，您可以将一些需要对外共享的资源放在该设备中，互联网中的设备可直接访问该DMZ主机。 --></div>
+					 <table border="0" class="clearboth block" cellpadding="0" cellspacing="0" align="left" style="margin-top:36px;">
+					 	<tbody>
+						  <tr>
+							<th><script>I18N("h","Commom_DMZ_Host");</script><!-- DMZ主机 --></th>
+							<td align="left">
+								<span id="preLanIp" style="float:left; padding-left:10px; padding-right:10px;">192.168.1.</span>
+								<input type="text" id="endLanIp" size="3" maxlength="3" name="endLanIp" class="samll_styled-text" onkeyup="setEed()">
+							</td>
+						  </tr>
+						   <tr id="error_1" style="display:none; ">
+							<td>&nbsp;</td>
+							<td class="errorinfo">
+								<table>
+									<tbody>
+										<tr>
+											<td>
+											<div class="ic-sign ic"></div>
+										  </td>
+										  <td id="errorinfo_1"></td>
+										</tr>
+									</tbody>
+								  </table>
+							</td>
+						 </tr>
+						<tr class="space"></tr>
+						  <tr>
+							<th><script>I18N("h","DMZ_Status");</script><!-- DMZ状态 --></th>
+							<td>
+							 <div class="networkstatue" id="dmzstatue"></div>
+							</td>
+						  </tr>
+						  <tr style="height:36px; "></tr>
+						  <tr><th>&nbsp;</th><td><input type="button" value="" id="savebutton" class="styled_button_s" disabled onClick="SaveDMZ();"></td></tr>
+					 </tbody>	
+					 </table>
+				</div>
+				</div><!--end right_content -->
+			</div>
+	   </div>
+ 	   <div class="footer_placeholder"></div>  
+   </div>
+	
+	<div id="footer"></div>
+
+	<div id="CreatePopAlertMessage" style=" display:none;"></div>
+	<div style=" display:none;" id="DetectRouterConnection"></div>
+	<div id="CreateOnloadMessage" style="display:none;"><div class="OnLoadPopRect"><img src="/image/submit.gif" width="58" height="58"></div></div>
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

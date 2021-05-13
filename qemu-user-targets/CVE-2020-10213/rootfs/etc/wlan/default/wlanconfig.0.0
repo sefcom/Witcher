@@ -1,0 +1,13 @@
+# Copyright (C) 2005 Atheros Communications, Inc., All Rights Reserved
+# DO NOT EDIT -- This file is will be overwritten by CLI.
+
+config bss 0
+
+set ssid "Atheros Wireless Network"
+set rate best
+set compression Disable
+set ff Disable
+set burst Disable
+set wmm Disable
+set encryption Disable
+set wlanstate Enable

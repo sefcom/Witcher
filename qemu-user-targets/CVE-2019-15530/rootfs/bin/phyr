@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+
+if [ $# -lt 3 ]; then echo "Usage: $0 phyId pageId regId";  exit 1 ; fi
+
+if [ $# -eq 3 ]; then
+	echo extRead $1 $2 $3 > /proc/rtl865x/phyReg
+else
+	echo "Wrong Input!"
+fi
+

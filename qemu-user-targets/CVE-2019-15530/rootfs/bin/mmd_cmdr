@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+
+if [ $# -lt 3 ]; then echo "Usage: $0 <phyId> <devId> <regId>";  exit 1 ; fi
+
+if [ $# -eq 3 ]; then
+	echo read $1 $2 $3 > /proc/rtl865x/mmd
+else
+	echo "Wrong Input!"
+fi

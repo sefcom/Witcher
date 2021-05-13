@@ -1,0 +1,49 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>WDS AP Table</title>
+<% getInfo("include_css"); %>
+</head>
+
+<body>
+<blockquote>
+<h2>
+<script type="text/javascript">
+var wlan_num =  <% getIndex("wlan_num"); %>;
+if (wlan_num > 1) {
+	var wlan_idx_ = <% getIndex("wlan_idx"); %> + 1;
+	document.write("WDS AP Table -wlan" + wlan_idx_ + "</p>");
+}
+else
+	document.write("WDS AP Table</p>");
+</script>
+</h2>
+
+
+<table border=0 width="500" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+ This table shows the MAC address, transmission, receiption packet counters and state
+ information for each configured WDS AP.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<form action=/boafrm/formWirelessTbl method=POST name="formWirelessTbl">
+<table border='1' width="500">
+<tr class="tbl_head"><td width="30%"><font size=2><b>MAC Address</b></td>
+<td width="15%"><font size=2><b>Tx Packets</b></td>
+<td width="15%"><font size=2><b>Tx Errors</b></td>
+<td width="15%"><font size=2><b>Rx Packets</b></td>
+<td width="25%"><font size=2><b>Tx Rate (Mbps)</b></td></tr>
+<% wdsList(); %>
+</table>
+
+<input type="hidden" value="/wlwdstbl.htm" name="submit-url">
+  <p><input type="submit" value="Refresh" name="refresh">&nbsp;&nbsp;
+  <input type="button" value=" Close " name="close" onClick="javascript: window.close();"></p>
+</form>
+</blockquote>
+</body>
+
+</html>

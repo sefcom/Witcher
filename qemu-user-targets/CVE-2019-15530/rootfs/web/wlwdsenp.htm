@@ -1,0 +1,261 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2004. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>WDS Security Setup</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<SCRIPT>
+var defPskLen=new Array()
+var defPskFormat=new Array();
+var wlan_idx= <% getIndex("wlan_idx"); %> ;
+
+function updateFormatWds(form, wlan_idx)
+{
+  format=form.elements["format"+wlan_idx];
+  if (form.elements["encrypt"+wlan_idx].value == 1) {
+	format.options[0].text = 'ASCII (5 characters)';
+	format.options[1].text = 'Hex (10 characters)';
+  }
+  else {
+	format.options[0].text = 'ASCII (13 characters)';
+	format.options[1].text = 'Hex (26 characters)';
+  }
+}
+
+function setWepKeyLen(form)
+{
+  updateFormatWds(form, wlan_idx);
+  if (form.elements["encrypt"+wlan_idx].value == 1) {
+	if ( form.elements["format"+wlan_idx].selectedIndex == 0) {
+		form.elements["wepKey"+wlan_idx].maxLength = 5;
+		form.elements["wepKey"+wlan_idx].value = "*****";
+	}
+	else {
+		form.elements["wepKey"+wlan_idx].maxLength = 10;
+		form.elements["wepKey"+wlan_idx].value = "**********";
+	}
+  }
+  else {
+	if ( form.elements["format"+wlan_idx].selectedIndex == 0) {
+		form.elements["wepKey"+wlan_idx].maxLength = 13;
+		form.elements["wepKey"+wlan_idx].value = "*************";
+	}
+	else {
+		form.elements["wepKey"+wlan_idx].maxLength = 26;
+		form.elements["wepKey"+wlan_idx].value = "**************************";
+	}
+  } 
+}
+
+function disableWEP(form)
+{
+  disableTextField(form.elements["format"+wlan_idx]);
+  disableTextField(form.elements["wepKey"+wlan_idx]);
+}
+
+function disableWPA(form)
+{
+  disableTextField(form.elements["pskFormat"+wlan_idx]);
+  disableTextField(form.elements["pskValue"+wlan_idx]);
+}
+
+
+function enableWEP(form)
+{
+  enableTextField(form.elements["format"+wlan_idx]);
+  enableTextField(form.elements["wepKey"+wlan_idx]);
+}
+
+function enableWPA(form)
+{
+  enableTextField(form.elements["pskFormat"+wlan_idx]);
+  enableTextField(form.elements["pskValue"+wlan_idx]);
+}
+
+function updateEncryptState(form)
+{
+  if (form.elements["encrypt"+wlan_idx].value == 0) 
+ 	{
+  	disableWEP(form);
+	disableWPA(form);
+  }
+  if (form.elements["encrypt"+wlan_idx].value == 1 || form.elements["encrypt"+wlan_idx].value == 2) {
+	setWepKeyLen(document.formWdsEncrypt);
+ 	enableWEP(form);
+	disableWPA(form);
+  }
+  if (form.elements["encrypt"+wlan_idx].value == 3 || form.elements["encrypt"+wlan_idx].value == 4) {
+ 	disableWEP(form);
+	enableWPA(form);
+  }
+}
+
+function saveChangesWep(form)
+{
+  var keyLen;
+  if (form.elements["encrypt"+wlan_idx].value == 1) {
+  	if ( form.elements["format"+wlan_idx].selectedIndex == 0)
+		keyLen = 5;
+	else
+		keyLen = 10;
+  }
+  else {
+  	if ( form.elements["format"+wlan_idx].selectedIndex == 0)
+		keyLen = 13;
+	else
+		keyLen = 26;
+  }
+  if (validateKey_wep(form, -1,form.elements["wepKey"+wlan_idx].value, keyLen, wlan_idx)==0) {
+	form.elements["wepKey"+wlan_idx].focus();
+	return false;
+  }
+  return true;
+}
+
+function saveChanges(form)
+{
+  if (form.elements["encrypt"+wlan_idx].value == 0)
+  	return true;
+  else if (form.elements["encrypt"+wlan_idx].value == 1 || form.elements["encrypt"+wlan_idx].value == 2)
+ 	return saveChangesWep(form, wlan_idx);
+  else
+  	return check_wpa_psk(form,wlan_idx );
+}
+
+function Load_Setting()
+{
+	var cf = document.formWdsEncrypt;
+	var wdsEncrypt = <% getIndex("wdsEncrypt"); %>;
+	
+	if (cf.elements["encrypt"+wlan_idx].options[3] && cf.elements["encrypt"+wlan_idx].options[3].text == "WPA (TKIP)") {
+		cf.elements["encrypt"+wlan_idx].selectedIndex = wdsEncrypt;
+	}
+	else {
+		if (wdsEncrypt == 4) // 4:WPA2 (AES)
+		{
+			
+
+			for(i=0;i<cf.elements["encrypt"+wlan_idx].length;i++)
+			{
+				if(cf.elements["encrypt"+wlan_idx].options[i].text == "WPA2 (AES)")
+					cf.elements["encrypt"+wlan_idx].selectedIndex = i;		
+			}
+			
+		}
+		else
+			cf.elements["encrypt"+wlan_idx].selectedIndex = wdsEncrypt;
+	}
+		
+	if ( <% getIndex("wdsWepFormat"); %> == 0 )
+		cf.elements["format"+wlan_idx].selectedIndex = 0;
+	else
+		cf.elements["format"+wlan_idx].selectedIndex = 1;
+
+	if ( <% getIndex("wdsPskFormat"); %> == 0 ){
+		cf.elements["pskValue"+wlan_idx].maxLength = "63";
+		cf.elements["pskFormat"+wlan_idx].selectedIndex = 0;
+	}
+	else{
+		cf.elements["pskValue"+wlan_idx].maxLength = "64";
+		cf.elements["pskFormat"+wlan_idx].selectedIndex = 1;
+	}
+	updateEncryptState(cf);
+}
+
+function resetForm()
+{
+	location=location; 
+}
+</SCRIPT>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<h2>
+<script type="text/javascript">
+var wlan_num =  <% getIndex("wlan_num"); %>;
+if (wlan_num > 1) {
+	var wlan_idx_ = <% getIndex("wlan_idx"); %> + 1;
+	document.write("WDS Security Setup -wlan" + wlan_idx_ + "</p>");
+}
+else
+	document.write("WDS Security Setup</p>");
+</script>
+</h2>
+
+<form action=/boafrm/formWdsEncrypt method=POST name="formWdsEncrypt">
+<table border=0 width="500" cellspacing=4>
+  <tr><font size=2>
+    This page allows you setup the wireless security for WDS. When enabled, you must
+    make sure each WDS device has adopted the same encryption algorithm and Key.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+  <tr>
+      <td width="30%"><font size=2><b>Encryption:</b></font></td>
+      <td width="70%"><font size=2><b>
+      	<select size="1" name="encrypt<% getIndex("wlan_idx"); %>" onChange="updateEncryptState(document.formWdsEncrypt)">
+			<option value="0">None</option>
+   <!-- <% getInfo("onoff_tkip_comment_start");%>
+			<option value="1">WEP 64bits</option>
+			<option value="2">WEP 128bits</option>
+			<option value="3">WPA (TKIP)</option>
+	<% getInfo("onoff_tkip_comment_end");%> -->         
+			<option value="4">WPA2 (AES)</option>
+
+      </b></font></td>
+  </tr>
+  <tr>
+      <td width="30%"><font size=2><b>WEP Key Format:</b></font></td>
+      <td width="70%"><font size=2><select size="1" name="format<% getIndex("wlan_idx"); %>" ONCHANGE=setWepKeyLen(document.formWdsEncrypt)>
+	  	<option value=0>ASCII (5 characters)</option>
+		<option value=1>Hex (10 characters)</option>
+       </select></font></td>
+  </tr>
+  <tr>
+      <td width="30%"><font size=2><b>WEP Key:</b></font></td>
+      <td width="70%"><font size=2>
+     	<input type="text" name="wepKey<% getIndex("wlan_idx"); %>" size="26" maxlength="26">
+      </font></td>
+  </tr>
+  <tr>
+      <td width="30%"><font size="2"><b>Pre-Shared Key Format:</b></font></td>
+      <td width="70%"><font size="2"><select size="1" name="pskFormat<% getIndex("wlan_idx"); %>" onChange="pskFormatChange(formWdsEncrypt,<% getIndex("wlan_idx"); %>)">
+          <option value="0">Passphrase</option>
+          <option value="1">Hex (64 characters)</option>
+      </select></font></td>
+  </tr>
+  <tr>
+      <td width="30%"><font size="2"><b>Pre-Shared Key:</b></font></td>
+      <td width="70%"><font size="2"><input type="password" name="pskValue<% getIndex("wlan_idx"); %>" size="40"  value=<% getInfo("wdsPskValue");%>>
+      </font></td>
+  </tr>
+  <script>
+     	form = document.formWdsEncrypt ;
+     updateEncryptState(document.formWdsEncrypt);
+	defPskLen[wlan_idx] = form.elements["pskValue"+wlan_idx].value.length;
+	defPskFormat[wlan_idx] = form.elements["pskFormat"+wlan_idx].selectedIndex;
+
+  </script>
+  <tr>
+     <td colspan=2 width="100%"><br>
+       <input type="hidden" value="/wlwdsenp.htm" name="submit-url">
+<% getInfo("apply_prompt_comment_start");%>	   
+     <input type="submit" value="Apply Changes" name="save" onClick="return saveChanges(document.formWdsEncrypt)">&nbsp;&nbsp;    
+     <input type="reset" value="Reset" name="reset" onClick="resetForm();">
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+     <input type="submit" value="Save" name="save" onClick="return saveChanges(document.formWdsEncrypt)">&nbsp;&nbsp;
+     <input type="submit" value="Save & Apply" name="save_apply" onClick="return saveChanges(document.formWdsEncrypt)">&nbsp;&nbsp;
+     <!--  <input type="button" value="Close" name="close" OnClick=window.close()>&nbsp;&nbsp; -->
+     <input type="reset" value="Reset" name="reset" onClick="resetForm();">
+<% getInfo("apply_direct_comment_end");%>
+     </td>
+  </tr>
+</table>
+</form>
+
+</blockquote>
+</body>
+</html>

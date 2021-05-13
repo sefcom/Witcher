@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<teapi>
+<gateway>
+<subtype>GatewayWithWiFi</subtype>
+<friendly_name>D-Link Wireless Router</friendly_name>
+<vendor_name>D-Link</vendor_name>
+<vendor_url>http://www.dlink.com/</vendor_url>
+<model_description>RangeBooster G Wireless Router</model_description>
+<model_name>WBR-2310</model_name>
+<extensions>
+<task name="Wireless settings" action="/wireless.htm" />
+<task name="Block network access" action="/adv_filters_mac.htm" />
+<task name="Parental controls" action="/adv_filters_url.htm" />
+<task name="D-Link Tech Support" action="http://support.dlink.com" />
+<task name="Reboot router" action="/restart.cgi" />
+</extensions>
+</gateway>
+</teapi>

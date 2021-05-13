@@ -1,0 +1,10 @@
+#!/bin/bash
+# Read configuration variables for rc, if any exist
+if [ -r t ]; then
+    . t
+fi
+
+if[ "$ip" ] 
+	echo ip enabled
+	
+

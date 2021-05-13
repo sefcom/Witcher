@@ -1,0 +1,858 @@
+
+<!DOCTYPE html>
+<html id="html">
+<head>
+<meta name="viewport" content="width=1200">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Pragma" content="No-cache" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+<meta http-equiv="Expires" content="-1" />
+<link rel=stylesheet type="text/css" href="css/jquery.selectbox.css" media="all" />
+<link href="css/stylish-select.css" type="text/css" rel="stylesheet" />
+<link href="css/style_page.css" type="text/css" rel="stylesheet" />
+<title></title>
+<style>
+.wrapper{    
+   min-height:100%;    
+    _height:100%;    
+   margin-bottom:-100px; 
+} 
+
+#homefooter, .footer_home{height:100px;}    
+.footer_home{clear:both;}  
+/*.homeCode{
+    background: url("image/icon_qrcode.png");
+    cursor: pointer;
+    height: 54px;
+    line-height: 54px;
+    width: 54px;
+	background-repeat: no-repeat;
+
+}
+.homeCodehover{
+    background: url("image/icon_qrcode_pre.png");
+    cursor: pointer;
+    height: 54px;
+    line-height: 54px;
+    width: 54px;
+	background-repeat: no-repeat;
+
+}
+.codeshow{
+	background: url("image/pic_wireframe.png");
+    height: 264px;
+    width: 224px;
+	background-repeat: no-repeat;
+}
+#codevalue{
+width:200px;
+height:200px;
+margin:0 auto;
+
+}
+
+.qrcode{
+width:200px;
+height:200px;
+}
+
+.nonetwork{
+    background: url("image/pic_no-network.png");
+    height: 60px;
+    width: 60px;
+	background-repeat: no-repeat;
+	margin:0 auto;
+}*/
+</style>
+<script type="text/javascript" charset="utf-8" src="js/localization/zh-cn.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/header.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.selectbox-0.2_new.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPAction.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/initialJS.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/verify/verify.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.qrcode.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/SOAP/SOAPDevices.js"></script>
+<script type="text/javascript">
+
+//xframeoption
+if(top!=self){top.location=self.location;}
+
+//var HNAP = new HNAP_XML();
+var DebugMode = 0;
+var run_day;
+var run_hour;
+var run_minute;
+var run_second;
+var time=0;
+var G_NetworkStatue="0";
+//var isConflict=false;
+var lanwantimer=null;
+var timer1=null;
+
+/*function showTopologyDisconnected()
+{
+	document.getElementById("wan_Line").src = "/image/pic_fail.png";
+}
+
+function reboot()
+{
+	var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		HNAP.SetXMLAsync("SetRebootSettings", result_xml, function(xml)	{	SetResult_2nd(xml);	});
+	}
+	else	{	if (DebugMode == 1)	{	alert("[!!SetXML Error!!] Function: reboot");	}	}
+}
+function SetResult_2nd(result_xml)
+{
+	var SetResult_2nd = result_xml.Get("SetRebootSettingsResponse/SetRebootSettingsResult");
+	if (SetResult_2nd == "OK"){
+	}
+}*/
+/*
+function GetXML()	
+{	
+	GetResult_1st();
+}
+function GetResult_1st()
+{
+	var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetCurrentNetworkRate");
+		HNAP.SetXMLAsync("GetCurrentNetworkRate", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+	}
+	else
+	{	
+		if (DebugMode == 1)	{	
+			alert("[!!GetXML Error!!] Function: GetResult_1st");	
+		}	
+	}
+}
+
+function GetResult_2nd(result_xml)
+{
+	var GetResult_2nd = result_xml.Get("GetCurrentNetworkRateResponse/GetCurrentNetworkRateResult");
+	if (GetResult_2nd == "OK"){
+		//上传下载速率
+		document.getElementById("up_speed").innerHTML = '上行：' + result_xml.Get("GetCurrentNetworkRateResponse/wan_wan(0)_current_upload_rate") + '/s';
+		document.getElementById("down_speed").innerHTML = '下行：' + result_xml.Get("GetCurrentNetworkRateResponse/wan_wan(0)_current_download_rate") + '/s';
+	} else {
+		if (DebugMode == 1)	{	
+			alert("[!!GetXML Error!!] Function: GetResult_2nd");
+		}
+	}
+}
+*/
+function GetMultiXML()
+{
+	GetMultiXML_1st();
+}
+function getHomeWan () {
+	this.GetWanSettingsResult = "";
+	this.IPAddress="";
+	this.RuntimeDNS = new getWandns();
+}
+function getWandns(){
+	this.Primary = "";
+}
+function GetMultiXML_1st()
+{
+	var soapAction = new SOAPAction();
+	var homeWan = new getHomeWan();
+	//上电时间
+	var systemUpTime = soapAction.sendSOAPAction("GetSystemUpTime", null, new function(){this.SystemUpTime="";this.GetSystemUpTimeResult = "";});
+	//在线设备
+	var getClientInfo = new SOAPGetClientInfoResponse();
+	//获取用户列表
+	var clientInfo = soapAction.sendSOAPAction("GetClientInfo", null, getClientInfo);
+	/*//连接状态
+	var connectStatus =  soapAction.sendSOAPAction("GetCurrentInternetStatus", null, new function(){this.GetCurrentInternetStatusResult=""});
+	*/
+	//WAN口相关信息
+	var wanMessage =  soapAction.sendSOAPAction("GetWanSettings", null, homeWan);
+	//WANLAN状态（success->正常; WAN->没有获取到地址; Cable->网线没插; Conflict->lan/wan ip冲突）
+	var WLstatus = soapAction.sendSOAPAction("GetWanCurrentStatus", null, new function(){this.WanStatus ="";this.GetWanCurrentStatusResult=""});
+	GetMultiXML_2nd(systemUpTime,clientInfo,wanMessage,WLstatus)
+			.done(function(){
+				document.getElementById("content").style.display="";
+				document.getElementById("homefooter").style.display="";
+				document.getElementById("CreateOnloadMessage").style.display="none";
+			})
+			.fail(function(){
+		document.getElementById("content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+		if (DebugMode == 1)	{
+			document.getElementById("content").style.display="";
+			document.getElementById("CreateOnloadMessage").style.display="none";
+			alert("[!!GetXML Error!!] Function: GetMultiXML_2nd");
+		}
+	});
+	/*var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetMultipleHNAPs/GetOnlineClientNum");
+		result_xml.Set("GetMultipleHNAPs/GetNetworkConnectStatus");
+		result_xml.Set("GetMultipleHNAPs/GetSysStatus");
+		result_xml.Set("GetMultipleHNAPs/GetQrCodeUrl");
+		//result_xml.Set("GetMultipleHNAPs/GetCurrentNetworkRate");
+		//result_xml.Set("GetMultipleHNAPs/GetGuestNetworkSettings");//guest ip
+		//result_xml.Set("GetMultipleHNAPs/GetNetworkSettings");//lan ip
+		result_xml.Set("GetMultipleHNAPs/GetWanplugInfo");
+		HNAP.SetXMLAsync("GetMultipleHNAPs", result_xml, function(xml)	{	GetMultiXML_2nd(xml);	});
+	}
+	else	
+	{	
+		if (DebugMode == 1)	
+			{	alert("[!!GetXML Error!!] Function: GetMultiXML_1st");	}	
+	}*/
+}
+
+var codeTime=0;
+
+function GetMultiXML_2nd(systemUpTime,onlineDevices,wanMessage,WLstatus)
+{
+	var dtd = $.Deferred();
+	$.when(systemUpTime).done(function(obj){
+		if(obj.GetSystemUpTimeResult=="OK"){
+		var system_up_time = obj.SystemUpTime;
+		run_day =  parseInt(system_up_time / 86400);
+		run_hour = parseInt((system_up_time % 86400) / 3600);
+		run_minute = parseInt((system_up_time % 3600)/60);
+		//run_second = system_up_time % 60;
+		//document.getElementById("sys_uptime").innerHTML = run_day + '天' + run_hour + '小时' + run_minute + '分钟';
+		document.getElementById("sys_uptime").innerHTML = run_day + I18N("j","Home_Day") + run_hour + I18N("j","Home_Hour") + run_minute + I18N("j","Home_Minute");
+		dtd.resolve();
+		}else dtd.reject();
+	}).fail(function(){
+		dtd.reject();
+	});
+	$.when(onlineDevices).done(function(obj){
+		//在线设备
+		if(obj.GetClientInfoResult=="OK"){
+			var ConnectedClients = 0;
+			for(var i = 0;i<obj.ClientInfoLists.ClientInfo.length;i++){
+				var type=obj.ClientInfoLists.ClientInfo[i].Type;
+				if(type=="LAN"||type=="WIFI_2.4G"||type=="WIFI_5G"||type=="WIFI_2.4G_Guest"||type=="WIFI_5G_Guest")
+					ConnectedClients++;
+			}
+		document.getElementById("Onclient2g").innerHTML = ConnectedClients;
+		dtd.resolve();
+		}else dtd.reject();
+	}).fail(function(){
+		dtd.reject();
+	});
+	/*$.when(connectStatus).done(function(obj){
+		//是否连接
+		var connect_status = obj.GetCurrentInternetStatusResult;
+		G_NetworkStatue=connect_status;
+		if (connect_status == "OK_CONNECTED") {
+			document.getElementById("wan_Line").src = "/image/pic_succeed.png";
+		} else if(connect_status == "OK_NOTCONNECTED"){
+			document.getElementById("wan_Line").src = "/image/pic_fail.png";
+		}
+		dtd.resolve();
+	}).fail(function(){
+		dtd.reject();
+	});*/
+	$.when(wanMessage).done(function(obj){
+		if(obj.GetWanSettingsResult=="OK"){
+		if (obj.IPAddress == "") {
+			//document.getElementById("routeripaddr").innerHTML = "无法获取IP地址";
+			document.getElementById("routeripaddr").innerHTML = I18N("j","RouterInfo_IP_Empty");
+		} else {
+			document.getElementById("routeripaddr").innerHTML = obj.IPAddress;
+		}
+
+		if (obj.RuntimeDNS.Primary == "") {
+			//document.getElementById("routerdns").innerHTML = "无法获取DNS地址";
+			document.getElementById("routerdns").innerHTML = I18N("j","Home_DNS_Empty");
+		} else {
+			document.getElementById("routerdns").innerHTML = obj.RuntimeDNS.Primary;
+		}
+		document.getElementById("content").style.display="";
+		document.getElementById("homefooter").style.display="";
+
+		document.getElementById("CreateOnloadMessage").style.display="none";
+
+
+		//var codeurl=result_xml.Get("GetMultipleHNAPsResponse/GetQrCodeUrlResponse/qrurl");
+
+		//var isConflict = result_xml.Get("GetMultipleHNAPsResponse/GetLanWanConflictStatusResponse/lan_wan_conflict");
+		//var wanip = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_ipaddr");
+		/*
+		 var wanmask = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_netmask");
+		 var lanip = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_ipaddr");
+		 var lanmask = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_netmask");
+		 var guestip=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_ipaddr");
+		 var guestmask=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_netmask");
+
+		 if(wanmask!="")//Lan Wan冲突检测
+		 {
+		 //wan与Lan网络冲突检测
+		 var wanmask_Int=transIptoInt(wanmask);//将wanmask转换成整数
+		 var lanmask_Int=transIptoInt(lanmask);//将lanmask转换成整数
+		 var checkmaskwan=( lanmask_Int < wanmask_Int ? lanmask : wanmask);//取得较小者
+		 if(isSameNet(lanip,wanip,checkmaskwan)!=ERR_IP_DIFFNET)
+		 {
+		 isConflict=true;
+		 }
+		 //Wan与访客网络冲突检测
+		 var guestmask_Int=transIptoInt(guestmask);//将guestmask转换成整数
+		 var checkmaskguest=( guestmask_Int < wanmask_Int ? guestmask : wanmask);//取得较小者
+		 if(isSameNet(guestip,wanip,checkmaskguest)!=ERR_IP_DIFFNET)
+		 {
+		 isConflict=true;
+		 }
+		 }
+		 */
+		/*
+		 if(isConflict=="1")
+		 {
+		 window.location.href = "Problem_Conflict.html";
+		 }
+		 */
+
+		dtd.resolve();
+		}else dtd.reject();
+	}).fail(function(){
+		dtd.reject();
+	});
+	$.when(WLstatus).done(function(obj){
+		//wanlan状态
+		if(obj.GetWanCurrentStatusResult=="OK"){
+			var type = obj.WanStatus ;
+			if(type == "success")
+			{
+				$("#message_Connect").attr("src","image/pic-right.png");
+				$("#hulianwang").attr("src","image/tu_hulianwang_on.png");
+				$("#ap_ms1r").attr("src","image/icon_ap_ms1r_on.png");
+				$("#zhongduan").attr("src","image/tu_zhongduan_on.png");
+				$("#Succ_Time").css("display","");
+				$("#Pro_Cable").css("display","none");
+				$("#Pro_Conflict").css("display","none");
+				$("#Pro_Wan").css("display","none");
+			}else if(type == "Conflict")
+			{
+				$("#message_Connect").attr("src","image/pic_clash.png");
+				$("#hulianwang").attr("src","image/tu_hulianwang.png");
+				$("#ap_ms1r").attr("src","image/icon_ap_ms1r.png");
+				$("#zhongduan").attr("src","image/tu_zhongduan.png");
+				$("#Succ_Time").css("display","none");
+				$("#Pro_Cable").css("display","none");
+				$("#Pro_Conflict").css("display","");
+				$("#Pro_Wan").css("display","none");
+				if(lanwantimer!=null){clearTimeout(lanwantimer);lanwantimer=null;}
+				if(timer1!=null){clearTimeout(timer1);timer1=null;}
+			}else if(type == "WAN"){
+				$("#message_Connect").attr("src","image/pic_wrong.png");
+				$("#hulianwang").attr("src","image/tu_hulianwang.png");
+				$("#ap_ms1r").attr("src","image/icon_ap_ms1r.png");
+				$("#zhongduan").attr("src","image/tu_zhongduan.png");
+				$("#Succ_Time").css("display","none");
+				$("#Pro_Cable").css("display","none");
+				$("#Pro_Conflict").css("display","none");
+				$("#Pro_Wan").css("display","");
+			}else if(type == "Cable"){
+				$("#message_Connect").attr("src","image/pic_disconnection.png");
+				$("#hulianwang").attr("src","image/tu_hulianwang.png");
+				$("#ap_ms1r").attr("src","image/icon_ap_ms1r.png");
+				$("#zhongduan").attr("src","image/tu_zhongduan.png");
+				$("#Succ_Time").css("display","none");
+				$("#Pro_Cable").css("display","");
+				$("#Pro_Conflict").css("display","none");
+				$("#Pro_Wan").css("display","none");
+			}
+			else
+			{
+				if(time >= 15000)
+				{
+					if(lanwantimer!=null)
+					{
+						clearTimeout(lanwantimer);
+						lanwantimer=null;
+					}
+					timer1=setTimeout("GetMultiXML()", 15000);//15s后判断一次lan wan冲突
+				}
+				else
+				{
+					time+=2000;
+					lanwantimer=setTimeout("GetMultiXML()", time);//2s后判断一次lan wan冲突
+				}
+			}
+			dtd.resolve();
+		}else dtd.reject();
+	}).fail(function(){
+		dtd.reject();
+	});
+	return dtd.promise();
+	/*var GetResult_xml = result_xml.Get("GetMultipleHNAPsResponse/GetMultipleHNAPsResult");
+	if (GetResult_xml == "OK"){
+		
+		//系统上电时间
+		var system_up_time = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/up_time");
+		run_day =  parseInt(system_up_time / 86400);
+		run_hour = parseInt((system_up_time % 86400) / 3600);
+		run_minute = parseInt((system_up_time % 3600)/60);
+		//run_second = system_up_time % 60;
+		//document.getElementById("sys_uptime").innerHTML = run_day + '天' + run_hour + '小时' + run_minute + '分钟';
+		document.getElementById("sys_uptime").innerHTML = run_day + I18N("j","Home_Day") + run_hour + I18N("j","Home_Hour") + run_minute + I18N("j","Home_Minute");
+		//在线设备
+		document.getElementById("Onclient2g").innerHTML = result_xml.Get("GetMultipleHNAPsResponse/GetOnlineClientNumResponse/online_client_number");
+		//是否连接
+		var connect_status = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkConnectStatusResponse/network_connect_status");
+		G_NetworkStatue=connect_status;
+		if (connect_status == "1") {
+			document.getElementById("wan_Line").src = "/image/pic_succeed.png";
+		} else {
+			document.getElementById("wan_Line").src = "/image/pic_fail.png";
+		}
+		
+		//上传下载速率
+		//document.getElementById("up_speed").innerHTML = '上行：' + result_xml.Get("GetMultipleHNAPsResponse/GetCurrentNetworkRateResponse/wan_wan(0)_current_upload_rate") + '/s';
+		//document.getElementById("down_speed").innerHTML = '下行：' + result_xml.Get("GetMultipleHNAPsResponse/GetCurrentNetworkRateResponse/wan_wan(0)_current_download_rate") + '/s';
+		//WAN口地址和DNS
+		if (result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_ipaddr") == "") {
+			//document.getElementById("routeripaddr").innerHTML = "无法获取IP地址";
+			document.getElementById("routeripaddr").innerHTML = I18N("j","RouterInfo_IP_Empty");
+		} else {
+			document.getElementById("routeripaddr").innerHTML = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_ipaddr");
+		}
+		
+		if (result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_dns") == "") {
+			//document.getElementById("routerdns").innerHTML = "无法获取DNS地址";
+			document.getElementById("routerdns").innerHTML = I18N("j","Home_DNS_Empty");
+		} else {
+			document.getElementById("routerdns").innerHTML = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_dns");
+		}
+		document.getElementById("content").style.display="";
+		document.getElementById("homefooter").style.display="";
+		
+		document.getElementById("CreateOnloadMessage").style.display="none";
+		
+		var type = result_xml.Get("GetMultipleHNAPsResponse/GetWanplugInfoResponse/wan_status");
+		var codeurl=result_xml.Get("GetMultipleHNAPsResponse/GetQrCodeUrlResponse/qrurl");
+
+		//var isConflict = result_xml.Get("GetMultipleHNAPsResponse/GetLanWanConflictStatusResponse/lan_wan_conflict");
+		//var wanip = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_ipaddr");
+		/!*
+		var wanmask = result_xml.Get("GetMultipleHNAPsResponse/GetSysStatusResponse/wan_wan(0)_netmask");
+		var lanip = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_ipaddr");
+		var lanmask = result_xml.Get("GetMultipleHNAPsResponse/GetNetworkSettingsResponse/lan(0)_netmask");
+		var guestip=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_ipaddr");
+		var guestmask=result_xml.Get("GetMultipleHNAPsResponse/GetGuestNetworkSettingsResponse/wl(0)_guest(0)_netmask");
+		
+		if(wanmask!="")//Lan Wan冲突检测
+		{
+			//wan与Lan网络冲突检测
+			var wanmask_Int=transIptoInt(wanmask);//将wanmask转换成整数
+			var lanmask_Int=transIptoInt(lanmask);//将lanmask转换成整数
+			var checkmaskwan=( lanmask_Int < wanmask_Int ? lanmask : wanmask);//取得较小者
+			if(isSameNet(lanip,wanip,checkmaskwan)!=ERR_IP_DIFFNET)
+			{
+				isConflict=true;
+			}
+			//Wan与访客网络冲突检测
+			var guestmask_Int=transIptoInt(guestmask);//将guestmask转换成整数
+			var checkmaskguest=( guestmask_Int < wanmask_Int ? guestmask : wanmask);//取得较小者
+			if(isSameNet(guestip,wanip,checkmaskguest)!=ERR_IP_DIFFNET)
+			{
+				isConflict=true;
+			}
+		}
+		*!/
+		/!*
+		if(isConflict=="1")
+		{
+			window.location.href = "Problem_Conflict.html";
+		}
+		*!/
+		if(type == "3")
+		{
+			if(lanwantimer!=null){clearTimeout(lanwantimer);lanwantimer=null;}
+			if(timer1!=null){clearTimeout(timer1);timer1=null;}
+			window.location.href = "Problem_Conflict.html";
+		}
+		else
+		{	
+			if(time >= 15000)
+			{
+				if(lanwantimer!=null)
+				{
+					clearTimeout(lanwantimer);
+					lanwantimer=null;
+				}
+				timer1=setTimeout("GetMultiXML()", 15000);//15s后判断一次lan wan冲突
+			}
+			else 
+			{
+				time+=2000;
+				lanwantimer=setTimeout("GetMultiXML()", time);//2s后判断一次lan wan冲突
+			}
+		}
+	} 
+	else
+	{
+		document.getElementById("content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+		if (DebugMode == 1)	{	
+		document.getElementById("content").style.display="";
+		document.getElementById("CreateOnloadMessage").style.display="none";
+			alert("[!!GetXML Error!!] Function: GetMultiXML_2nd");
+		}
+	}*/
+}
+function wanSpeed(){
+	var soapAction = new SOAPAction();
+	soapAction.sendSOAPAction("GetWanCurrentStatus", null, new function(){this.WanStatus ="";this.Speed=""})
+	.done(function(obj) {
+				if(obj.GetWanCurrentStatusResult=="OK") {
+					if (obj.WanStatus == "success") {
+						if(parseInt(obj.Speed)>=(1024*1024)){
+							$("#wanSpeed").html((obj.Speed/(1024*1024)).toFixed(1) + " MB/s");
+						}else if(parseInt(obj.Speed)>=1024)
+							$("#wanSpeed").html((obj.Speed/1024).toFixed(0) + " KB/s");
+						else
+							$("#wanSpeed").html(obj.Speed + " B/s");
+						setTimeout(wanSpeed,3000);
+					} else {
+						$("#wanSpeed").html("");
+					}
+				}else{
+					$("#wanSpeed").html("");
+				}
+	})
+}
+function gotoNetwork()
+{
+	//设置cookie
+	$.cookie('problem_page', "Network.html", { path: '/' });
+	window.location.href = "Network.html";
+}
+function SetRouter()
+{
+	window.location.href = "Network.html";
+}
+function getWanStatus()
+{
+	GetResult_1st();
+}
+
+function GetResult_1st()
+{
+
+	var soapAction = new SOAPAction();
+	soapAction.sendSOAPAction("GetWanCurrentStatus", null, new function(){this.WanStatus =false;this.GetWanCurrentStatusResult=""})
+			.done(function(obj2)
+			{
+				//for compatibility
+				if(obj2.GetWanCurrentStatusResult != "OK")
+				{
+					if (DebugMode == 1) {
+						alert("[!!SetXML Error!!] Function: GetResult_1st");
+					}
+				}
+				else
+				{
+					//success->正常; WAN->没有获取到地址; Cable->网线没插; Conflict->lan/wan ip冲突
+					var wan_status = obj2.WanStatus ;
+					if(wan_status == "success")
+					{
+						$("#message_Connect").attr("src","image/pic-right.png");
+						$("#hulianwang").attr("src","image/tu_hulianwang_on.png");
+						$("#ap_ms1r").attr("src","image/icon_ap_ms1r_on.png");
+						$("#zhongduan").attr("src","image/tu_zhongduan_on.png");
+						$("#Succ_Time").css("display","");
+						$("#Pro_Cable").css("display","none");
+						$("#Pro_Conflict").css("display","none");
+						$("#Pro_Wan").css("display","none");
+					}else if(wan_status == "Conflict")
+					{
+						$("#message_Connect").attr("src","image/pic_clash.png");
+						$("#hulianwang").attr("src","image/tu_hulianwang.png");
+						$("#ap_ms1r").attr("src","image/icon_ap_ms1r.png");
+						$("#zhongduan").attr("src","image/tu_zhongduan.png");
+						$("#Succ_Time").css("display","none");
+						$("#Pro_Cable").css("display","none");
+						$("#Pro_Conflict").css("display","");
+						$("#Pro_Wan").css("display","none");
+					}else if(wan_status == "WAN"){
+						$("#message_Connect").attr("src","image/pic_wrong.png");
+						$("#hulianwang").attr("src","image/tu_hulianwang.png");
+						$("#ap_ms1r").attr("src","image/icon_ap_ms1r.png");
+						$("#zhongduan").attr("src","image/tu_zhongduan.png");
+						$("#Succ_Time").css("display","none");
+						$("#Pro_Cable").css("display","none");
+						$("#Pro_Conflict").css("display","none");
+						$("#Pro_Wan").css("display","");
+					}else if(wan_status == "Cable"){
+						$("#message_Connect").attr("src","image/pic_disconnection.png");
+						$("#hulianwang").attr("src","image/tu_hulianwang.png");
+						$("#ap_ms1r").attr("src","image/icon_ap_ms1r.png");
+						$("#zhongduan").attr("src","image/tu_zhongduan.png");
+						$("#Succ_Time").css("display","none");
+						$("#Pro_Cable").css("display","");
+						$("#Pro_Conflict").css("display","none");
+						$("#Pro_Wan").css("display","none");
+					}
+				}
+			});
+
+
+	/*var result_xml = new StringDoc();
+	 if (result_xml != null)
+	 {
+	 result_xml.Set("GetWanplugInfo");
+	 HNAP.SetXMLAsync("GetWanplugInfo", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+	 }
+	 else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}*/
+}
+
+function dodge()
+{
+	getLanIP();
+}
+
+
+function getLanIP()
+{
+	var soapAction = new SOAPAction();
+	var detectResult = soapAction.sendSOAPAction("GetLanWanConflictInfo", null, new function(){this.AvoidedIpaddr=""});
+	$.when(detectResult)
+			.done(function(r1){
+				GetLanIPResult_2nd(r1);
+			})
+			.fail(function(){
+				if (DebugMode == 1)	{
+					alert("[!!GetXML Error!!] Function: getLanIP");
+				}
+			});
+
+
+	/*var result_xml = new StringDoc();
+	if (result_xml != null)
+	{
+		result_xml.Set("GetLanWanConflictInfo");
+		HNAP.SetXMLAsync("GetLanWanConflictInfo", result_xml, function(xml)	{	GetResult_2nd(xml);	});
+	}
+	else	{	if (DebugMode == 1)	{	alert("[!!GetXML Error!!] Function: GetResult_1st");	}	}*/
+}
+var G_LanIp;
+
+function GetLanIPResult_2nd(result_xml)
+{
+	var lan_ip = result_xml.AvoidedIpaddr;
+	G_LanIp=lan_ip;
+	if(lan_ip != "")
+	{
+		document.getElementById("devIP").innerHTML = lan_ip;
+		document.getElementById("createPop").style.display = "";
+	}
+	/*var GetResult_2nd = result_xml.Get("GetLanWanConflictInfoResponse/GetLanWanConflictInfoResult");
+	if (GetResult_2nd == "OK"){
+
+		var lan_ip = result_xml.Get("GetLanWanConflictInfoResponse/avoided_ipaddr");
+		G_LanIp=lan_ip;
+		if(lan_ip != "")
+		{
+			document.getElementById("devIP").innerHTML = lan_ip;
+			document.getElementById("createPop").style.display = "";
+		}
+	}*/
+}
+function reboot()
+{
+	//提交重启请求
+	var soapAction = new SOAPAction();
+	soapAction.sendSOAPAction("SetLanWanConflictInfo", null, null)
+			.done(function(){
+				document.getElementById("dodge").style.display = "none";
+				document.getElementById("reboot").style.display = "";
+				setTimeout("RefreshPage()", 80*1000);
+			})
+			.fail(function(){
+				if (DebugMode == 1)	{
+					alert("[!!GetXML Error!!] Function: reboot");
+				}
+			});
+
+}
+
+function RefreshPage()
+{
+	if(G_LanIp)
+		window.location.href ="http://"+G_LanIp;
+}
+
+
+$(document).ready( function()  {
+	document.getElementById("btn_retry").value = I18N("j","Commom_Retry");//重试
+	document.getElementById("btn_set_router").value = I18N("j","Problem_Set_Router");//设置路由器
+	document.getElementById("btn_yes").value = I18N("j","Problem_Yes");//是
+	document.getElementById("savebutton").value = I18N("j","Commom_Apply");//确定
+	document.getElementById("content").style.display="none";
+	document.getElementById("CreateOnloadMessage").style.display="";
+	$("#internetInfo_circle").click(function(){
+		location.href ="Network.html";
+	}); 
+	$("#routerInfo_circle").click(function(){
+		location.href ="Wireless.html";
+	}); 
+	$("#clientInfo_circle").click(function(){
+		location.href ="Devices.html";
+	});
+	GetMultiXML();
+	//setInterval("GetMultiXML()",15000);
+	/*
+	$("#clientInfo_circle5g").click(function(){
+		location.href ="Devices.html";
+	}); 	 
+	*/
+	wanSpeed();
+	checkTimeout();
+	//GetLanWanConfilct_1st();//页面进来后判断一次lan wan冲突
+});
+
+</script>
+
+</head>
+
+<body data-spy="scroll" data-target=".bs-docs-sidebar" style="background-color:white;">
+<div class="wrapper"> 
+<div id="header"></div>
+<div class="clearboth" style="position: relative; min-height:320px; display:none;" id="content">
+<div id="map" align="center">
+  <div id="internetIcon">
+    <div class="btn_bg" id="internetInfo_circle">
+	 <img id="hulianwang" width="136" height="136" src="image/tu_hulianwang.png" >
+	  <div class="IconName"><script>I18N("h","Home_Internet");</script></div>
+    </div>
+  </div>
+   
+   <div style="" id="routerIcon">
+    <div class="btn_bg" id="routerInfo_circle">
+		<img width="172" id="ap_ms1r" height="124" src="image/icon_ap_ms1r.png" >
+		<div class="IconName"><script>I18N("h","Login_Router_Name");</script></div>
+    </div>
+	<!--div class="iconinfo " style="display:none; ">
+		<div>运行时间</div>
+		<div class="iconinfo_1" id = "sys_uptime">00天00小时00分00秒</div>
+	</div-->	
+  </div>
+  <div style="" id="clientIcon2g">
+
+    <div class="btn_bg" id="clientInfo_circle">
+		<img width="162" id="zhongduan" height="134" src="image/tu_zhongduan.png" >
+		<div class="IconName">
+			<span><span><script>I18N("h","Home_Online_Device");</script></span><span id="Onclient2g" style=" font-size:20px; font-weight:bold; color:#4598aa; padding-left:8px; padding-right:8px;"></span><span><script>I18N("h","Home_Device_Number");</script></span></span>
+		</div>
+    </div>
+	  
+  </div>
+
+
+	<div id="connect_message">
+		<img  alt="" src="image/pic_wrong.png" id="message_Connect">
+	</div>
+  <div id="line_wan">
+    <img width="162" height="2" alt="" src="image/pic_line.png" id="wan_Line">
+  </div>
+  <!--div id="wanstatue">
+  <img width="42" height="42"  src="image/mobile/icon_lianjie_sb.png" id="wan_Light">
+  </div-->
+  <!-- 
+  <div style="" id="wan_connstat">
+  	<div class="speed" id = "up_speed"></div>
+	<div style="padding-top:78px; " id = "down_speed" class="speed"></div>
+  </div>
+  -->
+  <div style="" id="line_wifi2g">
+    <img width="162" height="2" alt="" src="image/pic_line.png">
+  </div>
+</div>
+
+
+	<div  id="Succ_Time" class="content_title" style="display:none;padding-bottom:15px;"><span style="padding-left:14px;color: #008DA8; "><script>I18N("h","Home_Running_Time");</script></span><span id="sys_uptime"></span></div>
+	<div id="Pro_Wan" style="display: none">
+	<div class="error_title" style="padding-bottom:15px;" ><script>I18N("h","Problem_Internet_Fail");</script><!-- 连接互联网失败 --></div>
+	<div class="Pro_WAN">
+		<span ><script>I18N("h","Problem_Internet_not_Connected1");</script><!-- 路由器暂时无法连接互联网，请联系宽带服务提供商。<br>或登录路由器，进入 --></span>
+		<span style="text-decoration:underline;color:#008DA8; font-size:20px; font-weight:bold;cursor:pointer" onclick="gotoNetwork();"><script>I18N("h","Problem_Internet_not_Connected2");</script><!-- "网络设置" --></span>
+		<span ><script>I18N("h","Problem_Internet_not_Connected3");</script><!-- 尝试更多上网方式。 --></span>
+	</div>
+	</div>
+	<div id="Pro_Cable" style="display:none;">
+		<div class="error_title" style="padding-bottom:15px;"><script>I18N("h","Problem_not_Plugged");</script><!-- WAN口网线没有插好，请插入网线后重新尝试。 --></div>
+		<!-- <div align="center" style="margin-top:48px; "><input type="button" value="重试" class="styled_button_s" onclick="getWanStatus();"></div> -->
+		<div align="center" style="margin-top:45px; ">
+		<span><input type="button" class="styled_button_ss" id="btn_retry" value="" onclick="getWanStatus()"></span><span style="padding-left:85px;"><input type="button" class="styled_button_ss" id="btn_set_router" value="" onclick="SetRouter()" ></span>
+		</div>
+		<!--<div style="width: 100%;text-align: center;margin-top: 20px;">
+		<div style="display: inline;margin:0 auto;margin-right: 40px;"><input type="button" style="cursor: pointer;background-color: white;background-image:url('image/set-button.png'); border:none;color: white;font-size: 16px;width: 190px;height: 46px;"  id="btn_retry" value=""  onclick="getWanStatus();"></div>
+
+		&lt;!&ndash; <div align="center" style="margin-top:48px; "><input type="button" value="设置路由器" class="styled_button_s" onclick="SetRouter();"></div> &ndash;&gt;
+		<div style="display: inline;margin:0 auto;margin-left: 40px;"><input  type="button" style="cursor: pointer;background-color: white;background-image:url('image/set-button.png'); border:none;color: white;font-size: 16px;width: 190px;height: 46px;" id="btn_set_router" value=""  onclick="SetRouter();"></div>
+		</div>-->
+	</div>
+	<div id="Pro_Conflict" style="display: none">
+		<div class="error_title" style="padding-bottom:15px;"><script>I18N("h","Problem_LAN_WAN_Conflicts");</script><!-- 路由器LAN口和WAN口IP出现冲突导致网络故障，是否需要避让冲突？ --></div>
+		<!-- <div align="center" style="margin-top:48px; "><input type="button" value="是" class="styled_button_s" onclick="dodge();"></div> -->
+		<div align="center" style="margin-top:40px; "><input type="button" class="styled_button_ss"  id="btn_yes"  value=""  onclick="dodge();"></div>
+	</div>
+	<div style="display: none;" id="createPop">
+		<div style="width:476px; top:150px; " class="dialogBox2">
+			<div id="dodge">
+				<div class="advance_row" style=" padding-left:24px; padding-right:24px;">
+					<span><script>I18N("h","Problem_Avoid_Conflict");</script><!-- 避让冲突 --></span>
+				</div>
+				<div style=" margin-top:80px; " align="center" class="words">
+					<span><script>I18N("h","Problem_IP_Modified");</script><!-- 您的设备IP已改为 --></span><span id="devIP">192.168.1.101</span><span><script>I18N("h","Problem_Confirm_Reboot");</script><!-- 请点击确认重启路由器 --></span>
+				</div>
+				<div class="moreline2" style="margin-top:80px; "></div>
+				<div style="margin-top:26px; " align="center">
+					<!-- <input value="确定" id="savebutton" class="styled_button_s" onclick="reboot();" type="button"> -->
+					<input value="" id="savebutton" class="styled_button_ss" onclick="reboot();" type="button">
+				</div>
+
+			</div>
+			<div id="reboot"  style="display:none;">
+				<div style=" margin-top:120px; " align="center">
+					<img src="image/submit.gif" width="58" height="58">
+				</div>
+				<div style="margin-top:12px; margin-bottom:142px; " class="words"><script>I18N("h","Problem_Rebooting");</script><!-- 正在为您重启路由器，请耐心等待 --></div>
+			</div>
+
+		</div>
+
+	</div>
+</div>
+
+ <div class="footer_home"></div> 
+
+</div>
+<div id="CreatePopAlertMessage" style=" display:none;">
+</div>
+<div style=" display:none;" id="DetectRouterConnection">
+</div>
+<div id="CreateOnloadMessage" style="display:none;">
+	  <div class="OnLoadPopRect">
+		<img src="image/submit.gif" width="58" height="58">
+	 </div>
+</div>
+<br><br><br>
+<div id="homefooter">
+<div class="conten_routerinfo" style="height: 32px;" id="conten_routerinfo">
+	<div style="text-align: center; position:relative; bottom:5px;white-space:nowrap; "><span style="letter-spacing:4px; font-weight:bold;font-size: 14px; color:#231815; "><script>I18N("h","Home_IP_Address");</script></span>&nbsp;&nbsp;<span id="routeripaddr" style="font-size: 14px;color: #9E9E9F
+;letter-spacing: 4px;"></span><span style="padding-left:40px; letter-spacing:4px;font-size: 14px; font-weight:bold; color:#231815;">DNS :</span>&nbsp;&nbsp;<span id="routerdns" style="font-size: 14px;color: #9E9E9F
+;letter-spacing: 4px;"></span><span style="padding-left:40px; letter-spacing:4px;font-size: 14px; font-weight:bold; color:#231815;">WAN口速率 :</span>&nbsp;&nbsp;<span id="wanSpeed" style="font-size: 14px;color: #9E9E9F
+;letter-spacing: 4px;"></span></div>
+</div>
+<div id="footer"></div>
+</div>
+
+</body>
+<script type="text/javascript">
+Initial();
+</script>
+</html>

@@ -1,0 +1,41 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Routing Table</title>
+<% getInfo("include_css"); %>
+</head>
+
+<body>
+<blockquote>
+<h2>Routing  Table </h2>
+
+
+<table border=0 width="500" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+ This table shows all the RIP(v1/v2) routing entries:
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<table border='1' width="500">
+<% kernelRouteList(); %>
+</table>
+
+<table border=0 width="500" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+ This table shows all the RIPng routing entries:
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+</table>
+<table border='1' width="500">
+<% kernelRoute6List(); %>
+</table>
+
+<input type="hidden" value="/routetbl.htm" name="submit-url">
+  <p><input type="button" value="Refresh" name="refresh" onClick="javascript: window.location.reload()">&nbsp;&nbsp;
+  <input type="button" value=" Close " name="close" onClick="javascript: window.close();"></p>
+</blockquote>
+</body>
+
+</html>

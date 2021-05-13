@@ -1,0 +1,30 @@
+#!/bin/sh
+rm -rf /tmp/logs.tar.gz
+rm -rf /tmp/logs
+echo Checking if the files are remotely logged
+awk 'BEGIN { FS = ":" }
+	ip=$1
+	{
+		if{NF > 1)
+			{print "Remote logging enabled"}
+	}
+' t	
+
+mkdir -p /tmp/logs
+echo Copying the files to a tmp location
+if (ip)
+if [ -f /var/log/messages ]; then
+	echo Copying messages file 
+	cp /var/log/messages /tmp/logs/.
+	files="messages"
+fi
+
+if [ -f /var/log/snmpd.log ]; then
+	echo Copying snmpd.log 
+	cp /var/log/snmpd.log /tmp/logs/.
+	files="$files snmpd.log"
+fi
+
+echo Taring the files $files 
+tar -cv -f /tmp/logs.tar.gz -C /tmp/logs $files
+

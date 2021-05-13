@@ -1,0 +1,176 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Disk Setup </title>
+<script language="javascript" type="text/javascript" src="util_gw.js"> </script>
+<script>
+/*
+function AnonFtpDisable()
+{
+  document.formDiskManagementAnon.anonymous_ftp_enable.checked = false;
+  document.formDiskManagementAnon.anonymous_ftp_disable.checked = true;
+}
+
+function AnonFtpEnable()
+{
+  document.formDiskManagementAnon.anonymous_ftp_enable.checked = true;
+  document.formDiskManagementAnon.anonymous_ftp_disable.checked = false;
+}*/
+
+function AnonDiskDisable()
+{
+  document.formDiskManagementAnon.anonymous_disk_enable.checked = false;
+  document.formDiskManagementAnon.anonymous_disk_disable.checked = true;
+}
+
+function AnonDiskEnable()
+{
+  document.formDiskManagementAnon.anonymous_disk_enable.checked = true;
+  document.formDiskManagementAnon.anonymous_disk_disable.checked = false;
+}
+
+function updateState()
+{
+  if (document.formDiskManagementAnon.AnonEnabled.checked){  
+	//enableTextField(document.formDiskManagementAnon.anonymous_ftp_enable); 
+	//enableTextField(document.formDiskManagementAnon.anonymous_ftp_disable); 
+	enableTextField(document.formDiskManagementAnon.anonymous_disk_enable); 
+	enableTextField(document.formDiskManagementAnon.anonymous_disk_disable); 
+  }
+  else{
+ 	//disableTextField(document.formDiskManagementAnon.anonymous_ftp_enable); 
+	//disableTextField(document.formDiskManagementAnon.anonymous_ftp_disable); 
+	disableTextField(document.formDiskManagementAnon.anonymous_disk_enable); 
+	disableTextField(document.formDiskManagementAnon.anonymous_disk_disable); 
+  }
+}
+
+function init()
+{
+	if ( <% getIndex("StorageAnonAccessEnable"); %> )
+		document.formDiskManagementAnon.AnonEnabled.checked = true;
+	
+	/*if ( <% getIndex("StorageAnonAccessFtpEnable"); %> )
+		document.formDiskManagementAnon.anonymous_ftp_enable.checked = true;
+	else
+		document.formDiskManagementAnon.anonymous_ftp_disable.checked = true;
+	*/
+		
+	if ( <% getIndex("StorageAnonAccessDiskEnable"); %> )
+		document.formDiskManagementAnon.anonymous_disk_enable.checked = true;
+	else
+		document.formDiskManagementAnon.anonymous_disk_disable.checked = true;
+	updateState();	
+}
+
+function UserDeleteClick()
+{
+	document.formDiskManagementUser.submit_url.value = "/administration.htm";
+}
+
+function GroupDeleteClick()
+{
+	document.formDiskManagementGroup.submit_url.value = "/administration.htm";
+}
+
+function UserEditClick(index)
+{
+	document.formDiskManagementUser.submit_url.value = "/storage_edituser.htm";
+	document.formDiskManagementUser.userindex.value = index;
+}
+
+function GroupEditClick(index)
+{
+	document.formDiskManagementGroup.submit_url.value = "/storage_editgroup.htm";
+	document.formDiskManagementGroup.groupindex.value = index;
+}
+
+function CreateUserGroupClick(url)
+{
+	//openWindow(url, 'Create User or Group',600, 400 );
+	document.location.href = url;
+}
+
+</script>
+</head>
+
+<blockquote>
+<h2><font color="#0000FF">Disk Management</font></h2>
+
+<body onload="init();">
+<table border=0 width="550" cellspacing=0 cellpadding=0>
+  <tr><font size=2>
+    Support Management For Disk.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+
+<form action=/boafrm/formDiskManagementAnon method=POST name="formDiskManagementAnon">
+ <table border=0 width=500>
+   <tr><td><font size=2><b>
+	<input type="checkbox" name="AnonEnabled" value="ON" ONCLICK=updateState()>&nbsp;&nbsp;Enable Anonymous Access</b><br>
+    </td>
+  </tr>
+   <tr>
+      <td width="60%"><font size=2><b>Anonymous Disk Access(read-write access)</b></td>
+      <td width="20%"><font size=2><input type="radio" name="anonymous_disk_enable" value="enabled" onClick="AnonDiskEnable()">Enabled</td>
+      <td width="20%"><font size=2><input type="radio" name="anonymous_disk_disable" value="disabled" onClick="AnonDiskDisable()">Disabled</td>
+  </tr>
+  <tr>
+ 	<td width="40%"><font size=2><b><input type="submit" value="Apply Changes" name="Apply Changes"></b></td>
+	<td width="20%"><font size=2><b><input type="reset" value="Reset" name="reset"></b></td>
+	<input type="hidden" value="/administration.htm" name="submit-url">
+  </tr>
+  <tr><td><hr size=1 noshade align=top></td></tr>
+ </table>
+ </form>
+
+<form action=/boafrm/formDiskManagementUser method=POST name="formDiskManagementUser">
+ <table border=0 width=500>
+  <tr><td><font size=2><b>
+	&nbsp;&nbsp;User Management</b><br>
+    </td>
+  </tr>
+  <tr><td><font size=2><b>
+	<input type="button" value="Create New User" name="CreateUser" onClick="CreateUserGroupClick('/storage_createuser.htm')" >
+    </td>
+  </tr>
+    <% Storage_DispalyUser(); %>
+    <input type="hidden"  name="submit_url">
+    <input type="hidden"  name="userindex">
+  <tr>
+ 	<td width="40%"><font size=2><b><input type="submit" value="Delete_All" name="Delete_All" onClick="UserDeleteClick()"></b></td>
+ 	<td width="40%"><font size=2><b><input type="submit" value="Delete_Selected" name="Delete_Selected" onClick="UserDeleteClick()"></b></td>
+	<td width="20%"><font size=2><b><input type="reset" value="Reset" name="reset"></b></td>
+  </tr>
+  <tr><td><hr size=1 noshade align=top></td></tr>
+ </table>
+</form>
+
+  
+<form action=/boafrm/formDiskManagementGroup method=POST name="formDiskManagementGroup">
+ <table border=0 width=500>
+  <tr><td><font size=2><b>
+	&nbsp;&nbsp;Group Management</b><br>
+    </td>
+  </tr>
+  <tr><td><font size=2><b>
+	<input type="button" value="Create New Group" name="CreateGroup" onClick="CreateUserGroupClick('/storage_creategroup.htm')" >
+    </td>
+  </tr>
+    <% Storage_DispalyGroup(); %>
+    <input type="hidden" name="submit_url">
+    <input type="hidden" name="groupindex">
+  <tr><td><hr size=1 noshade align=top></td></tr>
+  <tr>
+ 	<td width="40%"><font size=2><b><input type="submit" value="Delete_All" name="Delete_All" onClick="GroupDeleteClick()"></b></td>
+ 	<td width="40%"><font size=2><b><input type="submit" value="Delete_Selected" name="Delete_Selected" onClick="GroupDeleteClick()"></b></td>
+	<td width="20%"><font size=2><b><input type="reset" value="Reset" name="reset"></b></td>
+  </tr>
+</table>
+</form>
+
+</table>
+</body>
+</html>

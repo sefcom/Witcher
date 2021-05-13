@@ -1,0 +1,5 @@
+# /etc/fstab: static file system information.
+#
+proc		/proc	       proc     defaults	0 0
+tmpfs           /tmp           tmpfs    defaults	0 0
+devpts		/dev/pts       devpts   mode=0620	0 0 	

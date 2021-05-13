@@ -1,0 +1,20 @@
+#!/bin/sh
+######################################################################
+## This script controls bridge configuration.  It will configure the
+## bridge as specified by the apcfg file
+##
+## ETH0 is the WAN port
+## ETH1 is the LAN port
+######################################################################
+
+. /etc/ath/apcfg
+
+brctl addbr br0
+if [ "${WAN_MODE}" = "bridged" ]; then
+    ifconfig $ETH0 up
+    brctl addif br0 $ETH0
+fi
+brctl addif br0 $ETH1
+brctl setfd br0 0
+
+ifconfig br0 $AP_IPADDR netmask $AP_NETMASK up

@@ -1,0 +1,89 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>DMZ Host</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<script>
+function saveClick()
+{
+  if (!document.formDMZ.enabled.checked)
+  	return true;
+
+  if (document.formDMZ.ip.value=="")
+	return true;
+  
+  if (checkHostIPValid(document.formDMZ.ip,document.formDMZ.lan_mask, 'Invalid IP address') == false )
+	    return false;
+		
+  /*if ( checkIpAddr(document.formDMZ.ip, 'Invalid IP address') == false )
+	    return false;
+  */
+  return true;
+}
+
+function updateState()
+{
+  if (document.formDMZ.enabled.checked) {
+ 	enableTextField(document.formDMZ.ip);
+  }
+  else {
+ 	disableTextField(document.formDMZ.ip);
+  }
+}
+
+function Load_Setting()
+{
+	if ( <% getIndex("dmzEnabled"); %> )
+		document.formDMZ.enabled.checked = true;
+	updateState();
+}
+</script>
+</head>
+
+<body onload="Load_Setting();">
+<blockquote>
+<h2>DMZ</h2>
+
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+<tr><td><font size=2>
+
+A Demilitarized Zone is used to provide Internet services without sacrificing
+unauthorized access to its local private network. Typically, the DMZ host contains
+devices accessible to Internet traffic, such as Web (HTTP ) servers, FTP servers,
+SMTP (e-mail) servers and DNS servers.
+
+</font></td></tr>
+
+<tr><td><hr size=1 noshade align=top></td></tr>
+
+<form action=/boafrm/formDMZ method=POST name="formDMZ">
+<INPUT type=hidden name="lan_mask" value="<% getInfo("mask-rom"); %>">
+<tr><td><font size=2><b>
+   	<input type="checkbox" name="enabled" value="ON" ONCLICK=updateState()>&nbsp;&nbsp;Enable DMZ</b>
+    </td>
+</tr>
+<tr><td>
+     <font size=2><b>DMZ Host IP Address: </b><input type="text" name="ip" size="15" maxlength="15" value=<% getInfo("dmzHost"); %> ></font>
+</td></tr>
+<tr><td>
+	<br>
+<% getInfo("apply_prompt_comment_start");%>	
+     <input type="submit" value="Apply Changes" name="save" onClick="return saveClick()">&nbsp;&nbsp;
+     <input type="reset" value="Reset" name="reset">
+<% getInfo("apply_prompt_comment_end");%>
+<% getInfo("apply_direct_comment_start");%>
+     <input type="submit" value="Save" name="save" onClick="return saveClick()">&nbsp;&nbsp;
+     <input type="submit" value="Save & Apply" name="save_apply" onClick="return saveClick()">&nbsp;&nbsp;
+     <input type="reset" value="Reset" name="reset">
+<% getInfo("apply_direct_comment_end");%>
+        <input type="hidden" value="/dmz.htm" name="submit-url">
+</td></tr>
+     <script> updateState(); </script>
+</form>
+</table>
+</blockquote>
+</body>
+</html>

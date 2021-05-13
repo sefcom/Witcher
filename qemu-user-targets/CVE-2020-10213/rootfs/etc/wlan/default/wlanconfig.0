@@ -1,0 +1,14 @@
+# Copyright (C) 2005 Atheros Communications, Inc., All Rights Reserved
+# DO NOT EDIT -- This file is will be overwritten by CLI.
+
+config wlan 0
+
+set vap Disable
+del bss all
+set vap Enable
+add bss 0
+
+set wirelessmode 11a
+set xr Disable
+set ar Disable
+set autochannelselect Enable
