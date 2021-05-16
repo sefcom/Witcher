@@ -10,16 +10,17 @@ curl "http://$ipaddr/index.php?page=create"  -H 'Cookie: qi_profile=default'  --
 
 
 
-if docker exec -it phpbb-user bash -c "mysql qi_test < /test_config.sqldump"; then
-    wget http://$ipaddr/boards/test -O /dev/null
-    if [ -f "$(pwd)/coverages/+app+boards+test+index.cc.json" ]; then
-        printf "\033[36mReady for test @ http://$ipaddr/boards/test \n"
-        echo 'timeout 4h node /p/Witcher/base/helpers/request_crawler/main.js http://$ipaddr/board/phpbb $(pwd) ; docker exec -it -w $(pwd) -u wc $cve-$plus bash -i -c '"'"'p'"' "
-        echo " "
-    else
-      printf "\033[31mFailed to find coverages\033[0m\n\n"
-      exit 123
-    fi
+if docker exec -it $dname bash -c "mysql qi_test < /test_config.sqldump"; then
+    printf "\033[36mReady for test @ http://$ipaddr/boards/test \n"
+#    wget http://$ipaddr/boards/test -O /dev/null
+#    if [ -f "$(pwd)/coverages/+app+boards+test+index.cc.json" ]; then
+#        printf "\033[36mReady for test @ http://$ipaddr/boards/test \n"
+#        echo 'timeout 4h node /p/Witcher/base/helpers/request_crawler/main.js http://$ipaddr/board/phpbb $(pwd) ; docker exec -it -w $(pwd) -u wc $cve-$plus bash -i -c '"'"'p'"' "
+#        echo " "
+#    else
+#      printf "\033[31mFailed to find coverages\033[0m\n\n"
+#      exit 123
+#    fi
 
 else
     printf "\033[31mDatabase configuration import failed \033[0m\n\n"
