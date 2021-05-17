@@ -4,8 +4,9 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const process = require('process');
-const fuzzySet = require('fuzzyset');
+import urlExist from "url-exist"
+import process from 'process';
+import fuzzyset from 'fuzzyset';
 //const {JSHandle} = require('puppeteer/lib');
 const FoundRequest = require('./FoundRequest');
 
@@ -18,7 +19,8 @@ const MAX_NUM_ROUNDS = 3;
 function sleepg(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-class AppData{
+
+export class AppData{
 
     constructor(initializeWithBase, base_appdir, base_site, headless) {
         this.requestsFound = {};
@@ -41,6 +43,9 @@ class AppData{
         //this.site_ip = base_site.
 
         if (!this.loadDataFromJSON()){
+            /**
+             * Adding extra guessed urls here.
+             */
             if (this.site_url.href.endsWith("/")){
                 this.addRequest(FoundRequest.requestParamFactory(`${this.site_url.href}/admin`, "GET", "",{},"initial",this.site_url.href))
             }
@@ -317,7 +322,7 @@ class AppData{
                     let addResult = this.addRequest(foundRequest);
                     if (addResult){
                         requestsAdded++;
-                        console.log(`\x1b[38;5;2m[WC] ADDED ${foundRequest.toString()} ${ENDCOLOR}`);
+                        console.log(`[${GREEN}WC${ENDCOLOR}] ADDED ${foundRequest.toString()} `);
                     }
                 }
             }
@@ -358,7 +363,7 @@ class AppData{
                     postlen = foundRequest.postData().length
                 }
                 requestsAdded++;
-                console.log(`${GREEN}[WC] ADDED -- ${foundRequest.toString()} ${ENDCOLOR}`);
+                console.log(`[${GREEN}WC${ENDCOLOR}] ADDED -- ${foundRequest.toString()} ${ENDCOLOR}`);
             }
         }
         return requestsAdded;
@@ -434,7 +439,7 @@ class AppData{
             for (const key of randomKeys) {
                 let req = this.requestsFound[key];
                 if (req["attempts"] < this.currentURLRound) {
-                    console.log(`\x1b[38;5;4mStarting exploration of:\n\t${key}\n\t${req.url()}\x1b[0m`);
+                    //console.log(`\x1b[38;5;4mStarting exploration of: \t${key} \t${req.url()}\x1b[0m`);
                     req["attempts"] += 1;
                     this.save();
                     req["key"] = key;
@@ -499,11 +504,11 @@ function isInteractivePage(response, responseText){
         }
     }
 
-    console.log(responseText.slice(0,500))
+    //console.log(responseText.slice(0,500))
     if (responseText.search(/<body[ >]/) > -1 || responseText.search(/<form[ >]/) > -1){
         return true;
     } else {
-        console.log("\n\nNO HTML tag FOUND anywhere\n\n")
+        console.log(`[WC]NO HTML tag FOUND anywhere, skipping ${response.url()}`)
         return false;
     }
 
@@ -521,7 +526,7 @@ function isDefined(val) {
  *
  *
  */
-class RequestExplorer {
+export class RequestExplorer {
 
     constructor(appData, workernum, base_appdir, currentRequest ) {
         this.appData= appData;
@@ -555,7 +560,7 @@ class RequestExplorer {
             this.cookieData = "";
         }
         this.requestsAdded = 0;
-        this.timeoutLoops = 45;
+        this.timeoutLoops = 25;
         this.timeoutValue = 3;
         this.workernum = workernum;
         this.gremCounter = {};
@@ -566,6 +571,7 @@ class RequestExplorer {
         this.gremlins_error = false;
         this.lamehord_done = false
         this.getConfigData();
+        this.gremlins_url = "";
     }
 
     getConfigData(){
@@ -650,9 +656,9 @@ class RequestExplorer {
                     if (wasAdded){
                         requestsAdded++;
                         if (foundRequest.postData()){
-                            console.log(`\x1b[38;5;2m[WC] ADDED ${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
+                            console.log(`[${GREEN}WC${ENDCOLOR}] ADDED ${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
                         } else {
-                            console.log(`\x1b[38;5;2m[WC] ADDED ${foundRequest.toString()} \n ${ENDCOLOR}`);
+                            console.log(`[${GREEN}WC${ENDCOLOR}]] ADDED ${foundRequest.toString()} \n ${ENDCOLOR}`);
                         }
 
                     }
@@ -703,7 +709,7 @@ class RequestExplorer {
                 for (let i = 0; i < forms.length; i++) {
                     let faction = await this.getAttribute(forms[i], "action", "");
                     let fmethod = await this.getAttribute(forms[i], "method", "GET");
-                    console.log("[WC] second form ACTION=", faction, fmethod);
+                    //console.log("[WC] second form ACTION=", faction, fmethod);
                     requestsAdded += await this.searchForInputs(forms[i]);
                 }
             }
@@ -738,480 +744,517 @@ class RequestExplorer {
 
 
     async addCodeExercisersToPage(gremlinsHaveStarted){
-        if (gremlinsHaveStarted){
-            console.log("[WC] Using alternative launcher (horde only)");
-            await this.page.evaluate(()=>{
-                function randr(a) {
-                    return function() {
-                        var t = a += 0x6D2B79F5;
-                        t = Math.imul(t ^ t >>> 15, t | 1);
-                        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-                        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-                    }
-                }
-                function sleep(ms) {
-                    return new Promise(resolve => setTimeout(resolve, ms));
-                }
-                async function triggerHorde(){
-                    $("select").trigger("change");
-                    await sleep(100);
-                    $("select").prop("selectedIndex",1)
+        // ##############################################################################
+        //                         START Injected Exercise Code
+        // ##############################################################################
 
-                }
-                async function checkHordeLoad(){
-                    if (typeof window.gremlins === 'undefined') {
-                        console.log("cannot find gremlins, attempting to load on the fly");
-                        (function (d, script) {
-                            script = d.createElement('script');
-                            script.type = 'text/javascript';
-                            script.async = true;
-                            script.onload = function () {
-                                // remote script has loaded
-                            };
-                            script.src = 'https://trickel.com/gremlins.min.js';
-                            //script.src = 'https://unpkg.com/gremlins.js';
-                            d.getElementsByTagName('head')[0].appendChild(script);
-                        }(document));
-                    }
-                }
-                async function repeativeHorde(){
+        await this.page.evaluate((gremlinsHaveStarted)=>{
+            const CLICK_ELE_SELECTOR = "div,li,span,input,p,button";
+            //const CLICK_ELE_SELECTOR = "button";
+            var usedText = new Set();
+            const STARTPAGE = window.location.href;
+            const MAX_LEVEL = 10;
+            function shuffle(array) {
+                var currentIndex = array.length, temporaryValue, randomIndex;
 
+                // While there remain elements to shuffle...
+                while (0 !== currentIndex) {
 
-                    let pforms = document.getElementsByTagName("form");
+                    // Pick a remaining element...
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex -= 1;
 
-                    for(let i = 0; i < pforms.length; i++) {
-                        let f = pforms[i];
-                        if(typeof f.submit === 'function') {
-                            console.log("[WC] repeativeHord: submitting form")
-                            f.submit();
-                        } else if (typeof f.submit === 'undefined') {
-                            console.log("[WC] repeativeHord: The method submit of ", f, "is undefined");
-                        } else {
-                            //console.log("[WC] repeativeHord: It's neither undefined nor a function. It's a " + typeof f.submit, f);
-                        }
-
-                    }
-
-                }
-                async function coolHorde(){
-
-                    console.log("[WC] Setting fillTextElement to new function");
-                    // ff.prototype.fillTextElement = function(element) {
-                    //     console.log("[WC] happily filling in a form");
-                    //     const character = randomizer.character();
-                    //     const newValue = element.value + character;
-                    //     triggerSimulatedOnChange(element, newValue, window.HTMLInputElement.prototype);
-                    //     return character;
-                    // };
-
-                    var noChance = new gremlins.Chance();
-                    //noChance.prototype.bool = function(options) {return true;};
-                    noChance.character = function(options) {
-                        if (options != null){
-                            return "2";
-                        } else {
-                            let rnd =  Math.random()
-                            if (rnd > 0.7){
-                                return "Witcher";
-                            } else if (rnd > 0.3){
-                                return "127.0.0.1";
-                            } else {
-                                return "2"
-                            }
-                        }
-                    };
-                    console.log("[WC] UNLEASHING Reloaded Horde!!!");
-
-                    let ff = window.gremlins.species.formFiller(console.log, noChance, window);
-                    const distributionStrategy = gremlins.strategies.distribution({
-                        distribution: [0.53, 0.23, 0.23,0.01], // the first three gremlins have more chances to be executed than the last
-                        delay: 20,
-                    });
-                    for (let i =0; i < 5; i ++){
-                        await gremlins.createHorde({
-                            species: [gremlins.species.clicker(),ff,gremlins.species.typer(), gremlins.species.scroller()],
-                            mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
-                            strategies: [distributionStrategy],
-                            randomizer: noChance
-                        }).unleash();
-
-                    }
-
-                    console.log("[WC] Done with the unleashing");
-
-                    clearInterval(repeativeHorde);
-                    clearInterval(triggerHorde);
+                    // And swap it with the current element.
+                    temporaryValue = array[currentIndex];
+                    array[currentIndex] = array[randomIndex];
+                    array[randomIndex] = temporaryValue;
                 }
 
-                console.log("[WC] setting timeout for coolhorde")
-                setTimeout(checkHordeLoad, 3500);
-                setTimeout(coolHorde, 4000);
-                setTimeout(function(){setInterval(repeativeHorde, 5000)}, 20000);
-                setTimeout(function(){setInterval(triggerHorde, 500)}, 5000);
-            });
-        } else {
-            // ##############################################################################
-            //                         START Injected Exercise Code
-            // ##############################################################################
-            console.log("[WC] running code injection evaluation");
-            await this.page.evaluate(()=>{
-                const CLICK_ELE_SELECTOR = "div,li,span,input,p,button";
-                //const CLICK_ELE_SELECTOR = "button";
-                var usedText = new Set();
-                const STARTPAGE = window.location.href;
-                const MAX_LEVEL = 10;
-                function shuffle(array) {
-                    var currentIndex = array.length, temporaryValue, randomIndex;
-
-                    // While there remain elements to shuffle...
-                    while (0 !== currentIndex) {
-
-                        // Pick a remaining element...
-                        randomIndex = Math.floor(Math.random() * currentIndex);
-                        currentIndex -= 1;
-
-                        // And swap it with the current element.
-                        temporaryValue = array[currentIndex];
-                        array[currentIndex] = array[randomIndex];
-                        array[randomIndex] = temporaryValue;
-                    }
-
-                    return array;
-                }
-                function sleep(ms) {
-                    return new Promise(resolve => setTimeout(resolve, ms));
-                }
-                function getChangedDOM(domBefore, domAfter){
-                    let changedDOM = {};
-                    let index = 0;
-                    for (let dbIndex of Object.keys(domBefore)){
-                        let db = domBefore[dbIndex];
-                        let found = false;
-                        for (let da of domAfter){
-                            if (db === da){
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found){
-                            changedDOM[index] = db;
-                            index++;
-                        }
-
-                    }
-                    // if domAfter larger, then add entries if not in domBefore
-                    for (let daIndex=Object.keys(domBefore).length;daIndex < Object.keys(domAfter).length; daIndex++){
-                        let da = domAfter[daIndex];
-                        let found = false;
-                        for (let db of domBefore){
-                            if (db === da){
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found){
-                            changedDOM[index] = da;
-                            index++;
+                return array;
+            }
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            function getChangedDOM(domBefore, domAfter){
+                let changedDOM = {};
+                let index = 0;
+                for (let dbIndex of Object.keys(domBefore)){
+                    let db = domBefore[dbIndex];
+                    let found = false;
+                    for (let da of domAfter){
+                        if (db === da){
+                            found = true;
+                            break;
                         }
                     }
-                    return changedDOM;
-                }
-                function indent(cnt){
-                    let out = ""
-                    for (let x =0;x<cnt;x++){
-                        out += "  ";
+                    if (!found){
+                        changedDOM[index] = db;
+                        index++;
                     }
-                    return out;
+
                 }
-                async function clickSpam(elements, level=0, parentClicks=[]){
-                    if (level >= MAX_LEVEL){
-                        console.log(`[WC] ${indent(level)} L${level} too high, skipping`);
-                        return;
+                // if domAfter larger, then add entries if not in domBefore
+                for (let daIndex=Object.keys(domBefore).length;daIndex < Object.keys(domAfter).length; daIndex++){
+                    let da = domAfter[daIndex];
+                    let found = false;
+                    for (let db of domBefore){
+                        if (db === da){
+                            found = true;
+                            break;
+                        }
                     }
-                    //let randomArr = shuffle(Array.from(Object.values(elements)));
-                    let randomArr = Array.from(Object.values(elements));
+                    if (!found){
+                        changedDOM[index] = da;
+                        index++;
+                    }
+                }
+                return changedDOM;
+            }
+            function indent(cnt){
+                let out = ""
+                for (let x =0;x<cnt;x++){
+                    out += "  ";
+                }
+                return out;
+            }
+            async function clickSpam(elements, level=0, parentClicks=[]){
+                if (level >= MAX_LEVEL){
+                    console.log(`[WC] ${indent(level)} L${level} too high, skipping`);
+                    return;
+                }
+                let randomArr = shuffle(Array.from(Object.values(elements)));
+                //t randomArr = Array.from(Object.values(elements));
 
-                    let mouseEvents = ["click","mousedown","mouseup"];
-                    let eleIndex = 0;
-                    let startingURL = location.href;
-                    let startingDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
+                let mouseEvents = ["click","mousedown","mouseup"];
+                let eleIndex = 0;
+                let startingURL = location.href;
+                let startingDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
 
-                    console.log(`[WC] ${indent(level)} L${level} Starting DOM selected=${startingDOM.length} Nodes toExplore=${randomArr.length} `);
-                    //console.log(`[WC] ${indent(level)} L${level} number of elements initially `, startingDOM.length);
-                    // startingDOM.filter(function (e) {
-                    //     return e.hasOwnProperty("hasClicker");
-                    // });
-                    // console.log("[WC] number of elements is now ", startingDOM.length);
-                    for (let eleIndex =0; eleIndex < randomArr.length; eleIndex++){
-                        let ele = randomArr[eleIndex];
-                        //console.log(`[WC] ${indent(level)} L${level} attempt to click on  ${ele.textContent}`);
-                        try {
-                            if (ele.href != null){
-                                console.log(`FOUND URL of ${ele.href}`)
-                                if (ele.href.indexOf("support.dlink.com") !== -1){
-                                    console.log(`[WC] IGNORING url of FOUND URL of ${ele.href}`)
-                                    continue;
-                                }
-                            }
-                            let searchText="";
-                            if (ele.outerHTML != null) {
-                                searchText += ele.outerHTML;
-                            }
-                            if (ele.innerHTML != null) {
-                                searchText += ele.innerHTML;
-                            }
-                            if (ele.textContent != null) {
-                                searchText += ele.textContent;
-                            }
-                            console.log(`ele id=${ele.id} name=${ele.name}`)
-                            if (usedText.has(ele.textContent) ){
-                                return;
-                            }
-                            let pos = searchText.indexOf("Logout");
-                            if (pos > -1 ){
-                                console.log("[WC] SKIPPING B/C IT's a logout, ", ele.textContent);
+                console.log(`[WC] ${indent(level)} L${level} Starting DOM selected=${startingDOM.length} Nodes toExplore=${randomArr.length} `);
+                //console.log(`[WC] ${indent(level)} L${level} number of elements initially `, startingDOM.length);
+                // startingDOM.filter(function (e) {
+                //     return e.hasOwnProperty("hasClicker");
+                // });
+                // console.log("[WC] number of elements is now ", startingDOM.length);
+                for (let eleIndex =0; eleIndex < randomArr.length; eleIndex++){
+                    let ele = randomArr[eleIndex];
+                    //console.log(`[WC] ${indent(level)} L${level} attempt to click on  ${ele.textContent}`);
+                    try {
+                        if (ele.href != null){
+                            console.log(`FOUND URL of ${ele.href}`)
+                            if (ele.href.indexOf("support.dlink.com") !== -1){
+                                console.log(`[WC] IGNORING url of FOUND URL of ${ele.href}`)
                                 continue;
                             }
+                        }
+                        let searchText="";
+                        if (ele.outerHTML != null) {
+                            searchText += ele.outerHTML;
+                        }
+                        if (ele.innerHTML != null) {
+                            searchText += ele.innerHTML;
+                        }
+                        if (ele.textContent != null) {
+                            searchText += ele.textContent;
+                        }
+                        //console.log(`ele id=${ele.id} name=${ele.name}`)
+                        if (usedText.has(ele.textContent) ){
+                            return;
+                        }
+                        let pos = searchText.indexOf("Logout");
+                        if (pos > -1 ){
+                            console.log("[WC] SKIPPING B/C IT's a logout, ", ele.textContent);
+                            continue;
+                        }
 
-                            try {
-                                ele.disabled = false;
-                            } catch (ex){
-                                //pass
-                                console.log("[WC] ERROR WITH THE ELEMENTS CLICKING", e);
+                        try {
+                            ele.disabled = false;
+                        } catch (ex){
+                            //pass
+                            console.log("[WC] ERROR WITH THE ELEMENTS CLICKING", e);
+                        }
+
+                        try {
+
+                            function triggerMouseEvent (node, eventType) {
+                                //console.log("usedText=", usedText, "node=", node);
+                                // if
+                                // if (node.textContent.indexOf("Order History") === -1 && node.textContent.indexOf("account_circle") === -1 && node.textContent.indexOf("check_circle_outline") === -1 ){
+                                //     return;
+                                // }
+                                if (level > 1){
+                                    console.log(`[WC] ${indent(level)} L${level} triggering on ${node.textContent}`)
+                                }
+                                //console.log("usedText=", usedText, "node=", node);
+                                // if (usedText.has(node.textContent) ){
+                                //     return;
+                                // }
+
+                                usedText.add(node.textContent);
+                                let clickEvent = document.createEvent ('MouseEvents');
+                                clickEvent.initEvent (eventType, true, true);
+                                node.dispatchEvent (clickEvent);
+                                //console.log(`[WC] DONE-TRIGGERED ${indent(level)} L${level} triggering on ${clickEvent} ${node} ${node.id} ${node.name}`)
                             }
-
-                            try {
-
-                                function triggerMouseEvent (node, eventType) {
-                                    console.log("usedText=", usedText, "node=", node);
-                                    // if
-                                    // if (node.textContent.indexOf("Order History") === -1 && node.textContent.indexOf("account_circle") === -1 && node.textContent.indexOf("check_circle_outline") === -1 ){
-                                    //     return;
-                                    // }
-                                    if (level > 1){
-                                        console.log(`[WC] ${indent(level)} L${level} triggering on ${node.textContent}`)
-                                    }
-                                    console.log("usedText=", usedText, "node=", node);
-                                    // if (usedText.has(node.textContent) ){
-                                    //     return;
-                                    // }
-
-                                    usedText.add(node.textContent);
-                                    let clickEvent = document.createEvent ('MouseEvents');
-                                    clickEvent.initEvent (eventType, true, true);
-                                    node.dispatchEvent (clickEvent);
-                                    console.log(`[WC] DONE-TRIGGERED ${indent(level)} L${level} triggering on ${clickEvent} ${node} ${node.id} ${node.name}`)
-                                }
-                                for (let ev of mouseEvents){
-                                    console.log("mouse event = ", ev);
-                                    let temp = window.location.href;
-                                    triggerMouseEvent (ele, ev);
-                                    await sleep(50);
-                                    if (temp !== window.location.href){
-                                        console.log("[WC] RESET EM, ", temp, window.location.href);
-                                        // this sends it back out to puppeteer
-                                        console.log(`[WC-URL]${window.location.href}`);
-                                        await window.location.replace(temp);
-                                        for (let pc of parentClicks){
-                                            //console.log (`[WC] ${indent(level)} retriggering ${pc.textContent}`);
-                                            triggerMouseEvent(pc, "click");
-                                        }
-                                    }
-                                    let curDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
-                                    if (Object.keys(curDOM).length !== Object.keys(startingDOM).length && Object.keys(curDOM).length > 0){
-                                        var changedDOM = getChangedDOM(startingDOM, curDOM);
-                                        console.log(`[WC] ${indent(level)} ${level} starting len = ${Object.keys(elements).length} cur len = ${Object.keys(curDOM).length} changed len=${Object.keys(changedDOM).length}`);
-                                        /*for (let cd of Object.keys(changedDOM)){
-                                            console.log(`[WC] ${indent(level+1)} changedDOM #${cd} ${changedDOM[cd].textContent}`);
-                                        }*/
-                                        parentClicks.push(ele);
-                                        console.log(`[WC] ${indent(level)} L${level} recursing into the next level of ${ele.textContent}`);
-                                        await clickSpam(changedDOM, level+1, parentClicks);
-                                        // this resets DOM??
-                                        location.href = startingURL;
-                                        //startingDOM = document.querySelectorAll("div,li,span,a,input,p,button");
-
-                                        // can break by assuming that DOM change means event was heard.
-                                        break;
-                                    } else {
-                                        console.log(`[WC] ${indent(level)} ${level} ${Object.keys(startingDOM).length} ${Object.keys(curDOM).length}`)
-                                    }
-
-                                }
+                            for (let ev of mouseEvents){
+                                //console.log("mouse event = ", ev);
+                                let temp = window.location.href;
+                                triggerMouseEvent (ele, ev);
                                 await sleep(50);
+                                if (temp !== window.location.href){
+                                    console.log("[WC] RESET EM, ", temp, window.location.href);
+                                    // this sends it back out to puppeteer
+                                    console.log(`[WC-URL]${window.location.href}`);
+                                    await window.location.replace(temp);
+                                    for (let pc of parentClicks){
+                                        //console.log (`[WC] ${indent(level)} retriggering ${pc.textContent}`);
+                                        triggerMouseEvent(pc, "click");
+                                    }
+                                }
+                                let curDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
+                                if (Object.keys(curDOM).length !== Object.keys(startingDOM).length && Object.keys(curDOM).length > 0){
+                                    var changedDOM = getChangedDOM(startingDOM, curDOM);
+                                    console.log(`[WC] ${indent(level)} ${level} starting len = ${Object.keys(elements).length} cur len = ${Object.keys(curDOM).length} changed len=${Object.keys(changedDOM).length}`);
+                                    /*for (let cd of Object.keys(changedDOM)){
+                                        console.log(`[WC] ${indent(level+1)} changedDOM #${cd} ${changedDOM[cd].textContent}`);
+                                    }*/
+                                    parentClicks.push(ele);
+                                    console.log(`[WC] ${indent(level)} L${level} recursing into the next level of ${ele.textContent}`);
+                                    await clickSpam(changedDOM, level+1, parentClicks);
+                                    // this resets DOM??
+                                    location.href = startingURL;
+                                    //startingDOM = document.querySelectorAll("div,li,span,a,input,p,button");
 
-
-                            } catch(e2){
-                                console.log("[WC] NO CLICK, ERROR ", e2.message);
+                                    // can break by assuming that DOM change means event was heard.
+                                    break;
+                                } else {
+                                    //console.log(`[WC] ${indent(level)} ${level} ${Object.keys(startingDOM).length} ${Object.keys(curDOM).length}`)
+                                }
 
                             }
+                            await sleep(50);
 
-                            // if (typeof ele.click === 'function') {
-                            //
-                            //     console.log("\tLOG gremlin click all_clicker ", cnt );
-                            //     console.log("\tLOG gremlin click all_clicker ", cnt );
-                            //     //ele.click();
-                            //     //await sleep(100);
-                            // } else {
-                            //     console.log("\tNO CLICK ");
-                            // }
 
+                        } catch(e2){
+                            console.log("[WC] NO CLICK, ERROR ", e2.message);
+
+                        }
+
+                        // if (typeof ele.click === 'function') {
+                        //
+                        //     console.log("\tLOG gremlin click all_clicker ", cnt );
+                        //     console.log("\tLOG gremlin click all_clicker ", cnt );
+                        //     //ele.click();
+                        //     //await sleep(100);
+                        // } else {
+                        //     console.log("\tNO CLICK ");
+                        // }
+
+                    } catch (e){
+                        console.log("[WC] ERROR WITH THE ELEMENTS CLICKING", e.message);
+                    }
+
+                }
+            }
+
+
+            async function checkHordeLoad(){
+                if (typeof window.gremlins === 'undefined') {
+                    console.log("cannot find gremlins, attempting to load on the fly");
+                    (function (d, script) {
+                        script = d.createElement('script');
+                        script.type = 'text/javascript';
+                        script.async = true;
+                        script.onload = function () {
+                            // remote script has loaded
+                        };
+                        script.src = 'https://trickel.com/gremlins.min.js';
+                        //script.src = 'https://unpkg.com/gremlins.js';
+                        d.getElementsByTagName('head')[0].appendChild(script);
+                    }(document));
+                }
+            }
+            async function repeativeHorde(){
+
+                let all_submitable =  [...document.getElementsByTagName("form"),
+                    ...document.querySelectorAll('[type="submit"]')];
+
+                let randomArr = shuffle(all_submitable);
+
+                for(let i = 0; i < all_submitable.length; i++) {
+                    let submitable_item = randomArr[i];
+                    if(typeof submitable_item.submit === 'function') {
+                        submitable_item.submit();
+                    } else if(typeof submitable_item.requestSubmit === 'function') {
+                        try{
+                            submitable_item.requestSubmit();
                         } catch (e){
-                            console.log("[WC] ERROR WITH THE ELEMENTS CLICKING", e.message);
+                            console.log(`[WC] Error while trying to request submit`);
                         }
+                    }
+                    if(typeof submitable_item.click === 'function') {
+                        submitable_item.click()
+                    }
+                }
+            }
+            async function lameHorde(){
 
+                console.log("Searching and clicking.");
+                window.alert = function(message) {/*console.log(`Intercepted alert with '${message}' `)*/};
+
+                let all_elements = document.querySelectorAll( CLICK_ELE_SELECTOR);
+                console.log(`\t FOUND ${all_elements.length} elements to attempt to click in main `);
+                for (let ele of document.querySelectorAll("iframe")){
+                    all_elements = [...all_elements, ...ele.contentWindow.document.querySelectorAll(CLICK_ELE_SELECTOR) ];
+                }
+                console.log(`\t FOUND ${all_elements.length} elements to attempt to click in main and frames`);
+                function hashChangeEncountered(){
+                    alert('got hashchange');
+                }
+                window.addEventListener("hashchange", hashChangeEncountered);
+                var filter   = Array.prototype.filter;
+                var clickableElements = filter.call( all_elements, function( node ) {
+                    if (node.hasOwnProperty("href") && node.href.startsWith("http")){
+                        return false;
+                    }
+                    return node.hasOwnProperty('hasClicker');
+                });
+                console.log("[WC] clicky  DOM elements count = ", clickableElements.length);
+
+                //await clickSpam(clickableElements);
+                await clickSpam(all_elements);
+
+                let pforms = document.getElementsByTagName("form");
+                for(let i = 0; i < pforms.length; i++) {
+                    let frm = pforms[i];
+                    if(typeof frm.submit === 'function') {
+                        console.log("Submitting a form");
+                        frm.submit();
+                    } else if (typeof frm.submit === 'undefined') {
+                        console.log("[WC] lameHorde: The method submit of ", frm, "is undefined");
+                    } else {
+                        //console.log("[WC] lameHorde: It's neither undefined nor a function. It's a " + typeof frm.submit, frm);
                     }
 
                 }
-                async function repeativeHorde(){
-                    let pforms = document.getElementsByTagName("form");
-                    for(let i = 0; i < pforms.length; i++) {
-                        let f = pforms[i];
-                        if(typeof f.submit === 'function') {
-                            console.log("[WC] repeativeHord: submitting form")
-                            f.submit();
-                        } else if (typeof f.submit === 'undefined') {
-                            //console.log("[WC] repeativeHord: The method submit of ", f, "is undefined");
+
+                //
+                console.log(`[WC] lamehorde is done.`);
+                clearTimeout(checkHordeLoad)
+                clearTimeout(coolHorde);
+                checkHordeLoad();
+                setTimeout(coolHorde, 1000);
+
+            }
+            function randr(a) {
+                return function() {
+                    var t = a += 0x6D2B79F5;
+                    t = Math.imul(t ^ t >>> 15, t | 1);
+                    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                }
+            }
+
+            async function triggerHorde(){
+                $("select").trigger("change");
+                await sleep(100);
+                $("select").prop("selectedIndex",1)
+
+            }
+            var randomizer = new gremlins.Chance();
+            const triggerSimulatedOnChange = (element, newValue, prototype) => {
+                const lastValue = element.value;
+                element.value = newValue;
+
+                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value').set;
+                nativeInputValueSetter.call(element, newValue);
+                const event = new Event('input', { bubbles: true });
+
+                // React 15
+                event.simulated = true;
+                // React >= 16
+                let tracker = element._valueTracker;
+                if (tracker) {
+                    tracker.setValue(lastValue);
+                }
+                element.dispatchEvent(event);
+            };
+            const fillTextAreaElement = (element) => {
+                let rnd =  Math.random();
+                let value = "2";
+                if (rnd > 0.7){
+                    value = "Witcher";
+                } else if (rnd > 0.3) {
+                    value =  "127.0.0.1";
+                }
+                triggerSimulatedOnChange(element, value, window.HTMLTextAreaElement.prototype);
+
+                return value;
+            };
+
+            const fillNumberElement = (element) => {
+                const number = randomizer.character({ pool: '0123456789' });
+                const newValue = element.value + number;
+                triggerSimulatedOnChange(element, newValue, window.HTMLInputElement.prototype);
+
+                return number;
+            };
+
+            const fillSelect = (element) => {
+                const options = element.querySelectorAll('option');
+                if (options.length === 0) return;
+                const randomOption = randomizer.pick(options);
+                options.forEach((option) => {
+                    option.selected = option.value === randomOption.value;
+                });
+                let jelem = $(element);
+                jelem.trigger("change");
+
+                return randomOption.value;
+            };
+
+            const fillRadio = (element) => {
+                // using mouse events to trigger listeners
+                const evt = document.createEvent('MouseEvents');
+                evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                element.dispatchEvent(evt);
+
+                return element.value;
+            };
+
+            const fillCheckbox = (element) => {
+                // using mouse events to trigger listeners
+                const evt = document.createEvent('MouseEvents');
+                evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                element.dispatchEvent(evt);
+
+                return element.value;
+            };
+
+            const fillEmail = (element) => {
+                const email = "test@test.com";
+                triggerSimulatedOnChange(element, email, window.HTMLInputElement.prototype);
+
+                return email;
+            };
+            const fillTextElement = (element) => {
+                let rnd =  Math.random()
+                let value = "2";
+                if (rnd > 0.7){
+                    value = "Witcher";
+                } else if (rnd > 0.3) {
+                    value =  "127.0.0.1";
+                }
+                element.value = value;
+                if (Math.random() > 0.80){
+                    repeativeHorde();
+                }
+                return value;
+            };
+            const fillPassword = (element) => {
+                element.value = "rogerroger10!";
+                return element.value;
+            };
+            var wFormElementMapTypes = {
+                textarea: fillTextAreaElement,
+                'input[type="text"]': fillTextElement,
+                'input[type="password"]': fillPassword,
+                'input[type="number"]': fillNumberElement,
+                select: fillSelect,
+                'input[type="radio"]': fillRadio,
+                'input[type="checkbox"]': fillCheckbox,
+                'input[type="email"]': fillEmail,
+                'input:not([type])': fillTextElement,
+
+            }
+
+            async function coolHorde(){
+                var noChance = new gremlins.Chance();
+                //noChance.prototype.bool = function(options) {return true;};
+                noChance.character = function(options) {
+                    if (options != null){
+                        return "2";
+                    } else {
+                        let rnd =  Math.random()
+                        if (rnd > 0.7){
+                            return "Witcher";
+                        } else if (rnd > 0.3){
+                            return "127.0.0.1";
                         } else {
-                            //console.log("[WC] repeativeHord: It's neither undefined nor a function. It's a " + typeof f.submit, f);
+                            return "2"
                         }
-
                     }
+                };
 
+                if (!gremlinsHaveStarted ){
+                    console.log("[WC] UNLEASHING Horde for first time!!!");
                 }
-                async function lameHorde(){
+                let ff = window.gremlins.species.formFiller({elementMapTypes:wFormElementMapTypes, randomizer:noChance});
+                const distributionStrategy = gremlins.strategies.distribution({
+                    distribution: [0.80, 0.15, 0.04,0.01], // the first three gremlins have more chances to be executed than the last
+                    delay: 20,
+                });
 
-                    console.log("Searching and clicking.");
-                    window.alert = function(message) {/*console.log(`Intercepted alert with '${message}' `)*/};
 
-                    let all_elements = document.querySelectorAll( CLICK_ELE_SELECTOR);
-                    console.log(`\t FOUND ${all_elements.length} elements to attempt to click in main `);
-                    for (let ele of document.querySelectorAll("iframe")){
-                        all_elements = [...all_elements, ...ele.contentWindow.document.querySelectorAll(CLICK_ELE_SELECTOR) ];
-                    }
-                    console.log(`\t FOUND ${all_elements.length} elements to attempt to click in main and frames`);
-                    function hashChangeEncountered(){
-                        alert('got hashchange');
-                    }
-                    window.addEventListener("hashchange", hashChangeEncountered);
-                    var filter   = Array.prototype.filter;
-                    var clickableElements = filter.call( all_elements, function( node ) {
-                        if (node.hasOwnProperty("href") && node.href.startsWith("http")){
-                            return false;
-                        }
-                        return node.hasOwnProperty('hasClicker');
-                    });
-                    console.log("[WC] clicky  DOM elements count = ", clickableElements.length);
+                // const fillPassword = (element) => {
+                //     element.value = "1234";
+                //     return element.value;
+                // };
+                // console.log("[WC]",ff, defaultFFEle);
+                // defaultFFEle['input[type="password"]'] = fillPassword;
+                // ff.elementMapTypes = defaultFFEle;
 
-                    //await clickSpam(clickableElements);
-                    await clickSpam(all_elements);
-
-                    let pforms = document.getElementsByTagName("form");
-                    for(let i = 0; i < pforms.length; i++) {
-                        let frm = pforms[i];
-                        if(typeof frm.submit === 'function') {
-                            console.log("Submitting a form");
-                            frm.submit();
-                        } else if (typeof frm.submit === 'undefined') {
-                            console.log("[WC] lameHorde: The method submit of ", frm, "is undefined");
-                        } else {
-                            //console.log("[WC] lameHorde: It's neither undefined nor a function. It's a " + typeof frm.submit, frm);
-                        }
-
-                    }
-
-                    //
-                    console.log(`[WC] lamehorde is done.`);
-
-                }
-                function randr(a) {
-                    return function() {
-                        var t = a += 0x6D2B79F5;
-                        t = Math.imul(t ^ t >>> 15, t | 1);
-                        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-                        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-                    }
-                }
-                async function checkHordeLoad(){
-                    if (typeof window.gremlins === 'undefined') {
-                        console.log("cannot find gremlins, attempting to load on the fly");
-                        (function (d, script) {
-                            script = d.createElement('script');
-                            script.type = 'text/javascript';
-                            script.async = true;
-                            script.onload = function () {
-                                // remote script has loaded
-                            };
-                            script.src = 'https://trickel.com/gremlins.min.js';
-                            //script.src = 'https://unpkg.com/gremlins.js';
-                            d.getElementsByTagName('head')[0].appendChild(script);
-                        }(document));
-                    }
-                }
-                async function triggerHorde(){
-                    $("select").trigger("change");
-                    await sleep(100);
-                    $("select").prop("selectedIndex",1)
-
-                }
-                async function coolHorde(){
-                    var noChance = new gremlins.Chance();
-                    //noChance.prototype.bool = function(options) {return true;};
-                    noChance.character = function(options) {
-                        if (options != null){
-                            return "2";
-                        } else {
-                            let rnd =  Math.random()
-                            if (rnd > 0.7){
-                                return "Witcher";
-                            } else if (rnd > 0.3){
-                                return "127.0.0.1";
-                            } else {
-                                return "2"
-                            }
-                        }
-                    };
-                    console.log("[WC] UNLEASHING Reloaded Horde!!!");
-
-                    let ff = window.gremlins.species.formFiller(console.log, noChance, window);
-                    const distributionStrategy = gremlins.strategies.distribution({
-                        distribution: [0.5, 0.2, 0.2,0.1], // the first three gremlins have more chances to be executed than the last
-                        delay: 20,
-                    });
+                // const customClicker = gremlins.species.clicker({
+                //     // which mouse event types will be triggered
+                //     clickTypes: ['click'],
+                //     // Click only if parent is has class test-class
+                //     canClick: (element) => {console.log(element); return true},
+                //     // by default, the clicker gremlin shows its action by a red circle
+                //     // overriding showAction() with an empty function makes the gremlin action invisible
+                //     showAction: (x, y) => defaultShowAction,
+                // });
+                for (let i =0; i < 5; i ++){
                     await gremlins.createHorde({
                         species: [gremlins.species.clicker(),ff,gremlins.species.typer(), gremlins.species.scroller()],
                         mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
                         strategies: [distributionStrategy],
                         randomizer: noChance
-                    }).unleash({nb:100000});
-
-
-
-                    clearInterval(repeativeHorde);
-                    clearInterval(triggerHorde);
-
-                    clearInterval(repeativeHorde);
+                    }).unleash();
                 }
+                clearInterval(repeativeHorde);
+                clearInterval(triggerHorde);
+            }
 
-                console.log("[WC] setting timeout for lamehorde")
+            if (gremlinsHaveStarted){
+                console.log("[WC] Restarted Page -- going with Gremlins only")
+                if (typeof window.gremlins === 'undefined') {
+                    setTimeout(checkHordeLoad, 3500);
+                    setTimeout(coolHorde, 4000);
+                } else {
+                    coolHorde();
+                }
+                //setTimeout(function(){setInterval(repeativeHorde, 5000)}, 20000);
+                //setTimeout(function(){setInterval(triggerHorde, 1000)}, 5000);
+            } else {
+                console.log("[WC] Initial Page Test -- using lameHorde then coolHorde")
                 setTimeout(lameHorde, 2000);
-                setTimeout(function(){setInterval(repeativeHorde, 150)}, 3000);
-                setTimeout(function(){setInterval(triggerHorde, 500)}, 5000);
-                console.log("[WC] setting timeout for coolhorde")
+                // setTimeout(function(){setInterval(repeativeHorde, 500)}, 3000);
+                // setTimeout(function(){setInterval(triggerHorde, 1000)}, 5000);
                 setTimeout(checkHordeLoad, 19000);
                 setTimeout(coolHorde, 20000);
+            }
 
-                function hc(){
-                    console.log(`[WC] Detected HASH CHANGE, replacing ${window.location.href} with ${STARTPAGE}`);
-                    window.location.replace(STARTPAGE);
-                }
-                window.onhashchange = hc
+            function hc(){
+                console.log(`[WC] Detected HASH CHANGE, replacing ${window.location.href} with ${STARTPAGE}`);
+                window.location.replace(STARTPAGE);
+            }
+            window.onhashchange = hc
 
-            });
-            // ##############################################################################
-            //                         END Injected Exercise Code
-            // ##############################################################################
-        }
+        }, gremlinsHaveStarted);
+
+        // ##############################################################################
+        //                         END Injected Exercise Code
+        // ##############################################################################
     }
 
     async exerciseTarget(page){
@@ -1256,7 +1299,7 @@ class RequestExplorer {
 
         let url = this.url;
         let shortname = "";
-        console.log("\x1b[38;5;5mexerciseTarget, URL = ", url.href, "\x1b[0m");
+        //console.log("\x1b[38;5;5mexerciseTarget, URL = ", url.href, "\x1b[0m");
         if (url.href.indexOf("/") > -1) {
             shortname = path.basename(url.pathname);
         }
@@ -1275,7 +1318,7 @@ class RequestExplorer {
                     console.log("Reloading page ", turl);
                 } else {
                     let request_page =url.origin + url.pathname
-                    console.log("GOING TO requested page =", request_page , "hash =", url.hash);
+                    //console.log("GOING TO requested page =", request_page , "hash =", url.hash);
                     //response =
                     //let p1 = page.waitForResponse(url.origin + url.pathname);
                     //let p1 = page.waitForResponse(request => {console.log(`INSIDE request_page= ${request_page} ==> ${request.url()}`);return request.url().startsWith(url.origin);}, {timeout:10000});
@@ -1330,8 +1373,9 @@ class RequestExplorer {
                 }
                 let startingReqAdded = this.requestsAdded;
                 this.requestsAdded += await this.addDataFromBrowser(page, url);
-
-                console.log(`\tW#${this.workernum} ${shortname} Count ${cnt} Round ${this.appData.currentURLRound} loopcnt ${processedCnt}, added ${this.requestsAdded} reqs : Inputs: ${roundResults.totalInputs}, (${roundResults.equaltoRequests}/${roundResults.totalRequests}) reqs left to process ${gremCounterStr}`);
+                if (cnt % 10 === 0){
+                    console.log(`[WC] W#${this.workernum} ${shortname} Count ${cnt} Round ${this.appData.currentURLRound} loopcnt ${processedCnt}, added ${this.requestsAdded} reqs : Inputs: ${roundResults.totalInputs}, (${roundResults.equaltoRequests}/${roundResults.totalRequests}) reqs left to process ${gremCounterStr}`);
+                }
                 let pinfo = this.browser.process();
                 if (isDefined(pinfo) && pinfo.killed){
                     console.log("Breaking out from test loop b/c BROWSER IS DEAD....")
@@ -1349,7 +1393,7 @@ class RequestExplorer {
                     this.reinitPage = false;
                 }
                 if (now_url !== this_url){
-                    console.log(`[WC] Attempting to reload target page b/c browser changed urls ${this_url !== now_url} '${this.url}' != '${now_url}'`)
+                    //console.log(`[WC] Attempting to reload target page b/c browser changed urls ${this_url !== now_url} '${this.url}' != '${now_url}'`)
                     this.isLoading = true;
                     let response = await page.goto(this.url, options);
 
@@ -1361,7 +1405,7 @@ class RequestExplorer {
                     this.isLoading = false;
                 }
 
-                await page.waitFor(this.timeoutValue*1000);
+                await page.waitForTimeout(this.timeoutValue*1000)
                 // eval for iframes, a, forms
                 if (this.workernum === 0 && cnt % 3 === 1){
                     //page.screenshot({path: `/p/webcam/screenshot-${this.workernum}-${cnt}.png`, type:"png"}).catch(function(error){console.log("no save")});
@@ -1400,22 +1444,27 @@ class RequestExplorer {
     }
 
     async initpage(page, url, doingReload=false) {
-        if (fs.existsSync("/app/gremlins.min.js")) {
-            const gremscript = fs.readFileSync("/app/gremlins.min.js", 'utf8');
-            console.log(`\nread in gremscript ${gremscript.length}\n`);
-            await page.evaluate(gremscript);
-        } else {
-            console.log(`loading gremscript from remote location`);
-            await page.addScriptTag({url: 'https://trickel.com/gremlins.min.js'});
-            //await page.addScriptTag({url: 'https://unpkg.com/gremlins.js'});
 
+        const test_url = await urlExist(`http://${this.site_ip}/gremlins.min.js`);
+        console.log(`test_url = ${test_url}`);
+        if (test_url){
+            this.gremlins_url = `http://${this.site_ip}/gremlins.min.js`;
+        } else if (await urlExists(`https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js`)){
+            this.gremlins_url = 'https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js';
+        } else if (await urlExists(`https://trickel.com/gremlins.min.js`)){
+            this.gremlins_url = "https://trickel.com/gremlins.min.js"
+        }
+
+        if (isDefined(this.gremlins_url)){
+            console.log(`loading gremscript from remote location ${this.gremlins_url}`);
+            await page.addScriptTag({url: this.gremlins_url });
         }
 
         this.isLoading = false;
 
         await page.screenshot({path: '/p/tmp/screenshot-pre.png', type: "png"});
 
-        console.log("Waited for goto and response and div");
+        //console.log("Waited for goto and response and div");
         this.requestsAdded += this.addDataFromBrowser(page, url);
 
         //console.log(this.appData.requestsFound[this.currentRequestKey]["processed"]% 2 === 0);
@@ -1463,7 +1512,7 @@ class RequestExplorer {
             }
             //console.log(response);
 
-            console.log(await response.headers());
+            //console.log("response Headers = ", await response.headers());
 
             if (response.status() !== 200) {
                 //console.log("[WC] ERROR status = ", response.status(), response.statusText(), response.url())
@@ -1491,7 +1540,7 @@ class RequestExplorer {
     async do_login(page){
         //curl -i -s -k -X $'POST' --data-binary $'ipamusername=admin&ipampassword=password&phpipamredirect=%2F' $'http://10.90.90.90:9797/app/login/login_check.php'
         var loginData = this.loginData;
-        console.log(loginData["form_url"])
+        console.log(`[WC] Performing login ${loginData["form_url"]}`)
         var gotourl = new URL(loginData["form_url"]);
         var data = loginData["post_data"];
         var method = loginData["method"];
@@ -1500,7 +1549,7 @@ class RequestExplorer {
             foundRequest.from = "LoginPage";
             let addResult = this.appData.addRequest(foundRequest);
             if (addResult){
-                console.log(`\x1b[38;5;2mADDED ${foundRequest.toString()}  ${ENDCOLOR}`);
+                console.log(`[${GREEN}WC${ENDCOLOR}] ADDED ${foundRequest.toString()}  ${ENDCOLOR}`);
             }
         }
 
@@ -1528,11 +1577,11 @@ class RequestExplorer {
         }
         page.on('request', interceptLoginRequest);
 
-        console.log("[Login] REQUESTING URL ", gotourl);
+        //console.log("[Login] REQUESTING URL ", gotourl);
 
         const response = await page.goto(gotourl, {waitUntil:"load"});
 
-        console.log(`[Login] URL GOTO'ed `);
+        //console.log(`[Login] URL GOTO'ed `);
 
         try {
             if (loginData["usernameSelector"] || loginData["passwordSelector"]){
@@ -1552,7 +1601,7 @@ class RequestExplorer {
                 await page.keyboard.type( loginData["passwordValue"], {delay:100});
                 const element = await page.$(loginData["passwordSelector"]);
                 const text = await (await element.getProperty('value')).jsonValue();
-                console.log("PW TEXT VALUE IS = ", text,  loginData["passwordValue"]);
+
                 await page.screenshot({path: '/p/tmp/screenshot-pre-login.png', type:"png"});
 
                 let submitType = loginData["submitType"].toLowerCase();
@@ -1561,7 +1610,7 @@ class RequestExplorer {
                     const inputElement = await page.$('input[type=submit]');
                     await inputElement.click();
                 } else if (submitType === "enter"){
-                    console.log("\nPRESSING ENTERE\n");
+                    //console.log("\nPRESSING ENTERE\n");
                     await Promise.all([page.keyboard.type("\n"), page.waitForNavigation({timeout: 5000, waitUntil:'networkidle2'})])
 
                 } else if (submitType === "click") {
@@ -1601,7 +1650,7 @@ class RequestExplorer {
         }
 
         //console.log(bodyResponse);
-        console.log("POSI IS ", loginData["positiveLoginMessage"]);
+        //console.log("POSI IS ", loginData["positiveLoginMessage"]);
         if (bodyResponse.indexOf(loginData["positiveLoginMessage"]) === -1){
             console.log(bodyResponse);
             console.log("\nERROR ERROR ERROR ERROR  LOGIN FAILED TO COMPLETE, didn't find expected message ERROR ERROR ERROR ");
@@ -1609,8 +1658,11 @@ class RequestExplorer {
         }
         page.removeListener('request', interceptLoginRequest);
         let cookies = await page.cookies();
-        console.log(cookies);
-
+        //console.log("Cookies returned are ", cookies);
+        let loginPageLanding = await page.url();
+        //console.log("\x1b[36mLanding page of login ", loginPageLanding , "");
+        let foundRequest = FoundRequest.requestParamFactory(loginPageLanding,"GET", "",{},"targetChanged", self.appData.site_url.href);
+        self.requestsAdded += self.appData.addInterestingRequest(foundRequest);
 
         return cookies
     }
@@ -1634,7 +1686,7 @@ class RequestExplorer {
         });
         //console.log("COOKIES", cookies_in);
         for (let cooky of cookies_in) {
-            console.log("\t\x1b[38;5;5m" + cooky["name"] + "=" + cooky["value"] + "\x1b[0m");
+            console.log("[\x1b[38;5;5mWC\x1b[0m] Cookie: " + cooky["name"] + "=" + cooky["value"] + "");
             if (cooky["name"] === "token"){
                 page.setExtraHTTPHeaders({Authorization:`Bearer ${cooky["value"]}`});
                 this.bearer = `Bearer ${cooky["value"]}`;
@@ -1673,9 +1725,6 @@ class RequestExplorer {
         return {totalInputs:this.appData.numInputsFound(), totalRequests: total, equaltoRequests: equalto, aboveRequests:above}
     }
     reportResults(){
-        console.log("XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx");
-        console.log("XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx");
-        console.log("XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx");
         if (Object.entries(this.shownMessages).length > 0) {
             console.log("ERRORS:");
             for (const [key, val] of Object.entries(this.shownMessages)) {
@@ -1689,18 +1738,16 @@ class RequestExplorer {
         }
 
         let roundResults = this.getRoundResults();
-        console.log(`Round Results for round ${this.appData.currentURLRound} of ${MAX_NUM_ROUNDS}: `);
-        console.log(`\tTotal Inputs :  ${roundResults.totalInputs}`);
-        console.log(`\tTotal Requests: ${roundResults.equaltoRequests} of ${roundResults.totalRequests} processed so far`);
+        console.log(`[WC] Round Results for round ${this.appData.currentURLRound} of ${MAX_NUM_ROUNDS}: Total Inputs :  ${roundResults.totalInputs} Total Requests: ${roundResults.equaltoRequests} of ${roundResults.totalRequests} processed so far`);
 
-        console.log("XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx");
-        console.log("XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx");
-        console.log("XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx");
     }
 
     async start() {
         var self = this;
-
+        process.on('SIGINT', function() {
+            console.log("[WC] Caught interrupt signal, attempting to exit");
+            process.exit(99);
+        });
         async function targetChanged(target){
 
             try {
@@ -1722,12 +1769,12 @@ class RequestExplorer {
                     //     //console.log("PARAM NAME :::> ", key, value);
                     // });
                 } else {  // target is foreign or same url
-                    console.log(`TARGETED CHANGED to SAME ${self.url.href}`);
+                    //console.log(`TARGETED CHANGED to SAME ${self.url.href}`);
                     var tempurl = new URL(newurl);
-                    console.log("target changed -----------------------> ", tempurl.pathname);
+                    //console.log("target changed -----------------------> ", tempurl.pathname);
                     tempurl.searchParams.forEach(function (value, key, parent) {
                         //self.appData.addQueryParam(key, value);
-                        console.log("PARAM NAME :::> ", key, value);
+                        //console.log("PARAM NAME :::> ", key, value);
                     });
 
                     // self.page = await self.browser.newPage();
@@ -1770,7 +1817,7 @@ class RequestExplorer {
 
             if (message.text().indexOf("[WC]") > -1) {
                 if (message.text().indexOf("lamehorde is done") > -1){
-                    console.log("\x1b[38;5;136mLamehorde completion detected\x1b[0m");
+                    console.log(`[\x1b[38;5;136mWC${ENDCOLOR}] Lamehorde completion detected`);
                     self.lamehord_done = true;
                 } else {
                     console.log(message.text());
@@ -1810,9 +1857,9 @@ class RequestExplorer {
                 let re = new RegExp(/<soap:Body>(.*)<\/soap:Body>/);
                 if (re.test(req.postData())){
                     let pd_match = re.exec(req.postData());
-                    console.log(`${GREEN}${req.url()} ${pd_match[1]}${ENDCOLOR}`);
+                    //console.log(`${GREEN}${req.url()} ${pd_match[1]}${ENDCOLOR}`);
                 } else {
-                    console.log(`${GREEN}${req.url()} NO SOAP MATCH ${req.postData()} ${ENDCOLOR}`);
+                    //console.log(`${GREEN}${req.url()} NO SOAP MATCH ${req.postData()} ${ENDCOLOR}`);
                 }
             }
             if (self.url.href === req.url()) {
@@ -1839,12 +1886,12 @@ class RequestExplorer {
 
                 if (self.appData.addInterestingRequest(foundRequest) > 0){
                     self.requestsAdded++;
-                    console.log("[WC] req.url() = ", req.url());
+                    //console.log("[WC] req.url() = ", req.url());
                 }
 
-                console.log("processRequest caught to add method and data ");
-                console.log("\t", self.method, pdata.method)
-                console.log("\t", self.postData, pdata.postData)
+                // console.log("processRequest caught to add method and data ");
+                // console.log("\t", self.method, pdata.method)
+                // console.log("\t", self.postData, pdata.postData)
                 if (!self.isLoading){
                     self.reinitPage = true;
                 }
@@ -1878,7 +1925,7 @@ class RequestExplorer {
 
                     if (self.appData.addInterestingRequest(foundRequest) > 0){
                         self.requestsAdded++;
-                        console.log("[WC] ADDED intercepted request req.url() = ", req.url());
+                        //console.log("[WC] ADDED intercepted request req.url() = ", req.url());
                     }
                     // skip if it has a period for nodejs apps
 
@@ -1890,10 +1937,10 @@ class RequestExplorer {
                     // }
                 } else {
                     if (req.url().indexOf("gremlins") > -1){
-                        console.log("[WC] CONTINUING with getting some gremlins in here.");
+                        //console.log("[WC] CONTINUING with getting some gremlins in here.");
                         req.continue();
                     } else {
-                        console.log(`Aborting request for ${req.url().substr(0,200)}`)
+                        //console.log(`Aborting request for ${req.url().substr(0,200)}`)
                         req.abort();
                     }
                     return;
@@ -1904,24 +1951,24 @@ class RequestExplorer {
                 } else {
                     if (req.isNavigationRequest() && req.frame() === self.page.mainFrame() ) {
                         if (typeof self.last_nav_request !== "undefined" && self.last_nav_request === req.url()){
-                            console.log("[WC] this is the same as last nav request, ignoring");
+                            //console.log("[WC] this is the same as last nav request, ignoring");
                             req.abort()
                             self.last_nav_request = req.url();
                             return;
                         }
                         self.last_nav_request = req.url();
                         if (req.url().indexOf("gremlins") > -1){
-                            console.log("[WC] CONTINUING with getting some gremlins in here.");
+                            //console.log("[WC] CONTINUING with getting some gremlins in here.");
                             req.continue();
                             return;
                         }
                         if (self.isLoading){
-                            console.log(`[WC] \tRequest granted while still in loading phase ${req.resourceType()} ${req.url()} `);
+                            //console.log(`[WC] \tRequest granted while still in loading phase ${req.resourceType()} ${req.url()} `);
 
                             req.continue();
                         } else {
 
-                                console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()}`);
+                                //console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()}`);
                                 req.respond(req.redirectChain().length
                                   ? { body: '' } // prevent 301/302 redirect
                                   : { status: 204 } // prevent navigation by js
@@ -1975,15 +2022,15 @@ class RequestExplorer {
             }
         }
 
-        console.log("WE ARE STARTING THE BROWSER!!!!! ", this.url.href);
-        console.log("HEADLESS = ", this.appData.headless);
+        console.log(`[\x1b[38;5;5mWC\x1b[0m] Browser launching with  url=${this.url.href} `);
+
         try {
             try{
                 this.browser = await puppeteer.launch({headless:this.appData.headless, args:["--disable-features=site-per-process", "--window-size=1920,1040"], "defaultViewport": null }); //
-                console.log("OPENED BROWSER!");
+                //console.log("OPENED BROWSER!");
                 this.browser_up = true;
             } catch (xerror) {
-                console.log("UNABLE TO OPEN X DISPLAY");
+                //console.log("UNABLE TO OPEN X DISPLAY");
                 if (xerror.message.indexOf("Unable to open X display") > -1){
                     this.browser = await puppeteer.launch({headless:this.appData.headless, args:["--disable-features=site-per-process"] });
                     this.browser_up = true;
@@ -2029,7 +2076,6 @@ class RequestExplorer {
                     await this.addCookiesToPage(loginCookies, this.cookieData, this.page).catch(function (error) {
                         console.log("COOKIE ERROR:!!!", error)
                     });
-
                 }
 
                 this.page.on('request', processRequest);
@@ -2052,7 +2098,7 @@ class RequestExplorer {
             } finally {
                 clearTimeout(pagetimeout);
                 clearInterval(gremlinsErrorTest);
-                console.log(`current request = ${this.appData.requestsFound[this.currentRequestKey]}`)
+                //console.log(`current request = ${this.appData.requestsFound[this.currentRequestKey]}`)
                 await this.browser.close();
             }
 
