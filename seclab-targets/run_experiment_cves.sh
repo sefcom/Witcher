@@ -101,6 +101,9 @@ if [[ ${DO_BURP} = false ]]; then
       exit 1
   fi
 fi
+
+mkdir -p "$cve/$plus"
+
 cd "$cve/$plus" || exit 254
 
 base_url_path=$(jq .base_url_path witcher_config.json|tr -d '"')
