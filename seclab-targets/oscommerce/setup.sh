@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-dname=$(docker ps |grep puppeteer1337/oscommerce| grep oscommerce-user |cut -d " " -f1)
+dname=$(docker ps |grep puppeteer1337/oscommerce| grep oscommerce-$1 |cut -d " " -f1)
 
 ipaddr=$(docker inspect $dname | jq '.[]|.NetworkSettings.Networks.bridge.IPAddress'|tr -d '"')
 
@@ -36,4 +36,5 @@ curl -vv "http://$ipaddr" -c /tmp/cookies.txt
 curl -vv -c /tmp/cookies.txt  "http://$ipaddr/create_account.php"
 curl -vv -b /tmp/cookies.txt -L  "http://$ipaddr/create_account.php"   --data-raw 'action=process&formid=f1a90cf11e66663e8b342866879236e0&gender=f&firstname=test&lastname=test&dob=03%2F03%2F1903&email_address=test%40trickel.com&company=test&street_address=949449+nowhere&suburb=&city=phoenix&postcode=95555&state=az&country=223&telephone=2145551212&fax=&password=testteest&confirmation=testtest'
 curl -vv -b /tmp/cookies.txt -L "http://$ipaddr/create_account.php" --data-raw 'action=process&formid=7bf66c5a917a3b5fe7bfbcb9d3a131a6&gender=m&firstname=test&lastname=test&dob=03-03-1903&email_address=test%40trickel.com&company=&street_address=34+test&suburb=&city=test&postcode=90210&state=AZ&country=223&telephone=2145551212&fax=&password=testtest&confirmation=testtest' --compressed --insecure| grep succ
+
 
