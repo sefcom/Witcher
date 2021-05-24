@@ -52,6 +52,8 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/my.cnf && \
   sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
 
+RUN cd /phpsrc/ext/xdebug && phpize && ./configure --enable-xdebug && make -j $(nproc) && make install
+
 # change apache to forking instead of thread
 RUN rm /etc/apache2/mods-enabled/mpm_event.* \
     && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load \
@@ -62,16 +64,27 @@ RUN rm /etc/apache2/mods-enabled/mpm_event.* \
 #RUN cd /tmp && /usr/bin/go-pear && rm /usr/bin/go-pear
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY config/php5.conf /etc/apache2/mods-available/
-#COPY config/php.ini /etc/php/5.5/apache2/php.ini
+
+COPY config/php.ini /etc/php/5.5/apache2/php.ini
+COPY config/enable_cc.php /
+
+#RUN printf '\nzend_extension=/usr/local/lib/php/extensions/no-debug-non-zts-20121212/xdebug.so\nxdebug.mode=coverage\nauto_prepend_file=/enable_cc.php\n\n' >> /etc/php/5.5/cli/php.ini
+#RUN printf '\nzend_extension=/usr/local/lib/php/extensions/no-debug-non-zts-20121212/xdebug.so\nxdebug.mode=coverage\nauto_prepend_file=/enable_cc.php\n\n' >> config/php.ini /etc/php/5.5/apache2/php.ini
+
+#
 #COPY config/php.ini /etc/php/5.5/cli/php.ini
 
 RUN ln -s /etc/apache2/mods-available/php5.conf /etc/apache2/mods-enabled/php5.conf
 #    &&  ln -s /etc/apache2/mods-available/php5.load /etc/apache2/mods-enabled/php5.load
 
+COPY config/py_aff.alias /root/py_aff.alias
+RUN cat /root/py_aff.alias >> /home/wc/.bashrc
+
 RUN a2enmod rewrite
 ENV PHP_UPLOAD_MAX_FILESIZE 10M
 ENV PHP_POST_MAX_SIZE 10M
 RUN rm -fr /var/www/html && ln -s /app /var/www/html
+
 
 
 #RUN chmod +x /run-php-test.sh

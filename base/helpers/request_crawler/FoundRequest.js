@@ -3,7 +3,7 @@ function isDefined(val) {
     return !(typeof val === 'undefined' || val === null);
 }
 
-class FoundRequest  {
+export class FoundRequest  {
     static requestObjectFactory(request, site_url="http://localhost/"){
         return new FoundRequest(request.url(), request.method(), request.postData(), request.headers(), request.resourceType(), site_url);
     }
@@ -177,7 +177,7 @@ class FoundRequest  {
             const targetBoundary = this.getContentType().slice(boundryIndex);
             this._headers["content-type"] = this._headers["content-type"].replace(targetBoundary, WEBKIT_BOUNDRY);
             this._postData = this._postData.replace(targetBoundary, WEBKIT_BOUNDRY);
-            console.log("[WC] DOING REPLACE IN FOUNDREQUESTS::::: ", this._postData);
+            //console.log("[WC] DOING REPLACE IN FOUNDREQUESTS::::: ", this._postData);
         }
         var postArray = [];
         if (this.getContentType().indexOf("application/json") > -1){
@@ -200,7 +200,7 @@ class FoundRequest  {
 
         newPostData = newPostData.slice(1);
         if (newPostData){
-            console.log(`post data => ${newPostData}`);
+            //console.log(`post data => ${newPostData}`);
             this._postData = newPostData;
         }
 
@@ -247,5 +247,5 @@ class FoundRequest  {
     }
 }
 
-module.exports = FoundRequest;
+//module.exports = FoundRequest;
 

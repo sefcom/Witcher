@@ -1,14 +1,15 @@
+#! /usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
-const process = require('process');
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import process from  'process';
 
 const COOKIE_INDEX = 0;
 const GET_INDEX = 1;
 const POST_DATA_INDEX = 2;
 
-const iser = require("./input_sifter2");
+import {AppData, RequestExplorer} from "./input_sifter2.js";
 
 // buildRequest consumes url and returns
 // it does this by spliting the path on / and reversing the results.  Starting with the last value it
@@ -131,18 +132,17 @@ async function explorationWorker(workernum, appData){
     await sleep(50);
 
     if (appData.numRequestsFound() === 0){
-        let re = new iser.RequestExplorer(appData, workernum, BASE_APPDIR);
+        let re = new RequestExplorer(appData, workernum, BASE_APPDIR);
 
         await re.start();
     }
     let nextRequest = appData.getNextRequest();
     while (nextRequest != null){
-        console.log("\x1b[38;5;12m**************** Starting " + appData.currentRequest["url"] + "**************** \x1b[0m");
 
-        let re = new iser.RequestExplorer(appData, workernum, BASE_APPDIR, nextRequest);
+        let re = new RequestExplorer(appData, workernum, BASE_APPDIR, nextRequest);
         await re.start();
 
-        console.log("\x1b[38;5;12m**************** Completed " + appData.currentRequest["url"] + "**************** \x1b[0m");
+        console.log("\x1b[38;5;12m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Completed " + appData.currentRequest.url() + " ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \x1b[0m\n");
         nextRequest = appData.getNextRequest();
     }
 
@@ -176,12 +176,16 @@ function startExploration(workers=1, appData){
     console.log(`DoNeDoNeDoNeDoNeDoNeDoNeDoNe ${currentURLRound} DoNeDoNeDoNeDoNeDoNeDoNeDoNeDoNeDoNeDoNe`);
 }
 
-if (process.argv.length > 3) {
+if (process.argv.length > 4) {
+    var offset = 0;
+    console.log(process.argv)
+    if (process.argv[0] == "timeout"){
+    }
+    var BASE_SITE = process.argv[3];
+    var BASE_APPDIR = process.argv[4];
 
-    var BASE_SITE = process.argv[2];
-    var BASE_APPDIR = process.argv[3];
     var headless = true;
-    if (process.argv.length>4 && process.argv[4] === "--no-headless"){
+    if (process.argv.length>5 && process.argv[5] === "--no-headless"){
 
         headless = false;
     }
@@ -191,7 +195,7 @@ if (process.argv.length > 3) {
     //session_id = get_a_session();
     let doInit = (process.argv.length <= 4);
 
-    let appData = new iser.AppData(doInit, BASE_APPDIR, BASE_SITE, headless);
+    let appData = new AppData(doInit, BASE_APPDIR, BASE_SITE, headless);
 
     if (fs.existsSync(files_fn)){
         let paths_to_test = fs.readFileSync(files_fn,'utf8');
@@ -220,6 +224,7 @@ if (process.argv.length > 3) {
     setTimeout(startExploration,2000, 1, appData);
 
 } else {
+    console.log(process.argv)
     console.log("ERROR, an input file was not provided");
     console.log("Usage:\n\tnode input_sifter.js \x1b[38;5;5mBASE_SITE BASE_APPDIR \x1b[38;5;4m[RUNCNT]\x1b[0m\n\n");
 

@@ -1,0 +1,7 @@
+httpreqr.32: main.cc
+	g++ -m32 -o $@ $^ -I/usr/include/i386-linux-gnu -lcurl
+
+.PHONY: clean
+clean:
+	rm -f httpreqr.32
+

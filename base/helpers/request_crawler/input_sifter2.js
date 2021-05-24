@@ -1,14 +1,14 @@
 //import puppeteer from 'puppeteer';
 
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
 import urlExist from "url-exist"
 import process from 'process';
-import fuzzyset from 'fuzzyset';
+import fuzzySet from 'fuzzyset';
 //const {JSHandle} = require('puppeteer/lib');
-const FoundRequest = require('./FoundRequest');
+import {FoundRequest} from './FoundRequest.js';
 
 const GREEN="\x1b[38;5;2m";
 const ENDCOLOR="\x1b[0m";
@@ -322,7 +322,7 @@ export class AppData{
                     let addResult = this.addRequest(foundRequest);
                     if (addResult){
                         requestsAdded++;
-                        console.log(`[${GREEN}WC${ENDCOLOR}] ADDED ${foundRequest.toString()} `);
+                        console.log(`[${GREEN}WC${ENDCOLOR}] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} `);
                     }
                 }
             }
@@ -363,7 +363,7 @@ export class AppData{
                     postlen = foundRequest.postData().length
                 }
                 requestsAdded++;
-                console.log(`[${GREEN}WC${ENDCOLOR}] ADDED -- ${foundRequest.toString()} ${ENDCOLOR}`);
+                console.log(`[${GREEN}WC${ENDCOLOR}] ${GREEN} ADDED ${ENDCOLOR}-- ${foundRequest.toString()} ${ENDCOLOR}`);
             }
         }
         return requestsAdded;
@@ -505,9 +505,10 @@ function isInteractivePage(response, responseText){
     }
 
     //console.log(responseText.slice(0,500))
-    if (responseText.search(/<body[ >]/) > -1 || responseText.search(/<form[ >]/) > -1){
+    if (responseText.search(/<body[ >]/) > -1 || responseText.search(/<form[ >]/) > -1 || responseText.search(/<frameset[ >]/) > -1 ){
         return true;
     } else {
+        console.log(responseText.slice(0,5000))
         console.log(`[WC]NO HTML tag FOUND anywhere, skipping ${response.url()}`)
         return false;
     }
@@ -656,9 +657,9 @@ export class RequestExplorer {
                     if (wasAdded){
                         requestsAdded++;
                         if (foundRequest.postData()){
-                            console.log(`[${GREEN}WC${ENDCOLOR}] ADDED ${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
+                            console.log(`[${GREEN}WC${ENDCOLOR}] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
                         } else {
-                            console.log(`[${GREEN}WC${ENDCOLOR}]] ADDED ${foundRequest.toString()} \n ${ENDCOLOR}`);
+                            console.log(`[${GREEN}WC${ENDCOLOR}]] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} \n ${ENDCOLOR}`);
                         }
 
                     }
@@ -727,7 +728,7 @@ export class RequestExplorer {
 
         if (typeof childFrames !== 'undefined' && childFrames.length > 0){
             for (const frame of this.page.mainFrame().childFrames()){
-                console.log("ADDING form data from FRAMES.")
+                console.log("[WC] Attempting to ADD form data from FRAMES.")
                 requestsAdded += await this.addFormData(page);
                 requestsAdded += await this.addURLsFromPage(page);
             }
@@ -1140,10 +1141,12 @@ export class RequestExplorer {
             const fillTextElement = (element) => {
                 let rnd =  Math.random()
                 let value = "2";
-                if (rnd > 0.7){
+                if (rnd > 0.6){
                     value = "Witcher";
-                } else if (rnd > 0.3) {
+                } else if (rnd > 0.4) {
                     value =  "127.0.0.1";
+                } else if (rnd > 0.3){
+                    value = "W'tcher";
                 }
                 element.value = value;
                 if (Math.random() > 0.80){
@@ -1195,24 +1198,6 @@ export class RequestExplorer {
                     delay: 20,
                 });
 
-
-                // const fillPassword = (element) => {
-                //     element.value = "1234";
-                //     return element.value;
-                // };
-                // console.log("[WC]",ff, defaultFFEle);
-                // defaultFFEle['input[type="password"]'] = fillPassword;
-                // ff.elementMapTypes = defaultFFEle;
-
-                // const customClicker = gremlins.species.clicker({
-                //     // which mouse event types will be triggered
-                //     clickTypes: ['click'],
-                //     // Click only if parent is has class test-class
-                //     canClick: (element) => {console.log(element); return true},
-                //     // by default, the clicker gremlin shows its action by a red circle
-                //     // overriding showAction() with an empty function makes the gremlin action invisible
-                //     showAction: (x, y) => defaultShowAction,
-                // });
                 for (let i =0; i < 5; i ++){
                     await gremlins.createHorde({
                         species: [gremlins.species.clicker(),ff,gremlins.species.typer(), gremlins.species.scroller()],
@@ -1395,7 +1380,13 @@ export class RequestExplorer {
                 if (now_url !== this_url){
                     //console.log(`[WC] Attempting to reload target page b/c browser changed urls ${this_url !== now_url} '${this.url}' != '${now_url}'`)
                     this.isLoading = true;
-                    let response = await page.goto(this.url, options);
+                    let response = "";
+                    try{
+                        response = await page.goto(this.url, options);
+                    } catch (e2){
+                        console.log(`trying ${this.url} again`)
+                        response =  await page.goto(this.url, options);
+                    }
 
                     let response_good = await this.checkResponse(response, page.url());
 
@@ -1446,12 +1437,12 @@ export class RequestExplorer {
     async initpage(page, url, doingReload=false) {
 
         const test_url = await urlExist(`http://${this.site_ip}/gremlins.min.js`);
-        console.log(`test_url = ${test_url}`);
+        console.log(`test_url = ${test_url}`, `http://${this.site_ip}/gremlins.min.js`);
         if (test_url){
             this.gremlins_url = `http://${this.site_ip}/gremlins.min.js`;
-        } else if (await urlExists(`https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js`)){
+        } else if (await urlExist(`https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js`)){
             this.gremlins_url = 'https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js';
-        } else if (await urlExists(`https://trickel.com/gremlins.min.js`)){
+        } else if (await urlExist(`https://trickel.com/gremlins.min.js`)){
             this.gremlins_url = "https://trickel.com/gremlins.min.js"
         }
 
@@ -1549,7 +1540,7 @@ export class RequestExplorer {
             foundRequest.from = "LoginPage";
             let addResult = this.appData.addRequest(foundRequest);
             if (addResult){
-                console.log(`[${GREEN}WC${ENDCOLOR}] ADDED ${foundRequest.toString()}  ${ENDCOLOR}`);
+                console.log(`[${GREEN}WC${ENDCOLOR}] ${GREEN} ${GREEN} ADDED ${ENDCOLOR}${ENDCOLOR}${foundRequest.toString()}  ${ENDCOLOR}`);
             }
         }
 
@@ -1780,10 +1771,7 @@ export class RequestExplorer {
                     // self.page = await self.browser.newPage();
                     // await self.page.goto(newurl,{waitUntil:"load"});
                     // await self.addCodeExercisersToPage(self.hasGremlinResults());
-
                 }
-
-
                 //self.page = newPage;
             } catch (e) {
                 console.log(`TARGET CHANGED Error: target changed encountered an error`);
@@ -1925,13 +1913,13 @@ export class RequestExplorer {
 
                     if (self.appData.addInterestingRequest(foundRequest) > 0){
                         self.requestsAdded++;
-                        //console.log("[WC] ADDED intercepted request req.url() = ", req.url());
+                        //console.log("[WC] ${GREEN} ${GREEN} ADDED ${ENDCOLOR}${ENDCOLOR}intercepted request req.url() = ", req.url());
                     }
                     // skip if it has a period for nodejs apps
 
                     // let result = self.appData.addRequest(req.url(), req.method(), req.postData(), "interceptedRequest");
                     // if (result){
-                    //     console.log(`\x1b[38;5;2mINTERCEPTED REQUEST and ADDED  #${self.appData.collectedURL} ${req.url()} RF size = ${self.appData.numRequestsFound()}\x1b[0m`);
+                    //     console.log(`\x1b[38;5;2mINTERCEPTED REQUEST and ${GREEN} ${GREEN} ADDED ${ENDCOLOR}${ENDCOLOR} #${self.appData.collectedURL} ${req.url()} RF size = ${self.appData.numRequestsFound()}\x1b[0m`);
                     // } else {
                     //     //console.log(`INTERCEPTED and ABORTED repeat URL ${req.url()}`);
                     // }
@@ -2111,7 +2099,7 @@ export class RequestExplorer {
 
 }
 
-module.exports = {AppData:AppData, RequestExplorer:RequestExplorer};
+//module.exports = {AppData:AppData, RequestExplorer:RequestExplorer};
 
 
 /*

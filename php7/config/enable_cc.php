@@ -1,7 +1,6 @@
 <?php
 
 if (file_exists("/tmp/start_test.dat")) {
-
     $coverage_dpath = "/tmp/coverages/"; //__DIR__;
     if (!is_dir($coverage_dpath)){
         mkdir($coverage_dpath, 0777, true);
@@ -21,24 +20,27 @@ if (file_exists("/tmp/start_test.dat")) {
     {
         global $tarut_name;
         global $coverage_dpath;
-
+	//echo "cleaning up the mess\n";
         $coverageName = $coverage_dpath . $tarut_name . ".cc";
+	$jsonCoverageFPath = $coverageName . ".json";
 
         try {
             xdebug_stop_code_coverage(false);
             $cur_cc_jdata = xdebug_get_code_coverage();
 
             // if prior file exists merge jsons
-            if (file_exists($tarut_name)) {
-                $prior_cc_jdata = json_decode(file_get_contents($tarut_name));
+            if (file_exists($jsonCoverageFPath)) {
+                $prior_cc_jdata = json_decode(file_get_contents($jsonCoverageFPath));
                 $cur_cc_jdata = merge_jsons($prior_cc_jdata, $cur_cc_jdata);
-                $cur_cc_jdata = json_encode($out_jdata);
+                //echo count($cur_cc_jdata) . " \n";
+		
             }
             $cur_cc_jstr = json_encode($cur_cc_jdata); // obj to str
-
+	    
             file_put_contents($coverageName . '.json', $cur_cc_jstr);
 
         } catch (Exception $ex) {
+	    echo "ERROR encountered " . $ex . "\n";
             file_put_contents($coverageName . '.ex', $ex);
         }
     }

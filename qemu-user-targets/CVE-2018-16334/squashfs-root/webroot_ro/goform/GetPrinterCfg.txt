@@ -1,1 +1,0 @@
-{"printerEn":"1", "connectPrinter":"1", "printerName":"XXXXXX"}

@@ -1,5 +1,0 @@
-{
-    "thunderEn": true,
-    "bindStatus": true,
-    "thunderCode": 373737
-}

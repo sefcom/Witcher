@@ -1,6 +1,0 @@
-{"timeType": "sync",
-"timeZone": "12",
-"ntpServer":"baidu.com",
-"timePeriod": "7200",
-"time":"2014-01-12 12:22:30",
-"isSyncInternetTime":"true"}

@@ -1,5 +1,0 @@
-{
-"power":"low",
-"power_5g":"high",
-"homePageLink":"http://www.baidu.com"
-}
