@@ -19,7 +19,13 @@ ENV PROF_FLAGS="-lcgiwrapper -I/wclibs"
 ENV CPATH="/wclibs"
 
 RUN mkdir -p $PHP_INI_DIR/conf.d /phpsrc
-COPY phpsrc$PHP_VER /phpsrc
+COPY repo /phpsrc
+
+COPY witcher-php-install/php-7.3.3-witcher.patch /phpsrc/witcher.patch
+COPY witcher-php-install/zend_witcher_trace.c /phpsrc/Zend/
+COPY witcher-php-install/zend_witcher_trace.h /phpsrc/Zend/
+
+RUN cd /phpsrc && git apply ./witcher.patch && ./buildconf --force
 
 RUN cd /phpsrc &&         \
         ./configure       \
@@ -39,9 +45,9 @@ RUN cd /phpsrc &&         \
 		--with-zlib       \
 	&& printf "\033[36m[Witcher] PHP $PHP_VER Configure completed \033[0m\n"
 
-RUN sed -i 's/CFLAGS_CLEAN = /CFLAGS_CLEAN = -L\/wclibs -lcgiwrapper -I\/wclibs /g' /phpsrc/Makefile \
-    && cd /phpsrc \
-	&& make clean &&  make -j $(nproc) \
+#RUN sed -i 's/CFLAGS_CLEAN = /CFLAGS_CLEAN = -L\/wclibs -lcgiwrapper -I\/wclibs /g' /phpsrc/Makefile \
+RUN cd /phpsrc \
+	&& make clean &&  EXTRA_CFLAGS="-DWITCHER_DEBUG=1" make -j $(nproc) \
 	&& printf "\033[36m[Witcher] PHP $PHP_VER Make completed \033[0m\n"
 
 RUN cd /phpsrc && make install \
@@ -81,6 +87,7 @@ RUN rm -fr /var/www/html && ln -s /app /var/www/html
 #### XDEBUG
 RUN cd /phpsrc/ext/xdebug && phpize && ./configure --enable-xdebug && make -j $(nproc) && make install
 
+COPY --chown=wc:wc  config/phpinfo_test.php /app
 COPY --chown=wc:wc  config/db_test.php /app
 COPY --chown=wc:wc  config/cmd_test.php /app
 COPY --chown=wc:wc  config/run_segfault_test.sh /app

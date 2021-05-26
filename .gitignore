@@ -114,3 +114,7 @@ venv.bak/
 *:*
 
 ShellParser
+
+#ignore cloned repos
+*/repo*
+
