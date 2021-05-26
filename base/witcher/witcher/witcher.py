@@ -15,41 +15,6 @@ import sys
 import os
 import re
 
-filter_list = ["categories.php",
-               "commands.php",
-               "compliancepolicies.php",
-               "compliancepolicyelements.php",
-               "compliancereports.php",
-               "customProperties.php",
-               "deviceConnTemplates.php",
-               "devices.php",
-               "lib/ajaxHandlers/ajaxArchiveFiles.php",
-               "lib/ajaxHandlers/ajaxBackupSyslog.php",
-               "lib/ajaxHandlers/ajaxDeleteAllLoggingFiles.php",
-               "lib/ajaxHandlers/ajaxDeleteTemplate.php",
-               "lib/ajaxHandlers/ajaxGetFileByPath.php",
-               "lib/ajaxHandlers/ajaxGetIpByDevName.php",
-               "lib/ajaxHandlers/ajaxGetLogFile.php",
-               "lib/ajaxHandlers/ajaxGetTemplateForCreate.php",
-               "lib/ajaxHandlers/ajaxLoadTemplateforedit.php",
-               "lib/ajaxHandlers/ajaxReadDirtoArr.php",
-               "lib/crud/categories.crud.php",
-               "lib/crud/commands.crud.php",
-               "lib/crud/compliancepolicies.crud.php",
-               "lib/crud/compliancepolicyelements.crud.php",
-               "lib/crud/compliancereports.crud.php",
-               "lib/crud/customProperties.crud.php",
-               "lib/crud/devices.crud.php",
-               "lib/crud/scheduler.crud.php",
-               "lib/crud/settingsEmail.crud.php",
-               "lib/crud/snippets.crud.php",
-               "lib/crud/userprocess.php",
-               "lib/crud/vendors.crud.php",
-               "scheduler.php",
-               "updater.php",
-               "useradmin.php",
-               "vendors.php"]
-
 class Witcher():
     AFLR, AFLHR, WICH, WICR, WICHR, EXWIC, EXWICH, EXWICHR, DEV = "AFLR", "AFLHR", "WICH", "WICR", "WICHR", "EXWIC", "EXWICH", "EXWICHR", "DEV"
     CONFIGURATIONS = ["AFLR", "AFLHR", "WICH", "WICR", "WICHR", "EXWIC", "EXWICH", "EXWICHR", "DEV"]
@@ -214,17 +179,13 @@ class Witcher():
                     continue
 
                 match_found = False
-                for x in filter_list:
-                    if re.search(x, req["_url"]):
-                        match_found = True
-                        break
-
 
                 is_soapaction = False
                 if match_found:
                     url = urlparse(req["_url"])
                 else:
                     if re.match(r"http://.*/[a-zA-Z0-9_\-\.]+\.(css|js|toff|woff|jpg|gif|png)\?[0-9a-zA-Z ]*", req["_url"]):
+                        print(f"[*] Skipping {req['_url']} b/c static extension")
                         continue
 
                     if "_headers" in req and ("soapaction" in req["_headers"] or "SOAPACTION" in req["_headers"]):
@@ -237,8 +198,8 @@ class Witcher():
                         url = urlparse(req["_url"])
 
                     if req["_method"].upper() == "GET":
-                        if len(url.query) + len(req.get("_postData",[])) < 2 :
-                            print(f"[*] Skipping {reqkey} b/c {url.query} is {len(url.query)} and less than 3")
+                        if len(url.query) + len(req.get("_postData",[])) < 1 :
+                            print(f"[*] Skipping {reqkey} b/c {url.query} is {len(url.query)} and less than 1")
                             continue
 
                     if url.path.endswith("/") and req["_url"].find("/?") > -1:
@@ -251,7 +212,7 @@ class Witcher():
 
 
                     if req["_method"].upper() == "POST":
-                        if len(url.query) + len(req.get("_postData",[])) < 2:
+                        if len(url.query) + len(req.get("_postData",[])) < 1:
                             print(f"[*] Skipping {reqkey} b/c no post Data")
                             continue
 
@@ -263,22 +224,24 @@ class Witcher():
                         target_path = urlunparse(url)
 
                     else:
-                        url = urlparse(req["_url"])
-                        urlpath = url.path
-                        if urlpath.startswith("/"):
-                            urlpath = urlpath[1:]
+                        if self.jconfig.get("afl_inst_interpreter_binary", "").find("php-cgi") > -1:
+                            url = urlparse(req["_url"])
+                            urlpath = url.path
+                            if urlpath.startswith("/"):
+                                urlpath = urlpath[1:]
 
-                        target_path = os.path.join(self.appdir, urlpath)
+                            target_path = os.path.join(self.appdir, urlpath)
+                            print(f"target_path={target_path}")
+                            if not os.path.exists(target_path):
+                                target_path = Witcher.find_path(urlpath, last_rootpath)
+                                last_rootpath.add(target_path.replace(urlpath,""))
 
-                        if not os.path.exists(target_path):
-                            target_path = Witcher.find_path(urlpath, last_rootpath)
-                            last_rootpath.add(target_path.replace(urlpath,""))
-
-
-                if self.jconfig.get("afl_inst_interpreter_binary","").find("php-cgi") > -1:
-                    if url.path.find(".php") == -1 and not url.path.endswith("/"):
-                        print(f"Skipping {url} because php-cgi being used to evaluate but request url is for non php item")
-                        continue
+                            if url.path.find(".php") == -1 and not url.path.endswith("/"):
+                                print(
+                                    f"Skipping {url} because php-cgi being used to evaluate but request url is for non php item target_path={target_path}")
+                                continue
+                        else:
+                            target_path = req['_url']
 
 
                 method = req.get("_method", "GET").upper()
@@ -286,13 +249,15 @@ class Witcher():
                     print(f"[WC] Skipping {req['_url']} b/c of response status during crawling")
                     continue
 
-
-                if target_path.find("HNAP1/Login") > -1:
-                    continue
+                if target_path:
+                    if target_path.find("HNAP1/Login") > -1:
+                        continue
+                else:
+                    target_path = req["_url"]
 
                 # if request has user input, this only checks if query params or post data is passed in
-                if req["_url"].find("?") or req["_url"].find("&") or len(req["_postData"]) > 2:
-                    print(f" Fuzzing #{fcnt} at {target_path}")
+                if req["_url"].find("?") or req["_url"].find("&") or len(req["_postData"]) > 0:
+                    print(f" Fuzzing #{fcnt} at '{target_path}'")
                     fcnt += 1
                     if not self.single_target or target_path.find(self.single_target) > -1:
                         if target_path in targets_added:

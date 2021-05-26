@@ -21,12 +21,15 @@ for b in "${builds[@]}"; do
     if [[ ! -f ${dockerfile_path} ]]; then
         dockerfile_path=${DIR}/../${b}/Dockerfile
     fi
+    if [[ $docker_img_name == "witcher" ]]; then
+        puppeteer_img_name="puppeteer1337/witcher-base"
+    fi
     context="${DIR}/../${b}"
     printf "\033[34mBuilding ::> ${docker_img_name} using Dockerfile ${dockerfile_path} and context ${context}\033[0m\n"
     echo 'docker build -t '${docker_img_name}' -f "'${dockerfile_path}'" "'${context}'"'
     if docker build -t ${docker_img_name} -f "${dockerfile_path}" "${context}"; then
-        printf "\033[32mSucessfully built ${docker_img_name} using Dockerfile ${dockerfile_path} and context ${context}\033[0m\n"
         docker tag ${docker_img_name} ${puppeteer_img_name}
+        printf "\033[32mSucessfully built ${puppeteer_img_name} using Dockerfile ${dockerfile_path} and context ${context}\033[0m\n"
     else
         printf "\033[31mFailed to build ${docker_img_name} using Dockerfile ${dockerfile_path} and context ${context}\033[0m\n"
         exit 191

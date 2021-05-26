@@ -1,4 +1,5 @@
-FROM witcher
+FROM puppeteer1337/witcher-base
+
 MAINTAINER tricke
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - && \
@@ -27,6 +28,11 @@ RUN cp /config/mysql-connector-java-8.0.21.jar /opt/tomcat/base/lib/ && \
     cp /config/init-*.sh / && chmod +x /init-*.sh && /init-tomcats.sh && \
     cp /config/supervisord.conf /etc/supervisord.conf && \
     printf "\nskip_ssl\n# disable_ssl\n" >> /etc/mysql/mysql.cnf
+
+COPY config/py_aff.alias /root/py_aff.alias
+RUN cat /root/py_aff.alias >> /home/wc/.bashrc && printf "\n\n" >> /home/wc/.bashrc
+
+COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /bin/dash
 
 EXPOSE 14000
 #CMD /opt/tomcat/port_14000/bin/catalina.sh start && bash

@@ -20,7 +20,7 @@
   "base_url": "http://localhost/",
   "afl_path": "/afl",
   "ld_library_path":"/wclibs",
-  "afl_preload":"/wclibs/libcgiwrapper.so",
+  "afl_preload":"/wclibs/lib_db_fault_escalator.so",
   "number_of_refuzzes": 3,
   "timeout" : 28800,
   "script_skip_list": ["test_5"],

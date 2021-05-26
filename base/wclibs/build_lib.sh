@@ -48,5 +48,5 @@ elif [[ "$1" == "--clang" ]]; then
     fi
 
 else
-    gcc -c -Wall -fpic cgiwrapper.c && gcc -shared -o libcgiwrapper.so cgiwrapper.o -ldl && sudo cp libcgiwrapper.so /lib/libcgiwrapper.so && echo 'SUCCESS!!'
+    gcc -c -Wall -fpic cgiwrapper.c && gcc -shared -o lib_db_fault_escalator.so cgiwrapper.o -ldl && sudo cp lib_db_fault_escalator.so /lib/lib_db_fault_escalator.so && echo 'SUCCESS!!'
 fi

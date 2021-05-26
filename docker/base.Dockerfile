@@ -144,7 +144,13 @@ COPY --chown=wc:wc witcher /witcher/
 RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  cd /witcher && pip install -e ."
 
 RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate && pip install ipython "
+
 COPY --chown=wc:wc wclibs /wclibs
+
+RUN cd /wclibs && gcc -c -Wall -fpic db_fault_escalator.c && gcc -shared -o lib_db_fault_escalator.so db_fault_escalator.o -ldl
+
+RUN rm -f /wclibs/libcgiwrapper.so && ln -s /wclibs/lib_db_fault_escalator.so /wclibs/libcgiwrapper.so && ln -s /wclibs/lib_db_fault_escalator.so /lib/libcgiwrapper.so
+
 #COPY --chown=wc:wc bins /bins
 
 COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /crashing_dash

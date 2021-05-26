@@ -1442,11 +1442,13 @@ EXP_ST void setup_shm(void) {
 
 
   char *port = getenv("TARGET_PORT");
+  shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
   if (port){
+  	  printf("target port: %s \n", port);
       int port_id = atoi(port);
       shm_id = shmget(port_id , MAP_SIZE, IPC_CREAT | 0666);
   } else {
-      shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0666);
+      shm_id = shmget(shm_id, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0666);
   }
 
   if (shm_id < 0) PFATAL("shmget() failed");

@@ -134,7 +134,7 @@ RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate &&  cd /witche
 
 RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate && pip install ipython archr "
 COPY --chown=wc:wc base/wclibs /wclibs
-COPY base/wclibs/libcgiwrapper.so /lib
+COPY base/wclibs/lib_db_fault_escalator.so /lib
 #COPY --chown=wc:wc bins /bins
 
 #COPY --chown=wc:wc httpreqr /httpreqr
@@ -153,7 +153,7 @@ RUN mkdir -p /test && chown wc:wc /test
 CMD /netconf.sh && /usr/bin/supervisord
 
 
-RUN cp /wclibs/libcgiwrapper.so /lib
+RUN cp /wclibs/lib_db_fault_escalator.so /lib
 
 ARG ARG_PHP_VER=7
 ENV PHP_VER=${ARG_PHP_VER}

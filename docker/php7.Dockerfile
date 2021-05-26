@@ -1,5 +1,5 @@
 # webcam:php7
-FROM witcher
+FROM puppeteer1337/witcher-base
 MAINTAINER tricke
 
 # PHP 7.3 installation
@@ -9,7 +9,8 @@ MAINTAINER tricke
 #RUN apt-fast install -y php7.3-xdebug  libapache2-mod-php7.3 php7.3-mysql php7.3-apcu php7.1-mcrypt \
 #                        php7.3-gd php7.3-xml php7.3-mbstring php7.3-gettext php7.3-zip php7.3-curl \
 #                        php7.3-gmp php7.3-cli
-RUN cp /wclibs/libcgiwrapper.so /lib
+
+#RUN cp /wclibs/libcgiwrapper.so /lib
 
 ARG ARG_PHP_VER=7
 ENV PHP_VER=${ARG_PHP_VER}
