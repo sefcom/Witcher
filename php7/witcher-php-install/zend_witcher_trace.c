@@ -23,24 +23,7 @@ void dbg_printf(const char *fmt, ...);
 #define debug_print(fmt, ...)
 #endif
 
-struct rollback_entry {
-    char* varname;
-    bool rolledback;
-    int matchcnt;
-    int bitmapLoc;
-    struct rollback_entry *next;
-};
-
-struct test_process_info {
-    int initialized;
-    int afl_id;
-    int port;
-    int reqr_process_id;
-    int process_id;
-    char error_type[20]; /* SQL, Command */
-    char error_msg[100];
-    bool capture;
-};
+/***** END new for HTTP direct ********/
 
 #define MAPSIZE 65536
 #define TRACE_SIZE 128*(1024*1024) // X * megabytes
@@ -51,6 +34,8 @@ struct test_process_info {
 
 static int last = 0;
 static int op = 0;
+
+static int MAX_CMDLINE_LEN=128*1024;
 
 static unsigned char *afl_area_ptr = NULL;
 
@@ -73,6 +58,8 @@ bool wc_extra_instr = true;
 static bool start_tracing = false;
 
 static char* env_vars[2] = { "HTTP_COOKIE","QUERY_STRING"};
+char *login_cookie = NULL, *mandatory_cookie = NULL, *preset_cookie = NULL;
+char *witcher_print_op = NULL;
 
 char *main_filename;
 char session_id[40];
@@ -84,8 +71,6 @@ int trace_index = 0;
 int pipefds[2];
 
 int top_pid=0;
-
-struct rollback_entry *rollback_ll[3];
 
 void dbg_printf(const char *fmt, ...)
 {
@@ -248,65 +233,34 @@ char* format_to_json(char *str){
 /**
  * sets up the cgi environment for a cgi request
  */
-void setup_cgi_env(){
+void prefork_cgi_setup(){
     debug_print(("[\e[32mWitcher\e[0m] Starting SETUP_CGI_ENV  \n"));
-    setenv("DOCUMENT_ROOT","/app", 1); //might be important if your cgi read/writes there
+    char *tmp = getenv("DOCUMENT_ROOT");
+    if (!tmp){
+        setenv("DOCUMENT_ROOT","/app", 1); //might be important if your cgi read/writes there
+    }
     setenv("HTTP_REDIRECT_STATUS","1",1);
 
     setenv("HTTP_ACCEPT", "*/*", 1);
     setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
+
     setenv("PATH", "/usr/bin:/tmp:/app", 1); //HTTP URL PATH
-    setenv("REQUEST_METHOD", "POST", 1); //Usually GET or POST
+    tmp = getenv("REQUEST_METHOD");
+    if (!tmp){
+        setenv("REQUEST_METHOD", "POST", 1); //Usually GET or POST
+    }
     setenv("REMOTE_ADDR","127.0.0.1",1);
 
     setenv("CONTENT_TYPE","application/x-www-form-urlencoded",1);
     setenv("REQUEST_URI", "SCRIPT",1);
-    // strict is set for the modified /bin/dash
-#ifdef WITCHER_DEBUG
-    FILE *logfile = fopen ("/tmp/wrapper.log","a+");
-    fprintf (logfile, "----Start----\n");
-    //printf("starting\n");
-#endif
-    static int MAX_CMDLINE_LEN=128*1024;
+    login_cookie = getenv("LOGIN_COOKIE");
 
-    static int   num_env_vars = sizeof(env_vars) / sizeof(char*);
+    char* preset_cookie = (char *) malloc(MAX_CMDLINE_LEN);
+    memset(preset_cookie, 0, MAX_CMDLINE_LEN);
 
-    char  in_buf[MAX_CMDLINE_LEN];
-    if (read(0, in_buf, MAX_CMDLINE_LEN - 2) < 0);
-
-    int zerocnt = 0;
-    for (int cnt=0;cnt<MAX_CMDLINE_LEN;cnt++){
-        if (in_buf[cnt] == 0){
-            zerocnt++;
-        }
-        if (zerocnt == 3){
-            break;
-        }
-    }
-
-    pipe(pipefds);
-
-    dup2(pipefds[0], STDIN_FILENO);
-    //close(STDIN_FILENO);
-
-    int real_content_length = 0;
-    char* saved_ptr = (char *) malloc(MAX_CMDLINE_LEN);
-    char* ptr = in_buf;
-    int   rc  = 0;
-    char* cwd;
-    int errnum;
-    //struct passwd *p = getpwuid(getuid());  // Check for NULL!
-    long size = pathconf(".", _PC_PATH_MAX);
-    char* dirbuf = (char *)malloc((size_t)size);
-
-    // loop through the strings read via stdin and break at each \x00
-    // Cookies, Query String, Post (via re-writting to stdin)
-    char* cookie = (char *) malloc(MAX_CMDLINE_LEN);
-    memset(cookie, 0, MAX_CMDLINE_LEN);
-    char* login_cookie = getenv("LOGIN_COOKIE");
     if (login_cookie){
-        strcat(cookie, login_cookie);
-        setenv(env_vars[0], cookie, 1);
+        strcat(preset_cookie, login_cookie);
+        setenv(env_vars[0], login_cookie, 1);
         if (!strchr(login_cookie,';')){
             strcat(login_cookie,";");
         }
@@ -340,32 +294,80 @@ void setup_cgi_env(){
             }
             name = strtok(NULL, ";=");
         }
-        debug_print(("[\e[32mWitcher\e[0m] LOGIN ::> %s\n", cookie));
+        debug_print(("[\e[32mWitcher\e[0m] LOGIN ::> %s\n", login_cookie));
     }
-    char* mandatory_cookie = getenv("MANDATORY_COOKIE");
+    mandatory_cookie = getenv("MANDATORY_COOKIE");
     if (mandatory_cookie && strlen(mandatory_cookie) > 0){
-        strcat(cookie, "; ");
-        strcat(cookie, mandatory_cookie);
-        debug_print(("[\e[32mWitcher\e[0m] MANDATORY COOKIE = %s\n", cookie));
+        strcat(preset_cookie, "; ");
+        strcat(preset_cookie, mandatory_cookie);
+        debug_print(("[\e[32mWitcher\e[0m] MANDATORY COOKIE = %s\n", preset_cookie));
     }
+    witcher_print_op = getenv("WITCHER_PRINT_OP");
+}
+void setup_cgi_env(){
+
+    // strict is set for the modified /bin/dash
+#ifdef WITCHER_DEBUG
+    FILE *logfile = fopen ("/tmp/wrapper.log","a+");
+    fprintf (logfile, "----Start----\n");
+    //printf("starting\n");
+#endif
+
+
+    static int   num_env_vars = sizeof(env_vars) / sizeof(char*);
+
+    char  in_buf[MAX_CMDLINE_LEN];
+    memset(in_buf, 0, MAX_CMDLINE_LEN);
+    size_t bytes_read = read(0, in_buf, MAX_CMDLINE_LEN - 2);
+
+    int zerocnt = 0;
+    for (int cnt=0;cnt<MAX_CMDLINE_LEN;cnt++){
+        if (in_buf[cnt] == 0){
+            zerocnt++;
+        }
+        if (zerocnt == 3){
+            break;
+        }
+    }
+
+    pipe(pipefds);
+
+    dup2(pipefds[0], STDIN_FILENO);
+    //close(STDIN_FILENO);
+
+    int real_content_length = 0;
+    char* saved_ptr = (char *) malloc(MAX_CMDLINE_LEN);
+    char* ptr = in_buf;
+    int   rc  = 0;
+    char* cwd;
+    int errnum;
+    //struct passwd *p = getpwuid(getuid());  // Check for NULL!
+    long size = pathconf(".", _PC_PATH_MAX);
+    char* dirbuf = (char *)malloc((size_t)size);
+    size_t bytes_used = 0;
+
+    // loop through the strings read via stdin and break at each \x00
+    // Cookies, Query String, Post (via re-writting to stdin)
+    char* cookie = (char *) malloc(MAX_CMDLINE_LEN);
+    memset(cookie, 0, MAX_CMDLINE_LEN);
+    if (preset_cookie){
+        strcat(cookie, preset_cookie);
+    }
+
     setenv(env_vars[0], cookie, 1);
     char* post_data = (char *) malloc(MAX_CMDLINE_LEN);
     memset(post_data, 0, MAX_CMDLINE_LEN);
     char* query_string = (char *) malloc(MAX_CMDLINE_LEN);
     memset(query_string, 0, MAX_CMDLINE_LEN);
 
-    char* mandatory_get = getenv("MANDATORY_GET");
-    if (mandatory_get && strlen(mandatory_get) > 0){
-        strcat(query_string, mandatory_get);
-        debug_print(("\n[WC] MANDATORY GET = %s\n", query_string));
-    }
     setenv(env_vars[1], query_string, 1);
 
     while (!*ptr){
+        bytes_used++;
         ptr++;
         rc++;
     }
-    while (*ptr) {
+    while (*ptr || bytes_used < bytes_read) {
         memcpy(saved_ptr, ptr, strlen(ptr)+1);
         if (rc < 3){
             load_variables(saved_ptr, rc);
@@ -415,23 +417,26 @@ void setup_cgi_env(){
         }
 
         rc++;
-        while (*ptr)
+        while (*ptr){
             ptr++;
+            bytes_used++;
+        }
         ptr++;
+        bytes_used++;
 
     }
-    debug_print(("[\e[32mWitcher\e[0m] VARs (%d) sent in \n", num_env_vars));
+    debug_print(("[\e[32mWitcher\e[0m] %lib read / %lib used \n", bytes_read, bytes_used));
     if (afl_area_ptr != NULL) {
         afl_area_ptr[0xffdd]=1;
     }
     if (cookie){
-        debug_print(("  %-14s = \e[33m %s\e[0m\n", "COOKIES", cookie));
+        debug_print(("\t%-14s = \e[33m %s\e[0m\n", "COOKIES", cookie));
     }
     if (query_string){
-        debug_print(("  %-14s = \e[33m %s\e[0m\n", "QUERY_STRING", query_string));
+        debug_print(("\t%-14s = \e[33m %s\e[0m\n", "QUERY_STRING", query_string));
     }
     if (post_data){
-        debug_print(("  %-9s (%s) = \e[33m %s\e[0m\n", "POST_DATA", getenv("CONTENT_LENGTH"), post_data ));
+        debug_print(("\t%-9s (%s) = \e[33m %s\e[0m\n", "POST_DATA", getenv("CONTENT_LENGTH"), post_data ));
     }
     debug_print(("\n"));
 
@@ -449,7 +454,20 @@ void setup_cgi_env(){
     fflush(stderr);
 
 }
+/************************************************************************************************/
+/********************************** HTTP direct **************************************************/
+/************************************************************************************************/
+void afl_error_handler(int nSignum) {
+    FILE *elog = fopen("/tmp/witcher.log","a+");
+    if (elog){
+        fprintf(elog, "\033[36m[Witcher] detected error in child but AFL_META_INFO_ID is not set. !!!\033[0m\n");
+        fclose(elog);
+    }
+}
 
+/************************************************************************************************/
+/********************************** END HTTP direct **************************************************/
+/************************************************************************************************/
 
 
 unsigned char *cgi_get_shm_mem(char * ch_shm_id) {
@@ -491,312 +509,28 @@ void witcher_cgi_trace_init(char * ch_shm_id) {
         debug_print((" \e[32m WC Extra Instrumentation ENABLED \e[0m\n"));
     }
     top_pid = getpid();
-    cgi_get_shm_mem(ch_shm_id);
+    cgi_get_shm_mem(SHM_ENV_VAR);
 
     char *id_str = getenv(SHM_ENV_VAR);
-
+    prefork_cgi_setup();
     if (id_str) {
         afl_forkserver();
         debug_print(("[\e[32mWitcher\e[0m] Returning with pid %d \n\n", getpid()));
-        fflush(stdout);
-        int trace_sum = 0;
-        int slot_cnt = 0;
-        for (int x=0;x<MAPSIZE;x++){
-            trace_sum += afl_area_ptr[x]*x;
-            if (afl_area_ptr[x] > 0) {
-                slot_cnt++;
-            }
-        }
-        debug_print(("[Witcher] Trace_sum=%d, Slot_cnt=%d \n", trace_sum, slot_cnt));
-        fflush(stdout);
     }
-
+    // setup cgi must be after fork
     setup_cgi_env();
 
-    fflush(stdout);
+    //fflush(stdout);
 }
 
-void add_var_to_rollback(char* varname, int matchcnt, int bitmapLoc, int which){
-
-    struct rollback_entry * v = malloc(sizeof(struct rollback_entry));
-
-    v->varname      = strdup(varname);
-    v->rolledback = false;
-    v->matchcnt = matchcnt;
-    v->bitmapLoc = bitmapLoc;
-
-    if (rollback_ll[which]){
-        v->next = rollback_ll[which];
-        rollback_ll[which]= v;
-    } else {
-        rollback_ll[which] = v;
-        v->next = NULL;
-    }
-
-}
-
-void do_rollback(char* varname, int var_type){
-    struct rollback_entry *re_search = rollback_ll[var_type];
-
-    while (re_search){
-
-        if (re_search->rolledback == false && strcmp(re_search->varname, varname) == 0){
-            afl_area_ptr[re_search->bitmapLoc]--;
-            for (int i=1; i < re_search->matchcnt; i++){
-                afl_area_ptr[re_search->bitmapLoc + i] = 0;
-            }
-            re_search->rolledback = true;
-        }
-
-        re_search = re_search->next;
-
-    }
-
-}
-
-void var_diff_report(char *var1, int bitmapLoc, int var_type){
-
-    if (var1 != NULL){
-
-        int in_var_len = strlen(var1);
-        int comp_len;
-        int best_change = 0, best_change_pointer =-1;
-        debug_print(("[Witcher] Starting var matcher, see /tmp/match.dat \n"));
-        for (int i =0; i < variables_ptr[var_type]; i++){
-            if (variables_used[var_type][i] == 3){
-                continue;
-            }
-            comp_len = strlen(variables[var_type][i]);
-            // take the bigger of the two
-            comp_len = (comp_len > in_var_len) ? comp_len : in_var_len;
-            if (strncmp(variables[var_type][i], var1, comp_len) == 0){
-#ifdef WITCHER_DEBUG
-                FILE *logfile2 = fopen("/tmp/match.dat","a+");
-                fprintf(logfile2,"TOTAL MATCH '%s' '%s' \n ", var1, variables[var_type][i]);
-                fflush(logfile2);
-                fclose(logfile2);
-#endif
-                for (int x=0; x <= comp_len;x++){
-                    afl_area_ptr[bitmapLoc+x]=1;
-                }
-                if (variables_used[var_type][i] == 1){
-                    do_rollback(variables[var_type][i], var_type);
-                }
-                variables_used[var_type][i]=3;
-                return;
-            } else {
-                if (variables_used[var_type][i] == 1){  // already used for a partial match, if already used for full match then if above catches
-                    continue;
-                }
-                int change = value_diff_changes(var1, variables[var_type][i]);
-                if (change > best_change){
-                    best_change = change;
-                    best_change_pointer = i;
-                }
-
-            }
-        }
-        if (best_change_pointer > -1){
-#ifdef WITCHER_DEBUG
-            FILE *logfile2 = fopen("/tmp/match.dat","a+");
-            fprintf(logfile2,"BEST MATCH being used '%s' '%s' %d \n ", var1, variables[best_change_pointer], best_change);
-            //fprintf(logfile2,"\tAFTER match=%d afl=%d \n", matchcnt, afl_area_ptr[bitmapLoc]);
-            fflush(logfile2);
-            fclose(logfile2);
-#endif
-            add_var_to_rollback(variables[var_type][best_change_pointer], best_change, bitmapLoc, var_type);
-            variables_used[var_type][best_change_pointer] = 1;
-
-            value_diff_report(var1, variables[var_type][best_change_pointer], bitmapLoc);
-        }
-    }
-}
-
-
-int value_diff_changes(char *var1, char *var2){
-    if (var1 == NULL || var2 == NULL){
-        return 0;
-    }
-    int changes = 0;
-    int len1 = strlen(var1);
-    int len2 = strlen(var2);
-
-    if (len1 == len2){
-        changes++;
-    }
-
-    if (len1 < 2 || len2 < 2){
-        return changes;
-    }
-
-    int checklen = (len1 < len2) ? len1 : len2;
-    int matchcnt = 0;
-    for (int x=0; x<checklen;x++){
-        if (var1[x] == var2[x]){
-            matchcnt += 1;
-        } else {
-            break;
-        }
-    }
-    changes += matchcnt;
-    return changes;
-
-}
-
-void value_diff_report(char *var1, char *var2, int bitmapLoc){
-    if (var1 == NULL || var2 == NULL){
-        return;
-    }
-    int changes = 0;
-    int len1 = strlen(var1);
-    int len2 = strlen(var2);
-
-    if (len1 == len2){
-        afl_area_ptr[bitmapLoc]++;
-    }
-
-    if (len1 < 2 || len2 < 2){
-        return;
-    }
-
-    int checklen = (len1 < len2) ? len1 : len2;
-    int matchcnt = 0;
-    for (int x=0; x<checklen;x++){
-        if (var1[x] == var2[x]){
-            matchcnt += 1;
-        } else {
-            break;
-        }
-    }
-
-    if (matchcnt > 0){
-        //afl_area_ptr[bitmapLoc] += (int) log2(matchcnt);
-        // len check goes into first bitmapLoc, +1 for the rest.
-
-        for (int x=1; x <= matchcnt; x++){
-            afl_area_ptr[bitmapLoc+x] = 1;
-        }
-        if (getenv("WITCHER_PRINT_OP")){
-            char logfn[50];
-            sprintf(logfn, "/tmp/trace-%s.dat", getenv("WITCHER_PRINT_OP"));
-            FILE *logfile2 = fopen("/tmp/match.dat","a+");
-            fprintf(logfile2,"MATCH found '%s' '%s' match=%d bm=%d afl=%d afl+1=%d afl+2=%d afl+3=%d \tpid=%d\n ", var1, var2, matchcnt, bitmapLoc, afl_area_ptr[bitmapLoc], afl_area_ptr[bitmapLoc+1], afl_area_ptr[bitmapLoc+2],afl_area_ptr[bitmapLoc+3], getpid());
-            fflush(logfile2);
-            fclose(logfile2);
-        }
-
-    }
-}
-
-void var_report(char *var1, int bitmapLoc){
-    if (var1 != NULL){
-        int in_var_len = strlen(var1);
-        int comp_len;
-        for (int var_type=0; var_type< 3; var_type++){
-            for (int i =0; i < variables_ptr[var_type]; i++){
-                if (variables_used[var_type][i] > 0){
-                    continue;
-                }
-                comp_len = strlen(variables[var_type][i]);
-                // take the bigger of the two
-                comp_len = (comp_len > in_var_len) ? comp_len : in_var_len;
-
-                if (strncmp(variables[var_type][i], var1, comp_len) == 0){
-                    afl_area_ptr[bitmapLoc]++;
-                    variables_used[var_type][i]=1;
-                }
-            }
-        }
-
-    }
-}
-void witcher_cgi_trace_log_op2(int lineno, int opcode, char *var1, char *var2);
-
-void witcher_cgi_trace_log_op(int lineno, int opcode, char *var1){
-    witcher_cgi_trace_log_op2(lineno, opcode, var1,0);
-}
-
-void witcher_cgi_trace_log_op2(int lineno, int opcode, char *var1, char *var2)
-{
-
-    //static size_t last_len = 0;
-    if (start_tracing) {
-
-        op = (lineno << 8) | opcode ; //opcode; //| (lineno << 8);
-
-        if (last != 0) {
-            int bitmapLoc = (op ^ last) % MAPSIZE;
-
-            // turned off to disable afl code tracing
-            afl_area_ptr[bitmapLoc]++;
-            if (wc_extra_instr && getenv(SHM_ENV_VAR) && opcode < 100){
-
-                fflush(stdout);
-                if (nextVar2_is_a_var > -1) {
-                    var_diff_report(var1, (bitmapLoc*13) % MAPSIZE, nextVar2_is_a_var);
-                } else {
-                    var_report(var1, (bitmapLoc*11) % MAPSIZE);
-                    var_report(var2, (bitmapLoc*13) % MAPSIZE);
-                    value_diff_report(var1, var2, (bitmapLoc*17) % MAPSIZE);
-                }
-            }
-
-            char *cook = getenv("LOGIN_COOKIE");
-            if (cook && getenv("WITCHER_PRINT_OP")){
-                char logfn[50];
-                sprintf(logfn, "/tmp/trace-%s.dat", getenv("WITCHER_PRINT_OP"));
-
-                //sprintf(logfn, "/tmp/trace",getppid());
-                FILE *tout_fp = fopen("/tmp/match.dat","a");
-                setbuf(tout_fp, NULL);
-                for (int x=0; x < MAPSIZE;x++){
-                    if (afl_area_ptr[x] > 0){
-                        fprintf(tout_fp, "%04x ", x);
-                    }
-                }
-                fprintf(tout_fp, "\n");
-                for (int x=0; x < MAPSIZE;x++){
-                    if (afl_area_ptr[x] > 0){
-                        fprintf(tout_fp, " %02x  ", afl_area_ptr[x]);
-                    }
-                }
-                fprintf(tout_fp, "\n");
-                fclose(tout_fp);
-            }
-
-        }
-
-
-        if (var1 != NULL && getenv(SHM_ENV_VAR) && opcode < 100){
-            fflush(stdout);
-            if (strcmp(var1, "_GET") == 0 ){
-                nextVar2_is_a_var = 1;
-            } else if (strcmp(var1, "_POST") == 0){
-                nextVar2_is_a_var = 2;
-            } else {
-                nextVar2_is_a_var = -1;
-            }
-        } else {
-            nextVar2_is_a_var = -1;
-        }
-        if (trace_index < TRACE_SIZE){
-
-            trace[trace_index++] = op;
-        }
-        last = op;
-
-    }
-
-
-}
 
 void witcher_cgi_trace_finish()
 {
     start_tracing = false;
 
-    if (getenv("WITCHER_PRINT_OP")){
+    if (witcher_print_op){
         char logfn[50];
-        sprintf(logfn, "/tmp/trace-%s.dat", getenv("WITCHER_PRINT_OP"));
+        sprintf(logfn, "/tmp/trace-%s.dat", witcher_print_op);
         FILE *tout_fp = fopen(logfn,"a");
         setbuf(tout_fp, NULL);
         int cnt = 0;
@@ -826,45 +560,12 @@ void witcher_cgi_trace_finish()
         fclose(tout_fp);
     }
 
-    for(int i =0; i < 3; i++){
-        struct rollback_entry *tmp;
-        while (rollback_ll[i]){
-            free(rollback_ll[i]->varname);
-            tmp = rollback_ll[i];
-            rollback_ll[i] = rollback_ll[i]->next;
-            free(tmp);
-        }
-
-    }
-
     op = 0;
     last = 0;
     trace_index = 0;
 
 }
 
-
-
-zval* get_zval(zend_execute_data *execute_data, const zend_op *opline, zend_uchar op_type, const znode_op *node)
-{
-	zval *ret;
-    switch (op_type) {
-		case IS_CONST: // 1
-			ret = RT_CONSTANT(opline, *node);
-			break;
-		case IS_TMP_VAR: // 2
-		case IS_VAR:   // 4
-			ret = EX_VAR(node->var);
-			break;
-		case IS_CV: // 8
-			ret = EX_VAR(node->var);
-			break;
-		default:
-			ret = NULL;
-			break;
-	}
-	return ret;
-}
 void vld_start_trace(){
     if (getenv("WITCHER_PRINT_OP")){
         char tracefn[50];
@@ -872,47 +573,33 @@ void vld_start_trace(){
         FILE *ofile = fopen(tracefn, "w");
         fclose(ofile);
     }
-
 }
 
 void vld_external_trace(zend_execute_data *execute_data, const zend_op *opline){
-    zval *wc_op1, *wc_op2, *wc_res;
     FILE *ofile = NULL;
-    const char *opname = zend_get_opcode_name(opline->opcode);
-    if (getenv("WITCHER_PRINT_OP")){
+
+    if (witcher_print_op){
+        const char *opname = zend_get_opcode_name(opline->opcode);
         char tracefn[50];
-        sprintf(tracefn, "/tmp/trace-%s.dat", getenv("WITCHER_PRINT_OP"));
+        sprintf(tracefn, "/tmp/trace-%s.dat", witcher_print_op);
         ofile = fopen(tracefn, "a");
         debug_print(("%d] %s (%d)   %d    %d \n",opline->lineno, opname, opline->opcode, opline->op1_type, opline->op2_type));
         fprintf(ofile, "%d] %s (%d)   %d    %d \n",opline->lineno, opname, opline->opcode, opline->op1_type, opline->op2_type);
     }
 
-    wc_op1 = get_zval(execute_data, opline, opline->op1_type, &opline->op1);
-    wc_op2 = get_zval(execute_data, opline, opline->op2_type, &opline->op2);
+    if (start_tracing) {
 
-    if (wc_op1 != NULL && wc_op2 != NULL && Z_TYPE_P(wc_op1) == IS_STRING && Z_TYPE_P(wc_op2) == IS_STRING) {
-        witcher_cgi_trace_log_op2(opline->lineno, opline->opcode, Z_STR_P(wc_op1)->val, Z_STR_P(wc_op2)->val);
-        if (getenv("WITCHER_PRINT_OP")){
-          debug_print(("\tBOTH => %s and %s\n", Z_STR_P(wc_op1)->val, Z_STR_P(wc_op2)->val));
-          fprintf(ofile, "\tBOTH => %s and %s\n", Z_STR_P(wc_op1)->val, Z_STR_P(wc_op2)->val);
+        op = (opline->lineno << 8) | opline->opcode ; //opcode; //| (lineno << 8);
 
+        if (last != 0) {
+            int bitmapLoc = (op ^ last) % MAPSIZE;
+
+            // turned off to disable afl code tracing
+            afl_area_ptr[bitmapLoc]++;
         }
-    } else if (wc_op1 != NULL && Z_TYPE_P(wc_op1) == IS_STRING) {
-        if (getenv("WITCHER_PRINT_OP")){
-          debug_print(("\tFirst: %s  \n", Z_STR_P(wc_op1)->val));
-          fprintf(ofile, "\tFirst: %s  \n", Z_STR_P(wc_op1)->val);
-        }
-        //
-        witcher_cgi_trace_log_op(opline->lineno, opline->opcode, Z_STR_P(wc_op1)->val);
-    } else if (wc_op2 != NULL && Z_TYPE_P(wc_op2) == IS_STRING) {
-      if (getenv("WITCHER_PRINT_OP")){
-        debug_print(("\t\tSecond: %s  \n", Z_STR_P(wc_op2)->val));
-        fprintf(ofile, "\t\tSecond: %s  \n", Z_STR_P(wc_op2)->val);
-      }
-        witcher_cgi_trace_log_op(opline->lineno, opline->opcode, Z_STR_P(wc_op2)->val);
-    }  else {
-        witcher_cgi_trace_log_op(opline->lineno, opline->opcode, 0);
     }
+    last = op;
+
     if (ofile){
         fflush(ofile);
         fclose(ofile);

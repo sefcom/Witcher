@@ -1,0 +1,73 @@
+
+
+services:
+  basebuild:
+    build:
+      context: ../base
+      dockerfile: ../docker/basebuild.Dockerfile
+    image: witcher/basebuild
+    deploy:
+      replicas: 0
+
+  baserun:
+    build:
+      context: ../base
+      dockerfile: ../docker/baserun.Dockerfile
+    image: witcher/baserun
+    deploy:
+      replicas: 0
+
+  php7build:
+    build:
+      context: ../php7
+      dockerfile: ../docker/php7build.Dockerfile
+    image: witcher/php7build
+    deploy:
+      replicas: 0
+
+  php7run:
+    build:
+      context: ../php7
+      dockerfile: ../docker/php7run.Dockerfile
+    image: witcher/php7
+    deploy:
+      replicas: 1
+
+  phpwebfuzz:
+    build:
+      context: ../php7
+      dockerfile: ../docker/php7-webfuzz.Dockerfile
+    image: witcher/phpwebfuzz
+    deploy:
+      replicas: 1
+
+  php5build:
+    build:
+      context: ../php5
+      dockerfile: ../docker/php5build.Dockerfile
+    image: witcher/php5build
+    deploy:
+      replicas: 0
+
+  php5run:
+    build:
+      context: ../php5
+      dockerfile: ../docker/php5run.Dockerfile
+    image: witcher/php5
+    deploy:
+      replicas: 1
+
+
+  php5webfuzz:
+    build:
+      context: ../php5
+      dockerfile: ../docker/php5-webfuzz.Dockerfile
+    image: witcher/php5webfuzz
+    deploy:
+      replicas: 1
+
+      #  load-initial-data:
+#    image: hacrs/crucible
+#    volumes:
+#      - initial-slacrs-db:/root/sql
+

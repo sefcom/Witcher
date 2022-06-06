@@ -12,5 +12,10 @@
   "license": "",
   "bin": {
     "execute": "main.js"
+  },
+  "dependencies": {
+    "fuzzyset": "^1.0.6",
+    "puppeteer": "^12.0.1",
+    "url-exist": "^3.0.0"
   }
 }

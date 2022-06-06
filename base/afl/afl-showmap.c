@@ -164,12 +164,17 @@ static void setup_shm(void) {
 
   u8* shm_str;
 
-  shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
+  shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0666);
   char *port = getenv("TARGET_PORT");
   if (port){
   	  printf("target port: %s \n", port);
       int port_id = atoi(port);
+      shmctl(port_id, IPC_RMID, NULL);
       shm_id = shmget(port_id , MAP_SIZE, IPC_CREAT | 0666);
+
+      if (shm_id >= 0 ){
+        printf("Created shm!!!\n");
+      }
   } else {
       shm_id = shmget(shm_id, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0666);
   }
@@ -189,7 +194,7 @@ static void setup_shm(void) {
 //  trace_bits[65535] = 3;
   if (getenv("AFL_META_INFO_ID")){
       int mem_key = atoi(getenv("AFL_META_INFO_ID"));
-        int witch_shm_id = shmget(mem_key , sizeof(struct test_process_info), 0666);
+      int witch_shm_id = shmget(mem_key , sizeof(struct test_process_info), 0666);
       if (witch_shm_id  >= 0 ) {
             struct test_process_info *afl_info = (struct test_process_info *) shmat(witch_shm_id, NULL, 0);  /* attach */
             printf("showmap: AFL_META_INFO_ID=%s, witcher_shm_id=%d, %s=%d, info=> afl_id=%d capture=%d \n", getenv("AFL_META_INFO_ID"),witch_shm_id,
@@ -200,7 +205,7 @@ static void setup_shm(void) {
       }
 
   } else {
-      printf("showmap: AFL_META_INFO_ID not set , %s \n", SHM_ENV_VAR, shm_id);
+      printf("showmap: AFL_META_INFO_ID not set , %s = %x \n", SHM_ENV_VAR, shm_id);
   }
   printf("showmap: trace_bits = %p\n", trace_bits);
   

@@ -4,7 +4,6 @@ LABEL maintainer="erik.trickel@asu.edu"
 
 # Use the fastest APT repo
 #COPY ./files/sources.list.with_mirrors /etc/apt/sources.list
-RUN dpkg --add-architecture i386
 RUN apt-get update
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -22,18 +21,18 @@ RUN apt-fast update && apt-fast -y upgrade && apt-fast update
 
 # Install all APT packages
 
-RUN apt-fast install -y git build-essential  binutils-multiarch nasm \
+RUN apt-fast install -y git build-essential  \
                         #Libraries
                         libxml2-dev libxslt1-dev libffi-dev cmake libreadline-dev \
                         libtool debootstrap debian-archive-keyring libglib2.0-dev libpixman-1-dev \
                         libssl-dev qtdeclarative5-dev libcapnp-dev libtool-bin \
                         libcurl4-nss-dev libpng-dev libgmp-dev \
                         # x86 Libraries
-                        libc6:i386 libgcc1:i386 libstdc++6:i386 libtinfo5:i386 zlib1g:i386 \
+                        #libc6:i386 libgcc1:i386 libstdc++6:i386 libtinfo5:i386 zlib1g:i386 \
                         #python 3
                         python3-pip python3-pexpect ipython3 \
                         #Utils
-                        sudo openssh-server automake rsync net-tools netcat openssh-client \
+                        sudo openssh-server automake rsync net-tools netcat  \
                         ccache make g++-multilib pkg-config coreutils rsyslog \
                         manpages-dev ninja-build capnproto  software-properties-common zip unzip pwgen \
                         # other stuff
@@ -153,7 +152,7 @@ RUN rm -f /wclibs/libcgiwrapper.so && ln -s /wclibs/lib_db_fault_escalator.so /w
 
 #COPY --chown=wc:wc bins /bins
 
-COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /crashing_dash
+COPY --from=puppeteer1337/build-widash-x86 /Widash/archbuilds/dash /crashing_dash
 
 ENV CONTAINER_NAME="witcher"
 ENV WC_TEST_VER="EXWICHR"
@@ -165,6 +164,8 @@ ENV WC_SET_AFFINITY="0"
 ENV WC_SINGLE_SCRIPT=""
 
 RUN mkdir -p /test && chown wc:wc /test
+
+RUN su - wc -c "source /home/wc/.virtualenvs/witcher/bin/activate && pip install ply "
 
 CMD /netconf.sh && /usr/bin/supervisord
 

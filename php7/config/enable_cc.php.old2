@@ -1,0 +1,150 @@
+<?php
+$do_cc = true;
+
+if (isset($_SERVER['SCRIPT_FILENAME']) && !empty($_SERVER['SCRIPT_FILENAME'])) {
+    $bn = basename($_SERVER['SCRIPT_FILENAME'], ".php");
+    if ($bn == 'enable_cc.php' || $bn == 'export_cc.php'){
+        $do_cc = false;
+    }
+}
+if (file_exists("/tmp/start_test.dat") && $do_cc) {
+
+    date_default_timezone_set("America/Phoenix");
+    $coverage_dpath = "/tmp/coverages/"; //__DIR__;
+    if (!is_dir($coverage_dpath)){
+        mkdir($coverage_dpath, 0777, true);
+    }
+    $tarut = (isset($_SERVER['SCRIPT_FILENAME']) && !empty($_SERVER['SCRIPT_FILENAME'])) ?  : $_SERVER['REQUEST_URI'];
+    $tarut_dirname = realpath(dirname($tarut));
+    $tarut_dirname = str_replace("/","+",$tarut_dirname );
+
+    $tarut_basename = basename($tarut, ".php");
+
+    $tarut_name = $tarut_dirname . "+" . $tarut_basename;
+    //echo "hidy-ho neighbor " . $tarut_dirname . "+" . $tarut_basename . "\n";
+
+    xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
+    function get(&$var, $default=null) {
+        return isset($var) ? $var : $default;
+    }
+    function end_coverage()
+    {
+        global $tarut_name;
+        global $coverage_dpath;
+
+        $coverageName = $coverage_dpath . $tarut_name . ".cc";
+	    $jsonCoverageFPath = $coverageName . ".json";
+        $lockfp = NULL;
+        $mysqli = NULL;
+        try {
+            xdebug_stop_code_coverage(false);
+            $cur_cc_jdata = xdebug_get_code_coverage();
+            $mysqli = new mysqli("127.0.0.1","witcher", "witcherpw", "witchercc");
+
+            $insstmt = $mysqli->prepare("INSERT INTO page (pagename) VALUES (?) ON DUPLICATE KEY UPDATE execs = execs + 1, last_exec_ts = CURRENT_TIMESTAMP()");
+            $insstmt->bind_param("s", $tarut_name);
+            $insstmt->execute();
+            $insstmt->close();
+
+            $updates = array();
+            foreach ($cur_cc_jdata as $uri => $cur_cc_for_uri):
+                check_create_script($mysqli, $uri);
+                check_create_pagescript($mysqli, $tarut_name, $uri);
+                $stmt = $mysqli->prepare("SELECT lineno, ccval FROM codecov WHERE FK_scriptname = ?");
+                $stmt->bind_param("s", $uri);
+                if ($stmt->execute()){
+                    $stmt->bind_result($priorlineno, $priorccval);
+                    while ($stmt->fetch()) {
+                        if (array_key_exists($priorlineno, $cur_cc_for_uri)){
+                            // it's in the DB and 1) the DB value is > 0 or 2) the new value is < 0 then remove from results to update
+                            if ($priorccval > 0 || $cur_cc_for_uri[$priorlineno] < 0){
+                                unset($cur_cc_for_uri[$priorlineno]);
+                            }
+                        }
+                    }
+                }
+                $vals = array();
+                foreach ($cur_cc_for_uri as $line => $line_result):
+                     $vals[] = array($line, $line_result);
+                endforeach;
+                $mysqli->query("START TRANSACTION");
+                $insstmt = $mysqli->prepare("INSERT into codecov (FK_scriptname, lineno, ccval) VALUES (?,?,?) ON DUPLICATE KEY UPDATE ccval = VALUES(ccval) ");
+                $insstmt->bind_param('sii', $uri, $outlineno, $outccval);
+                foreach ($vals as $outdata):
+                    list($outlineno, $outccval) = $outdata;
+                    //echo $outlineno . " " . $outccval . ", ";
+                    if (!$insstmt->execute()){
+                        $mysqli->query("ROLLBACK");
+                        die('execute() failed: ' . htmlspecialchars($stmt->error));
+                    }
+                endforeach;
+                $insstmt->close();
+                $mysqli->query("COMMIT");
+            endforeach;
+        } catch (Exception $ex) {
+	        echo "ERROR encountered " . $ex . "\n";
+            file_put_contents($coverage_dpath."exceptions.log", $ex, FILE_APPEND);
+        } finally {
+            if ($mysqli != NULL){
+                $mysqli->query("COMMIT");
+                $mysqli->close();
+            }
+        }
+    }
+    function check_create_pagescript($mysqli, $tarut_name, $uri){
+        $insstmt = $mysqli->prepare("INSERT INTO pagescript (FK_pagename, FK_scriptname) VALUES (?,?)");
+        $insstmt->bind_param("ss", $tarut_name, $uri);
+        $insstmt->execute();
+        $insstmt->close();
+    }
+    function check_create_script($mysqli, $uri){
+        $insstmt = $mysqli->prepare("INSERT INTO script (scriptname) VALUES (?)");
+        $insstmt->bind_param("s", $uri);
+        $insstmt->execute();
+        $insstmt->close();
+    }
+
+    // merges 2 code coverage jsons always keeping values > 0 from either dictionary
+    function merge_jsons($jdata1, $jdata2) {
+        $changed = false;
+        foreach ($jdata1 as $uri => $uri_data):
+
+            foreach ($uri_data as $line => $line_result):
+                if (isset($jdata2[$uri])){
+                    if (isset($jdata2[$uri][$line]) && $jdata2[$uri][$line] > 0){
+                     // do nothing
+                    } else {
+                        if (isset($jdata2[$uri][$line]) && $jdata2[$uri][$line] != $line_result){
+                            $changed = true;
+                        }
+                        // if jdata2 doesn't have the value or its less than zero than use line_result, copy everything from jdata1
+                        $jdata2[$uri][$line] = $line_result;
+
+                    }
+                } else {
+                    $changed = true;
+                    $jdata2[$uri] = array();
+                    $jdata2[$uri][$line] = $line_result;
+                }
+
+            endforeach;
+
+        endforeach;
+        $jdata2["changed"] = $changed;
+        return $jdata2;
+    }
+
+    class coverage_dumper
+    {
+        function __destruct()
+        {
+            try {
+                end_coverage();
+            } catch (Exception $ex) {
+                echo str($ex);
+            }
+        }
+    }
+
+    $_coverage_dumper = new coverage_dumper();
+}

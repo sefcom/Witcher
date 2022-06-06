@@ -143,6 +143,7 @@ async function explorationWorker(workernum, appData){
         await re.start();
 
         console.log("\x1b[38;5;12m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Completed " + appData.currentRequest.url() + " ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \x1b[0m\n");
+        appData.updateReqsFromExternal()
         nextRequest = appData.getNextRequest();
     }
 
@@ -179,7 +180,7 @@ function startExploration(workers=1, appData){
 if (process.argv.length > 4) {
     var offset = 0;
     console.log(process.argv)
-    if (process.argv[0] == "timeout"){
+    if (process.argv[0] === "timeout"){
     }
     var BASE_SITE = process.argv[3];
     var BASE_APPDIR = process.argv[4];

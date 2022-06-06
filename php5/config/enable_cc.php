@@ -33,11 +33,20 @@ if (file_exists("/tmp/start_test.dat")) {
                 $prior_cc_jdata = json_decode(file_get_contents($jsonCoverageFPath));
                 $cur_cc_jdata = merge_jsons($prior_cc_jdata, $cur_cc_jdata);
                 //echo count($cur_cc_jdata) . " \n";
-		
+                if (count($prior_cc_jdata)  < count($cur_cc_jdata)){
+                    $cur_cc_jstr = json_encode($cur_cc_jdata); // obj to str
+                    file_put_contents($coverageName . '.json', $cur_cc_jstr, LOCK_EX);
+                    $wo = $coverageName . " " . count($prior_cc_jdata) . " " . count($cur_cc_jdata);
+                    file_put_contents('/tmp/coverages/writelog.dat' , $wo, FILE_APPEND | LOCK_EX);
+                }
+
+            } else {
+                $cur_cc_jstr = json_encode($cur_cc_jdata); // obj to str
+                file_put_contents($coverageName . '.json', $cur_cc_jstr, LOCK_EX);
             }
-            $cur_cc_jstr = json_encode($cur_cc_jdata); // obj to str
+
 	    
-            file_put_contents($coverageName . '.json', $cur_cc_jstr);
+
 
         } catch (Exception $ex) {
 	    echo "ERROR encountered " . $ex . "\n";

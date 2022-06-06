@@ -1,0 +1,56 @@
+http://localhost/#/search
+http://localhost/
+http://localhost/rest/admin/application-configuration
+http://localhost/socket.io/?EIO=3&transport=polling&t=N4EQcHe
+http://localhost/rest/admin/application-version
+http://localhost/api/Challenges/?name=Score Board
+http://localhost/rest/user/whoami
+http://localhost/rest/languages
+http://localhost/api/Quantitys/
+http://localhost/rest/products/search?q=
+http://localhost/#/basket
+http://localhost/rest/basket/1
+http://localhost/#/contact
+http://localhost/rest/captcha/
+http://localhost/#/
+http://localhost/rest/saveLoginIp
+http://localhost/#/complain
+http://localhost/#/about
+http://localhost/api/Feedbacks/
+http://localhost/#/deluxe-membership
+http://localhost/#/403?error=UNAUTHORIZED_ACCESS_ERROR
+http://localhost/#/photo-wall
+http://localhost/api/Memorys/
+http://localhost/redirect?to=https://github.com/bkimminich/juice-shop
+http://localhost/api/BasketItems/10
+http://localhost/api/Products/6?d=Tue Mar 24 2020
+http://localhost/rest/products/33/reviews
+http://localhost/api/BasketItems/17
+http://localhost/api/Products/24?d=Tue Mar 24 2020
+http://localhost/rest/products/6/reviews
+http://localhost/api/BasketItems/12
+http://localhost/api/Products/8?d=Tue Mar 24 2020
+http://localhost/api/BasketItems/13
+http://localhost/api/Products/33?d=Tue Mar 24 2020
+http://localhost/rest/products/27/reviews
+http://localhost/api/BasketItems/15
+http://localhost/rest/products/3/reviews
+http://localhost/api/Products/30?d=Tue Mar 24 2020
+http://localhost/rest/products/24/reviews
+http://localhost/api/BasketItems/3
+http://localhost/api/Products/3?d=Tue Mar 24 2020
+http://localhost/profile
+http://localhost/profile/image/file
+http://localhost/profile/image/url
+http://localhost/api/BasketItems/18
+http://localhost/api/Products/5?d=Tue Mar 24 2020
+http://localhost/api/BasketItems/
+http://localhost/rest/products/22/reviews
+http://localhost/#/photo-wall?file=&=&
+http://localhost/rest/products/1/reviews
+http://localhost/rest/deluxe-status
+http://localhost/ftp/legal.md
+http://localhost/#/!
+http://localhost/#/photo-wall?file=
+http://localhost/rest/products/34/reviews
+http://localhost/rest/products/5/reviews

@@ -10,6 +10,8 @@ import fuzzySet from 'fuzzyset';
 //const {JSHandle} = require('puppeteer/lib');
 import {FoundRequest} from './FoundRequest.js';
 
+import{ networkInterfaces } from 'os';
+
 const GREEN="\x1b[38;5;2m";
 const ENDCOLOR="\x1b[0m";
 
@@ -37,12 +39,19 @@ export class AppData{
         this.ignoreValues = new Set();
         this.urlUniqueIfValueUnique = new Set();
         this.minFuzzyScore = .80;
-
-
+        this.ips = ["127.0.0.1", "localhost", this.site_url.host]
+        this.gremlinValues = new Set(["Witcher","127.0.0.1", "W'tcher","W%27tcher","2"]);
+        const nets = networkInterfaces();
+        for (const name of Object.keys(nets)) {
+            for (const net of nets[name]) {
+                this.ips.push(net.address)
+            }
+        }
+        
         this.site_ip = this.site_url.host
         //this.site_ip = base_site.
 
-        if (!this.loadDataFromJSON()){
+        if (!this.loadReqsFromJSON()){
             /**
              * Adding extra guessed urls here.
              */
@@ -57,31 +66,45 @@ export class AppData{
             }
         }
     }
-
-    loadDataFromJSON() {
+    addGremlinValue(newval){
+        this.gremlinValues.add(newval);
+    }
+    updateReqsFromExternal(){
+        let extra_reqs_json_fn = path.join(this.base_appdir, "afl_request_data.json");
+        if (fs.existsSync(extra_reqs_json_fn)){
+            let jstrdata = fs.readFileSync(extra_reqs_json_fn);
+            let temprf = JSON.parse(jstrdata);
+            this.currentURLRound = 0;
+            for (let key of Object.keys(temprf)){
+                let req = temprf[key];
+                if (key in this.requestsFound){
+                    // skip
+                } else {
+                    this.requestsFound[key] = Object.assign(new FoundRequest(), req);
+                    this.requestsFound[key]["attempts"] = 0
+                    console.log("NEW REQ FND from scanner", this.requestsFound[key].toString());
+                }
+                
+            }
+        }
+    }
+    loadReqsFromJSON() {
         let json_fn = path.join(this.base_appdir, "request_data.json");
-
+        
         if (fs.existsSync(json_fn)) {
             console.log(" ************************* LOADING INCOMING ******************************");
             let jstrdata = fs.readFileSync(json_fn);
             let jdata = JSON.parse(jstrdata);
             this.inputSet = new Set(jdata["inputSet"]);
             let temprf = jdata["requestsFound"];
-            let itemcnt =0;
             for (let key of Object.keys(temprf)){
-                itemcnt++;
-
                 let req = temprf[key];
                 this.currentURLRound = Math.min(this.currentURLRound, req["attempts"]);
-
                 this.requestsFound[key] = Object.assign(new FoundRequest(), req);
                 console.log(this.requestsFound[key].toString());
-                // if (!("id" in this.requestsFound[key])){
-                //     this.requestsFound[key]["id"] = itemcnt;
-                // }
-
                 //this.requestsFound[key]["attempts"] = req["attempts"];
             }
+            
             return true
             //console.log(requestsFound);
         }
@@ -148,6 +171,7 @@ export class AppData{
             return false;
         }
         let paramValueMatchCnt=0;
+        let gremlinValues = this.gremlinValues;
         // excluded
         //0.3533549273542278&_=1617038119579
         //0.8389814703576484&_=1617038119586
@@ -165,8 +189,12 @@ export class AppData{
                 if (this.ignoreValues.has(skey)){
                     paramValueMatchCnt++;
                 } else {
+                    //console.log(`svalues=`,svalues, `testParams[skey]=`,testParams[skey], skey, )
                     for (const svalue of svalues.values()){
-                        if (testParams[skey].has(svalue)){
+                        if (testParams[skey].has(svalue) ) {
+                            paramValueMatchCnt++;
+                            break;
+                        } else if (gremlinValues.has(svalue) ||svalue.match(/1999.12.12/) || svalue.match(/12.12.1999/)){
                             paramValueMatchCnt++;
                             break;
                         } else {
@@ -213,9 +241,10 @@ export class AppData{
      * Search the requestData to determine whether a sufficient match exists between urls.
      * An equivalent querystring matches for 100% of the keys and 75% of the values.
      * @param soughtRequest {FoundRequest} - the Request object that contains the query string in question
+     * @param forceMatch {boolean} - whether a fuzzy match at the class's rate is used
      * @returns {boolean}
      */
-    containsEquivURL(soughtRequest){
+    containsEquivURL(soughtRequest, forceMatch=false){
 
         let soughtURL = new URL(soughtRequest.url());
         let queryString = soughtURL.search.substring(1);
@@ -227,6 +256,7 @@ export class AppData{
         let nbrParams = Object.keys(soughtParamsArr).length;
         // if nbrParams*matchPercent is more than nbrParams-1, it's requires a 100% parameter match
         let fullMatchEquiv = nbrParams * this.fuzzyMatchEquivPercent;
+        
         let soughtPathname = soughtRequest.getPathname();
 
         let keyMatch = 0;
@@ -238,7 +268,9 @@ export class AppData{
             if (prevURL.href === soughtURL.href && savedReq.postData === soughtRequest.postData() && savedReq.hash === soughtURL.hash){
                 return true;
             }
-
+            if (forceMatch){
+                return false;
+            }
             if (prevPathname === soughtPathname && (!soughtURL.hash || savedReq.hash === soughtURL.hash)){
 
                 if (postData.startsWith("<?xml")){
@@ -431,21 +463,88 @@ export class AppData{
     numRequestsFound(){
         return Object.keys(this.requestsFound).length
     }
+    ignoreRequest(urlstr){
+        try {
+            let url = new URL(urlstr);
+            if (url.pathname.endsWith('logout.php')){
+                return true;
+            }
+            
+        } catch (ex){
+            console.log(`ERROR converting ${urlstr} to URL `);
+            console.log(ex);
+        }
+        return false;
+    }
+    shuffle(array) {
+        let currentIndex = array.length,  randomIndex;
+        
+        // While there remain elements to shuffle...
+        while (currentIndex !== 0) {
+            
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            
+            // And swap it with the current element.
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]];
+        }
+        
+        return array;
+    }
+    
+    // return True if the pathname of one to investigate matches current, gives more diversity when a bunch of a single type exist.
+    checkToSkip(new_urlstr){
+        try {
+            if (!this.currentRequest){
+                return false;
+            }
+            let cur_urlstr = this.currentRequest._urlstr;
+            let new_url = new URL(new_urlstr);
+            let cur_url = new URL(cur_urlstr);
+            if (new_url.pathname === cur_url.pathname){
+                return true;
+            }
+        
+        } catch (ex){
+            console.log(`ERROR converting ${new_urlstr} or ${cur_urlstr} to URL in checkToSkip`);
+            console.log(ex);
+        }
+        return false
+    }
     getNextRequest() {
-
+        let skips = 0;
         // console.log(inputSet);
         while (this.currentURLRound <= MAX_NUM_ROUNDS) {
             let randomKeys = Object.keys(this.requestsFound);
+            //this.shuffle(randomKeys);
+            console.log(randomKeys.slice(0,5));
+            let cnt = 0;
             for (const key of randomKeys) {
                 let req = this.requestsFound[key];
-                if (req["attempts"] < this.currentURLRound) {
-                    //console.log(`\x1b[38;5;4mStarting exploration of: \t${key} \t${req.url()}\x1b[0m`);
-                    req["attempts"] += 1;
-                    this.save();
-                    req["key"] = key;
-                    this.currentRequest = req;
-                    return req;
+                cnt ++;
+                if (this.ignoreRequest(req._urlstr)){
+                    // skip it
+                    console.log(`IGNORING >>>>> ${key} `);
+                    this.requestsFound[key]["attempts"] = MAX_NUM_ROUNDS
+                    
+                } else {
+                    
+                    if (req["attempts"] < this.currentURLRound) {
+                        if ((cnt+5) < randomKeys.length && skips < 5 && this.checkToSkip(req["_urlstr"])){
+                            console.log(`SKIPPING ${req} for now `);
+                            continue;
+                        }
+                        //console.log(`\x1b[38;5;4mStarting exploration of: \t${key} \t${req.url()}\x1b[0m`);
+                        req["attempts"] += 1;
+                        this.save();
+                        req["key"] = key;
+                        this.currentRequest = req;
+                        return req;
+                    }
                 }
+                
             }
 
             this.currentURLRound++;
@@ -538,6 +637,8 @@ export class RequestExplorer {
         this.isLoading = false;
         this.reinitPage= false;
         this.loadedURLs = [];
+        this.passwordValue = "";
+        this.usernameValue = "";
         if (appData.numRequestsFound() > 0){
             this.currentRequestKey = currentRequest.getRequestKey();
             this.url = currentRequest.getURL();
@@ -561,8 +662,9 @@ export class RequestExplorer {
             this.cookieData = "";
         }
         this.requestsAdded = 0;
-        this.timeoutLoops = 25;
+        this.timeoutLoops = 5;
         this.timeoutValue = 3;
+        this.actionLoopTimeout = 45;
         this.workernum = workernum;
         this.gremCounter = {};
         this.shownMessages = {};
@@ -584,22 +686,65 @@ export class RequestExplorer {
             this.appData.setUrlUniqueIfValueUnique(this.loginData["urlUniqueIfValueUnique"]);
         }
     }
-
-    async searchForURLSelector(page, tag, attribute){
+    async page_frame_selection(selector){
+        let results = []
+        const elementHandles = await page.$$(selector);
+        for (let ele of elementHandles) {
+            results.push(ele);
+        }
+        for (const frame of page.mainFrame().childFrames()){
+            const frElementHandles = await frame.$$(selector);
+            for (let ele of frElementHandles) {
+                results.push(ele);
+            }
+        }
+        return results;
+    }
+    async resetURLBack(page){
+        let cururl = await page.url();
+        console.log("[WC] cururl = ", typeof(cururl), cururl, cururl.startsWith("chrome-error"),"\n");
+        if (cururl.startsWith("chrome-error")){
+            await page.goBack();
+            let backedurl = await page.url();
+            console.log(`[WC] Performed goBack to ${backedurl} after chrome-error`);
+        }
+    }
+    async searchForURLSelector(page, tag, attribute, completed={}){
         let elements = [];
-
+        console.log("[WC] searchForURLSelector starting.");
         try {
             const links = await page.$$(tag);
             for (var i=0; i < links.length; i++) {
-                let valueHandle = await links[i].getProperty(attribute);
-                let val = await valueHandle.jsonValue();
-                if (isDefined(val)){
-                    elements.push(val);
+                if (links[i]){
+                    if (i === 0){
+                        let hc = await links[i].getProperty("hashCode");
+                        console.log(`[WC] check element hash = ${hc} ${typeof(links[i])}`);
+                    }
+                    await this.resetURLBack(page);
+                    let valueHandle = null;
+                    try{
+                        valueHandle = await links[i].getProperty(attribute);
+                    } catch(ex){
+                        console.log(`[WC] \x1b[38;5;197m link #${i}/${links.length} error encountered while trying to getProperty`, typeof(page), page.url(), tag, attribute, links[i], "\n",ex, "\x1b[0m");
+                        try {
+                            console.log("[WC] Trying again", links[i]);
+                            
+                            valueHandle = await links[i].getProperty(attribute);
+                        } catch (eex){
+                            continue;
+                        }
+                    }
+                    let val = await valueHandle.jsonValue();
+                    if (isDefined(val)){
+                        elements.push(val);
+                    }
+                    
+                    console.log(`[WC] link #${i}/${links.length} completed`);
                 }
             }
 
         } catch (e){
-            console.log("[WC] error encountered while trying to search for tag");
+            console.log("[WC] error encountered while trying to search for tag", typeof(page), page.url(), tag, attribute, "\n\t", e);
         }
         return elements;
     }
@@ -615,14 +760,41 @@ export class RequestExplorer {
         }
         return defaultval;
     }
-
+    addFormbasedRequest(foundRequest, requestsAdded){
+        if (foundRequest.isSaveable() ){ // && this.appData.containsMaxNbrSameKeys(tempurl) === false
+        
+            if (this.appData.containsEquivURL(foundRequest, true) ) {
+                // do nothing yet
+                //console.log("[WC] Could have been added, ",foundRequest.postData());
+            } else {
+                let url = new URL(foundRequest.urlstr());
+            
+                if (foundRequest.urlstr().startsWith(`${this.appData.site_url.origin}`) || this.appData.ips.includes(url.hostname)){
+                    foundRequest.from = "PageForms";
+                    foundRequest.cleanURLParamRepeats()
+                    foundRequest.cleanPostDataRepeats()
+                    let wasAdded = this.appData.addRequest(foundRequest);
+                    if (wasAdded){
+                        requestsAdded++;
+                        if (foundRequest.postData()){
+                            console.log(`[${GREEN}WC${ENDCOLOR}] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
+                        } else {
+                            console.log(`[${GREEN}WC${ENDCOLOR}]] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} \n ${ENDCOLOR}`);
+                        }
+                    }
+                } else {
+                    console.log(`\x1b[38;5;3m[WC] IGNORED b/c not correct ${foundRequest.toString()} does not start with ${this.appData.site_url.origin} ips = ${this.appData.ips} hostname=${url.hostname} -- ${ENDCOLOR}`);
+                }
+            }
+        }
+        return requestsAdded;
+    }
     async searchForInputs(node){
         let requestsAdded = 0;
         let requestInfo = {}; //{action:"", method:"", elems:{"attributename":"value"}
         let nodeaction = await this.getAttribute(node, "action");
         let method = await this.getAttribute(node, "method");
 
-        let foundRequest = FoundRequest.requestParamFactory(nodeaction, method, "",{},"PageForms",this.appData.site_url.href);
 
         const buttontags = await node.$$('button');
         let formdata = await this.searchTags(buttontags);
@@ -638,38 +810,40 @@ export class RequestExplorer {
         if (formdata.length === 0){
             return requestsAdded;
         }
-
-        foundRequest.addParams(formdata);
-
-        //console.log("[WC] ",requestInfo);
-        if (foundRequest.isSaveable() ){ // && this.appData.containsMaxNbrSameKeys(tempurl) === false
-
-            if (this.appData.containsEquivURL(foundRequest) ) {
-                // do nothing yet
-                //console.log("[WC] Could have been added, ",requestInfo["url"], requestInfo["method"], requestInfo["postData"]);
+        
+        let formInfo = FoundRequest.requestParamFactory(nodeaction, method, "",{},"PageForms",this.appData.site_url.href);
+        formInfo.addParams(formdata);
+        let allParams = formInfo.getAllParams();
+        
+        let basedata = "";
+        for (const [pkey, pvalue] of Object.entries(allParams)) {
+            if (pkey in formInfo.multipleParamKeys) {
+                continue;
+            }
+            let arrVal = Array.from(pvalue);
+            if (arrVal.length > 0){
+                basedata += `${pkey}=${arrVal[0]}&`
             } else {
-                if (foundRequest.urlstr().startsWith(`${this.appData.site_url.origin}`)){
-
-                    foundRequest.from = "PageForms";
-                    foundRequest.cleanURLParamRepeats()
-                    foundRequest.cleanPostDataRepeats()
-                    let wasAdded = this.appData.addRequest(foundRequest);
-                    if (wasAdded){
-                        requestsAdded++;
-                        if (foundRequest.postData()){
-                            console.log(`[${GREEN}WC${ENDCOLOR}] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} postData=${foundRequest.postData()} ${ENDCOLOR}`);
-                        } else {
-                            console.log(`[${GREEN}WC${ENDCOLOR}]] ${GREEN} ADDED ${ENDCOLOR}${foundRequest.toString()} \n ${ENDCOLOR}`);
-                        }
-
-                    }
-                } else {
-                    console.log(`\x1b[38;5;3m[WC] IGNORED b/c not correct ${foundRequest.toString()} does not start with ${this.appData.site_url.origin} -- ${ENDCOLOR}`);
-                }
-
+                basedata += `${pkey}=&`
             }
         }
-
+        let postdata = [basedata]
+        for (let mpk of formInfo.multipleParamKeys) {
+            let new_pd = []
+            for (let ele of Array.from(allParams[mpk])){
+                for (let pd of postdata){
+                    new_pd.push(pd + `${mpk}=${ele}&`);
+                }
+            }
+            postdata = new_pd;
+        }
+        
+        for (let pd of postdata){
+            let formBasedRequest = FoundRequest.requestParamFactory(nodeaction, method, pd,{},"PageForms",this.appData.site_url.href);
+            //console.log("[WC] Considering the addition of ",typeof(formBasedRequest.urlstr()), formBasedRequest.urlstr(), formBasedRequest.postData());
+            requestsAdded = this.addFormbasedRequest(formBasedRequest, requestsAdded);
+        }
+        
         return requestsAdded;
     }
 
@@ -689,13 +863,17 @@ export class RequestExplorer {
         try {
             // these are always GETs
             const anchorlinks = await this.searchForURLSelector(page, 'a', 'href');
-            //console.log("LINKS ", anchorlinks);
-            requestsAdded += this.appData.addValidURLS(anchorlinks, parenturl, "OnPageAnchor");
+            if (anchorlinks){
+                //console.log("[WC] adding valid URLS from anchors ")
+                requestsAdded += this.appData.addValidURLS(anchorlinks, parenturl, "OnPageAnchor");
+            }
             const iframelinks = await this.searchForURLSelector(page, 'iframe', 'src');
-            requestsAdded += this.appData.addValidURLS(iframelinks, parenturl, "OnPageIFrame");
-
+            if (iframelinks){
+                //console.log("[WC] adding valid URLS from iframe links")
+                requestsAdded += this.appData.addValidURLS(iframelinks, parenturl, "OnPageIFrame");
+            }
         } catch (ex){
-            console.log(`[WC] Error ${ex}`)
+            console.log(`[WC] Error in addURLSFromPage(): ${ex}`)
         }
         return requestsAdded;
     }
@@ -710,13 +888,14 @@ export class RequestExplorer {
                 for (let i = 0; i < forms.length; i++) {
                     let faction = await this.getAttribute(forms[i], "action", "");
                     let fmethod = await this.getAttribute(forms[i], "method", "GET");
-                    //console.log("[WC] second form ACTION=", faction, fmethod);
+                    console.log("[WC] second form ACTION=", faction, fmethod, " FROM url ", await page.url());
                     requestsAdded += await this.searchForInputs(forms[i]);
                 }
             }
 
         } catch (ex){
-            console.log(`[WC] Error ${ex}`)
+            console.log(`[WC] addFormData(p) Error ${ex}`);
+            console.log(ex.stack);
         }
         return requestsAdded;
     }
@@ -727,34 +906,96 @@ export class RequestExplorer {
         let childFrames = this.page.mainFrame().childFrames();
 
         if (typeof childFrames !== 'undefined' && childFrames.length > 0){
-            for (const frame of this.page.mainFrame().childFrames()){
-                console.log("[WC] Attempting to ADD form data from FRAMES.")
-                requestsAdded += await this.addFormData(page);
-                requestsAdded += await this.addURLsFromPage(page);
+            for (const frame of childFrames ){
+                //console.log("[WC] Attempting to ADD form data from FRAMES. "); //, await frame.$$('form'))
+                if (frame.isDetached()){
+                    console.log("\x1b[31mDETACHED FRAME \x1b[0m", frame.url());
+                    await this.page.reload();
+                }
+                requestsAdded += await this.addFormData(frame);
+                requestsAdded += await this.addURLsFromPage(frame, parenturl);
             }
-
-        } else {
-            requestsAdded = await this.addFormData(page);
-            requestsAdded += await this.addURLsFromPage(page, parenturl);
         }
-
+        requestsAdded += await this.addFormData(page);
+        requestsAdded += await this.addURLsFromPage(page, parenturl);
+        
         //const bodynode = await page.$('html');
         //requestsAdded += await this.searchForInputs(bodynode);
         return requestsAdded;
     }
 
 
-    async addCodeExercisersToPage(gremlinsHaveStarted){
+    async addCodeExercisersToPage(gremlinsHaveStarted, usernameValue="", passwordValue=""){
         // ##############################################################################
         //                         START Injected Exercise Code
         // ##############################################################################
 
-        await this.page.evaluate((gremlinsHaveStarted)=>{
+        await this.page.evaluate((gremlinsHaveStarted, usernameValue, passwordValue)=>{
+            window.gremlinsHaveFinished = false
+            window.gremlinsHaveStarted = gremlinsHaveStarted;
+            /***************************************************************************************************************************************************************************************
+             ***************************************************************************************************************************************************************************************
+             ***************************************************************************************************************************************************************************************
+             *
+             *
+             * TODO:REMOVE ME!!!!
+             *
+             *
+             ***************************************************************************************************************************************************************************************
+             ***************************************************************************************************************************************************************************************/
+            gremlinsHaveStarted = true;
+            
+            var formEntries = {}
+            // taken from https://superuser.com/questions/455863/how-can-i-disable-javascript-popups-alerts-in-chrome
+            // ==UserScript==
+            // @name        Wordswithfriends, Block javascript alerts
+            // @match       http://wordswithfriends.net/*
+            // @run-at      document-start
+            // ==/UserScript==
+    
+    
+            function overrideSelectNativeJS_Functions () {
+                console.log("[WC] ---------------- OVERRIDING window.alert ------------------------------");
+                window.alert = function alert (message) {
+                    console.log (message);
+                }
+            }
+    
+            function addJS_Node (text, s_URL, funcToRun) {
+                var D                                   = document;
+                var scriptNode                          = D.createElement ('script');
+                scriptNode.type                         = "text/javascript";
+                if (text)       scriptNode.textContent  = text;
+                if (s_URL)      scriptNode.src          = s_URL;
+                if (funcToRun)  scriptNode.textContent  = '(' + funcToRun.toString() + ')()';
+        
+                var targ = D.getElementsByTagName ('head')[0] || D.body || D.documentElement;
+                console.log(`[WC] Alert OVERRIDE attaching script to ${targ}`);
+                targ.appendChild (scriptNode);
+            }
+            
+            addJS_Node (null, null, overrideSelectNativeJS_Functions);
+            if (usernameValue === ""){
+                usernameValue = "Witcher";
+            }
+            if (passwordValue === ""){
+                passwordValue = "Witcher";
+            }
+            console.log(`[WC] usernameValue = ${usernameValue} passwordValue = ${passwordValue}`);
             const CLICK_ELE_SELECTOR = "div,li,span,input,p,button";
             //const CLICK_ELE_SELECTOR = "button";
             var usedText = new Set();
             const STARTPAGE = window.location.href;
             const MAX_LEVEL = 10;
+            
+            let today = new Date();
+            let dd = String(today.getDate()).padStart(2, '0');
+            let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+            let yyyy = today.getFullYear();
+            
+            var currentDateYearFirst = `${yyyy}-${mm}-${dd}`;
+            var currentDateMonthFirst = `${mm}-${dd}-${yyyy}`;
+            
             function shuffle(array) {
                 var currentIndex = array.length, temporaryValue, randomIndex;
 
@@ -778,7 +1019,7 @@ export class RequestExplorer {
             }
             function getChangedDOM(domBefore, domAfter){
                 let changedDOM = {};
-                let index = 0;
+                let index = 0
                 for (let dbIndex of Object.keys(domBefore)){
                     let db = domBefore[dbIndex];
                     let found = false;
@@ -823,26 +1064,65 @@ export class RequestExplorer {
                     console.log(`[WC] ${indent(level)} L${level} too high, skipping`);
                     return;
                 }
-                let randomArr = shuffle(Array.from(Object.values(elements)));
+                //let randomArr = shuffle(Array.from(Object.values(elements)));
+                let randomArr = Array.from(Object.values(elements));
+                //console.log(`[WC] ${indent(level)} L${level} Starting cliky for ${randomArr.length} elements`);
                 //t randomArr = Array.from(Object.values(elements));
 
                 let mouseEvents = ["click","mousedown","mouseup"];
                 let eleIndex = 0;
                 let startingURL = location.href;
                 let startingDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
-
-                console.log(`[WC] ${indent(level)} L${level} Starting DOM selected=${startingDOM.length} Nodes toExplore=${randomArr.length} `);
+                var frames = window.frames; // or // var frames = window.parent.frames;
+                let frameurls = []
+                if (frames){
+                    for (let i = 0; i < frames.length; i++) {
+                        startingDOM = [... startingDOM, ...frames[i].document.querySelectorAll(CLICK_ELE_SELECTOR)];
+                        frameurls.push(frames[i].location)
+                    }
+                    
+                    //console.log(`[WC] ${indent(level)} L${level} FOUND StartingDOM ${startingDOM.length} elements to use with curDOM not sure why not using ${elements.length}`);
+                }
+                //console.log(`[WC] ${indent(level)} L${level} Starting DOM selected=${startingDOM.length} Nodes toExplore=${randomArr.length} `);
                 //console.log(`[WC] ${indent(level)} L${level} number of elements initially `, startingDOM.length);
                 // startingDOM.filter(function (e) {
                 //     return e.hasOwnProperty("hasClicker");
                 // });
-                // console.log("[WC] number of elements is now ", startingDOM.length);
+                function check_for_url_change_in_frames(frameurls) {
+                    let framediff = false;
+                    
+                    if (frames) {
+                        for (let i = 0; i < frames.length; i++) {
+                            if (frames[i].location !== frameurls[i]) {
+                                framediff = true;
+                                break;
+                            }
+                        }
+                    }
+                    return framediff;
+                    
+                }
+                function report_frame_changes(frameurls) {
+                    
+                    if (frames) {
+                        for (let i = 0; i < frames.length; i++) {
+                            if (frames[i].location !== frameurls[i]) {
+                                console.log(`[WC] FOUND a change to frame ${i}`, frames[i].location.href);
+                                console.log(`[WC-URL] ${frames[i].location}` ); // report changed location to puppeteer
+                            }
+                        }
+                    }
+                    
+                }
+
                 for (let eleIndex =0; eleIndex < randomArr.length; eleIndex++){
                     let ele = randomArr[eleIndex];
-                    //console.log(`[WC] ${indent(level)} L${level} attempt to click on  ${ele.textContent}`);
+                    let textout = ele.textContent.replaceAll("\n",",").replaceAll("  ", "")
+                    
+                    //console.log(`[WC] ${indent(level)} L${level} attempt to click on e#${eleIndex} of ${randomArr.length} : ${textout.length} ${textout.substring(0,50)}`);
                     try {
                         if (ele.href != null){
-                            console.log(`FOUND URL of ${ele.href}`)
+                            console.log(`${indent(level)} L${level} FOUND URL of ${ele.href}`)
                             if (ele.href.indexOf("support.dlink.com") !== -1){
                                 console.log(`[WC] IGNORING url of FOUND URL of ${ele.href}`)
                                 continue;
@@ -859,8 +1139,10 @@ export class RequestExplorer {
                             searchText += ele.textContent;
                         }
                         //console.log(`ele id=${ele.id} name=${ele.name}`)
-                        if (usedText.has(ele.textContent) ){
-                            return;
+                        if (usedText.has(ele.innerHTML) ){
+                            //console.log("[WC] SKIPPING B/C IT'found in usedText, ");
+                            continue;
+                            //return;  // not sure why it was a return that's causing it to exit the entire thing
                         }
                         let pos = searchText.indexOf("Logout");
                         if (pos > -1 ){
@@ -872,7 +1154,7 @@ export class RequestExplorer {
                             ele.disabled = false;
                         } catch (ex){
                             //pass
-                            console.log("[WC] ERROR WITH THE ELEMENTS CLICKING", e);
+                            console.log("[WC] ERROR WITH THE ELEMENTS CLICKING : ", ex.stack);
                         }
 
                         try {
@@ -884,36 +1166,103 @@ export class RequestExplorer {
                                 //     return;
                                 // }
                                 if (level > 1){
-                                    console.log(`[WC] ${indent(level)} L${level} triggering on ${node.textContent}`)
+                                    console.log(`[WC] ${indent(level)} L${level} ${indent(level)} L${level} triggering on ${node.textContent}`)
                                 }
                                 //console.log("usedText=", usedText, "node=", node);
                                 // if (usedText.has(node.textContent) ){
                                 //     return;
                                 // }
 
-                                usedText.add(node.textContent);
+                                usedText.add(node.innerHTML);
                                 let clickEvent = document.createEvent ('MouseEvents');
                                 clickEvent.initEvent (eventType, true, true);
                                 node.dispatchEvent (clickEvent);
-                                //console.log(`[WC] DONE-TRIGGERED ${indent(level)} L${level} triggering on ${clickEvent} ${node} ${node.id} ${node.name}`)
+                                if(typeof node.click === 'function') {
+                                    try{
+                                        node.click()
+                                        // if (node.textContent){
+                                        //     console.log(`[WC] ${indent(level)} L${level} Fired clicky poo -- ${node.nodeType} ${node.textContent.substring(0,20)} ${eventType}`);
+                                        // } else {
+                                        //     console.log(`[WC] ${indent(level)} L${level} Fired clicky poo `);
+                                        // }
+                                    } catch (ex){
+                                        console.log(`[WC] ${indent(level)} L${level} click method threw an error ${ex}`);
+                                    }
+                                }
+                                //console.log(`[WC] ${indent(level)} L${level} DONE-TRIGGERED triggering on`, clickEvent, node, node.id, node.name, node.click);
                             }
+                            
                             for (let ev of mouseEvents){
                                 //console.log("mouse event = ", ev);
-                                let temp = window.location.href;
+                                let mainurl = window.location.href;
+                                let hiddenChildren = [];
+                                for (clickablechild of startingDOM) {
+                                    if (clickablechild.offsetParent === null){
+                                        hiddenChildren.push(clickablechild)
+                                    }
+                                }
+                                
+                                //console.log(`[WC] ${indent(level)} L${level} HIDDEN CHILDREN at start = ${hiddenChildren.length}`)
+                                
                                 triggerMouseEvent (ele, ev);
+                                
                                 await sleep(50);
-                                if (temp !== window.location.href){
-                                    console.log("[WC] RESET EM, ", temp, window.location.href);
-                                    // this sends it back out to puppeteer
-                                    console.log(`[WC-URL]${window.location.href}`);
-                                    await window.location.replace(temp);
-                                    for (let pc of parentClicks){
+                                
+                                let mainurl_changed = mainurl !== window.location.href
+                                if (mainurl_changed || check_for_url_change_in_frames(frameurls)){
+                                    // bubble up URL for change
+                                    if (mainurl_changed){
+                                        console.log(`[WC] ${indent(level)} L${level} FOUND a change to main frame `, mainurl, window.location.href);
+                                        console.log(`[WC-URL]${window.location.href}`);
+                                    } else {
+                                        report_frame_changes(frameurls)
+                                    }
+                                    // reload main frame
+                                    await window.location.replace(main);
+                                    // retrigger parents after reload to show the children
+                                    for (let pc of parentClicks) {
                                         //console.log (`[WC] ${indent(level)} retriggering ${pc.textContent}`);
                                         triggerMouseEvent(pc, "click");
                                     }
                                 }
+                                
                                 let curDOM = document.querySelectorAll(CLICK_ELE_SELECTOR);
+                                if (frames) {
+                                    for (let i = 0; i < frames.length; i++) {
+                                        curDOM = [... curDOM, ...frames[i].document.querySelectorAll(CLICK_ELE_SELECTOR)];
+                                    }
+                                    //console.log(`[WC] ${indent(level)} L${level} FOUND ${curDOM.length}  curkeys=${Object.keys(curDOM).length} startkey=${Object.keys(startingDOM).length} `);
+                                }
+                                let newlyVisibleLinks = []
+                                for (child of hiddenChildren){
+                                    if (child.offsetParent !== null){
+                                        try{
+                                            let newvislinks = ""
+                                            for (let subc of child.querySelectorAll(CLICK_ELE_SELECTOR)){
+                                                if (subc.offsetParent === null){
+                                                    newvislinks += subc.textContent + ", ";
+                                                }
+                                            }
+                                            if (nawvislink.length === 0 ){
+                                                newvislinks = child.textContent.replace("\n",",").replace(" ","");
+                                            }
+                                            console.log(`[WC] ${indent(level)} L${level} after clicking on ${ele.textContent} adding newly visible link ${newvislinks} `);
+                                            
+                                        } catch (eex){
+                                            console.log("[WC] Error with finding newly visible link ", eex.stack);
+                                        }
+                                        newlyVisibleLinks.push(child);
+                                    }
+                                }
+                                if (newlyVisibleLinks.length > 0){
+                                    console.log(`[WC] ${indent(level)} L${level} click on ${ele.textContent} showed ${newlyVisibleLinks.length} new links, recursing the new links`);
+                                    parentClicks.push(ele);
+                                    await clickSpam(newlyVisibleLinks, level+1, parentClicks)
+                                }
+                                
+                                // have we added any clickable items that we need to now clicky?
                                 if (Object.keys(curDOM).length !== Object.keys(startingDOM).length && Object.keys(curDOM).length > 0){
+                                    console.log(`[WC] maybe some difference here`)
                                     var changedDOM = getChangedDOM(startingDOM, curDOM);
                                     console.log(`[WC] ${indent(level)} ${level} starting len = ${Object.keys(elements).length} cur len = ${Object.keys(curDOM).length} changed len=${Object.keys(changedDOM).length}`);
                                     /*for (let cd of Object.keys(changedDOM)){
@@ -937,7 +1286,12 @@ export class RequestExplorer {
 
 
                         } catch(e2){
-                            console.log("[WC] NO CLICK, ERROR ", e2.message);
+                            console.trace("[WC] NO CLICK, ERROR ", e2.message);
+                            if (e2.stack){
+                                console.log("[WC] ", e2.stack);
+                            } else {
+                                console.log("[WC] Stack is unavailable to print");
+                            }
 
                         }
 
@@ -952,10 +1306,15 @@ export class RequestExplorer {
                         // }
 
                     } catch (e){
-                        console.log("[WC] ERROR WITH THE ELEMENTS CLICKING", e.message);
+                        console.trace("[WC] ERROR WITH THE ELEMENTS CLICKING ", e.message);
+                        if (e.stack){
+                            console.log("[WC] ", e.stack);
+                        } else {
+                            console.log("[WC] Stack is unavailable to print");
+                        }
                     }
 
-                }
+                } //end for loop eleIndex
             }
 
 
@@ -980,7 +1339,8 @@ export class RequestExplorer {
                 let all_submitable =  [...document.getElementsByTagName("form"),
                     ...document.querySelectorAll('[type="submit"]')];
 
-                let randomArr = shuffle(all_submitable);
+                //let randomArr = shuffle(all_submitable);
+                let randomArr = all_submitable;
 
                 for(let i = 0; i < all_submitable.length; i++) {
                     let submitable_item = randomArr[i];
@@ -990,7 +1350,8 @@ export class RequestExplorer {
                         try{
                             submitable_item.requestSubmit();
                         } catch (e){
-                            console.log(`[WC] Error while trying to request submit`);
+                            console.trace(`[WC] Error while trying to request submit`);
+                            console.log(e.stack)
                         }
                     }
                     if(typeof submitable_item.click === 'function') {
@@ -998,17 +1359,40 @@ export class RequestExplorer {
                     }
                 }
             }
+            async function submitForms(doc) {
+                let pforms = document.getElementsByTagName("form");
+                for (let i = 0; i < pforms.length; i++) {
+                    let frm = pforms[i];
+                    if (typeof frm.submit === 'function') {
+                        console.log("Submitting a form");
+                        frm.submit();
+                    } else if (typeof frm.submit === 'undefined') {
+                        console.log("[WC] lameHorde: The method submit of ", frm, "is undefined");
+                    } else {
+                        //console.log("[WC] lameHorde: It's neither undefined nor a function. It's a " + typeof frm.submit, frm);
+                    }
+                }
+            }
+            
             async function lameHorde(){
 
-                console.log("Searching and clicking.");
+                console.log("[WC] Searching and clicking.");
                 window.alert = function(message) {/*console.log(`Intercepted alert with '${message}' `)*/};
-
+                
                 let all_elements = document.querySelectorAll( CLICK_ELE_SELECTOR);
-                console.log(`\t FOUND ${all_elements.length} elements to attempt to click in main `);
+                var frames = window.frames; // or // var frames = window.parent.frames;
+                if (frames){
+                    console.log(`[WC] FOUND ${all_elements.length} elements to attempt to click in main `);
+                    for (let i = 0; i < frames.length; i++) {
+                        all_elements = [... all_elements, ...frames[i].document.querySelectorAll(CLICK_ELE_SELECTOR)];
+                    }
+                }
                 for (let ele of document.querySelectorAll("iframe")){
                     all_elements = [...all_elements, ...ele.contentWindow.document.querySelectorAll(CLICK_ELE_SELECTOR) ];
                 }
-                console.log(`\t FOUND ${all_elements.length} elements to attempt to click in main and frames`);
+                
+                console.log(`[WC] FOUND after FRAMES ${all_elements.length} elements to attempt to click in main `);
+                
                 function hashChangeEncountered(){
                     alert('got hashchange');
                 }
@@ -1021,22 +1405,16 @@ export class RequestExplorer {
                     return node.hasOwnProperty('hasClicker');
                 });
                 console.log("[WC] clicky  DOM elements count = ", clickableElements.length);
-
+                
                 //await clickSpam(clickableElements);
                 await clickSpam(all_elements);
-
-                let pforms = document.getElementsByTagName("form");
-                for(let i = 0; i < pforms.length; i++) {
-                    let frm = pforms[i];
-                    if(typeof frm.submit === 'function') {
-                        console.log("Submitting a form");
-                        frm.submit();
-                    } else if (typeof frm.submit === 'undefined') {
-                        console.log("[WC] lameHorde: The method submit of ", frm, "is undefined");
-                    } else {
-                        //console.log("[WC] lameHorde: It's neither undefined nor a function. It's a " + typeof frm.submit, frm);
+                
+                await submitForms(document);
+                if (frames){
+                    for (let i = 0; i < frames.length; i++) {
+                        console.log(`[WC] Submit forms ${frames[i].location.href}`)
+                        submitForms(frames[i].document);
                     }
-
                 }
 
                 //
@@ -1057,10 +1435,18 @@ export class RequestExplorer {
             }
 
             async function triggerHorde(){
-                $("select").trigger("change");
-                await sleep(100);
-                $("select").prop("selectedIndex",1)
-
+                try{
+                    let select_elems = document.querySelectorAll("select");
+                    for (let i = 0; i < select_elems.length; i++) {
+                        var event = new Event('change');
+                        select_elems[i].dispatchEvent(event);
+                        await sleep(100);
+                        select_elems[i].selectedIndex = 1
+                    }
+                } catch (ex){
+                    console.trace(`ERROR with selecting either change or selected Index in triggerHorde() ${ex}`)
+                    console.log(ex.stack)
+                }
             }
             var randomizer = new gremlins.Chance();
             const triggerSimulatedOnChange = (element, newValue, prototype) => {
@@ -1108,8 +1494,12 @@ export class RequestExplorer {
                 options.forEach((option) => {
                     option.selected = option.value === randomOption.value;
                 });
-                let jelem = $(element);
-                jelem.trigger("change");
+                
+                //console.log(`[WC] element = ${element}`);
+                var event = new Event('change');
+                element.dispatchEvent(event);
+                // let jelem = $(element);
+                // jelem.trigger("change");
 
                 return randomOption.value;
             };
@@ -1139,14 +1529,71 @@ export class RequestExplorer {
                 return email;
             };
             const fillTextElement = (element) => {
+                if (!element){
+                    console.log(`[WC] Element is null?????`)
+                    return 0;
+                }
+                let oldDateYearFirst = "1998-10-11";
+                let oldDateMonthFirst = "11-12-1997";
+                
                 let rnd =  Math.random()
+                let current_value = element.value;
+                let desc = element.id;
+                if (!desc){
+                    desc = element.name;
+                }
+                // let's leave it the default value for a little while.
+                if (current_value && current_value > "" && desc > ""){
+                    if (desc in formEntries){
+                        if (formEntries[desc]["inc"] < 5){
+                            formEntries[desc]["inc"] += 1;
+                            return current_value;
+                        }
+                    } else {
+                        formEntries[desc] = {origingal_value: current_value, inc:1};
+                        
+                        return current_value;
+                    }
+                }
+                
                 let value = "2";
-                if (rnd > 0.6){
-                    value = "Witcher";
+                
+                if (rnd > .2 && element.placeholder && (element.placeholder.match(/[Yy]{4}.[Mm]{2}.[Dd]{2}/) || element.placeholder.match(/[Mm]{2}.[Dd]{2}.[Yy]{4}/))){
+                    let yearfirst = element.placeholder.match(/[Yy]{4}(.)[Mm]{2}.[Dd]{2}/);
+                    let sep = "-";
+                    if (yearfirst)
+                        sep = yearfirst[1]
+                    else {
+                        let monthfirst = element.placeholder.match(/[Mm]{2}(.)[Dd]{2}.[Yy]{4}/)
+                        if (monthfirst){
+                            sep = monthfirst[1];
+                        } else {
+                            console.log("[WC] this should never occur, couldn't find the separator, defaulting to -")
+                        }
+                    }
+                    
+                    if (element.placeholder.match(/[Yy]{4}.[Mm]{2}.[Dd]{2}/)) {
+                        value = rnd > .8 ? currentDateYearFirst.replace("-",sep) : oldDateYearFirst.replace("-",sep);
+                    } else if (element.placeholder.match(/[Mm]{2}.[Dd]{2}.[Yy]{4}/)){
+                        value = rnd > .8 ? currentDateMonthFirst.replace("-",sep) : oldDateMonthFirst.replace("-",sep);
+                    }
+                } else if (rnd > .5 && element.name && (element.name.search(/dob/i) !== -1 || element.name.search(/birth/i) !== -1 )){
+                    value = rnd > .75 ? oldDateMonthFirst : oldDateYearFirst;
+                } else if (rnd > .5 && element.name && (element.name.search(/date/i) !== -1)){
+                    value = rnd > .75 ? currentDateMonthFirst : currentDateYearFirst;
+                } else if (rnd > .5 && element.name && (element.name.search(/time/i) !== -1)){
+                    value = element.name.search(/start/i) !== -1 ? "8:01" : "11:11";
                 } else if (rnd > 0.4) {
-                    value =  "127.0.0.1";
-                } else if (rnd > 0.3){
-                    value = "W'tcher";
+                    value = "127.0.0.1";
+                } else if (rnd > .3){
+                    value = usernameValue.substring(0,1) + "'" + usernameValue.substring(2);
+                } else if (rnd > 0.2) {
+                    value = value = rnd > .35 ? currentDateYearFirst : oldDateYearFirst;
+                } else if (rnd > 0.1) {
+                    value = rnd > .45 ? currentDateYearFirst : oldDateYearFirst;
+                } else if (rnd > 0.0){
+                    //value = value;
+                    value = current_value;
                 }
                 element.value = value;
                 if (Math.random() > 0.80){
@@ -1155,9 +1602,18 @@ export class RequestExplorer {
                 return value;
             };
             const fillPassword = (element) => {
-                element.value = "rogerroger10!";
+                let rnd =  Math.random()
+                if (rnd < 0.8) {
+                    element.value = passwordValue;
+                } else {
+                    element.value = passwordValue.replace("t","'");
+                }
                 return element.value;
             };
+            const clickSub = (element) => {
+                element.click();
+                return element.value
+            }
             var wFormElementMapTypes = {
                 textarea: fillTextAreaElement,
                 'input[type="text"]': fillTextElement,
@@ -1167,11 +1623,18 @@ export class RequestExplorer {
                 'input[type="radio"]': fillRadio,
                 'input[type="checkbox"]': fillCheckbox,
                 'input[type="email"]': fillEmail,
+                'input[type="submit"]' : clickSub,
+                'button' : clickSub,
                 'input:not([type])': fillTextElement,
-
             }
-
+            
             async function coolHorde(){
+                // setTimeout(()=>{
+                //     window.gremlinsHaveFinished=true
+                //     clearInterval(repeativeHorde);
+                //     clearInterval(triggerHorde);
+                // }, 20000);
+                
                 var noChance = new gremlins.Chance();
                 //noChance.prototype.bool = function(options) {return true;};
                 noChance.character = function(options) {
@@ -1180,7 +1643,7 @@ export class RequestExplorer {
                     } else {
                         let rnd =  Math.random()
                         if (rnd > 0.7){
-                            return "Witcher";
+                            return usernameValue;
                         } else if (rnd > 0.3){
                             return "127.0.0.1";
                         } else {
@@ -1192,50 +1655,72 @@ export class RequestExplorer {
                 if (!gremlinsHaveStarted ){
                     console.log("[WC] UNLEASHING Horde for first time!!!");
                 }
+                window.gremlinsHaveStarted = true;
                 let ff = window.gremlins.species.formFiller({elementMapTypes:wFormElementMapTypes, randomizer:noChance});
                 const distributionStrategy = gremlins.strategies.distribution({
-                    distribution: [0.80, 0.15, 0.04,0.01], // the first three gremlins have more chances to be executed than the last
+                    distribution: [0.80, 0.15, 0.05], // the first three gremlins have more chances to be executed than the last
                     delay: 20,
                 });
-
+                
                 for (let i =0; i < 5; i ++){
+                    console.log("[WC] Form Horde away!")
                     await gremlins.createHorde({
-                        species: [gremlins.species.clicker(),ff,gremlins.species.typer(), gremlins.species.scroller()],
+                        species: [ff],
+                        mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
+                        strategies: [gremlins.strategies.allTogether({ nb: 1000 })],
+                        randomizer: noChance
+                    }).unleash();
+                    await gremlins.createHorde({
+                        species: [gremlins.species.clicker(),ff, gremlins.species.scroller()],
                         mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
                         strategies: [distributionStrategy],
                         randomizer: noChance
                     }).unleash();
+                    try{
+                        await gremlins.createHorde({
+                            species: [gremlins.species.clicker(), gremlins.species.typer()],
+                            mogwais: [gremlins.mogwais.alert(),gremlins.mogwais.gizmo()],
+                            strategies: [gremlins.strategies.allTogether({ nb: 1000 })],
+                            randomizer: noChance
+                        }).unleash();
+                    } catch (e){
+                        console.log(`\x1b[38;5;8m${e}\x1b[0m`);
+                    }
                 }
+                window.gremlinsHaveFinished = true
                 clearInterval(repeativeHorde);
                 clearInterval(triggerHorde);
             }
-
-            if (gremlinsHaveStarted){
-                console.log("[WC] Restarted Page -- going with Gremlins only")
-                if (typeof window.gremlins === 'undefined') {
-                    setTimeout(checkHordeLoad, 3500);
-                    setTimeout(coolHorde, 4000);
+            try {
+                if (gremlinsHaveStarted) {
+                    console.log("[WC] Restarted Page -- going with Gremlins only")
+                    if (typeof window.gremlins === 'undefined') {
+                        setTimeout(checkHordeLoad, 3500);
+                        setTimeout(coolHorde, 4000);
+                    } else {
+                        coolHorde();
+                    }
+                    //setTimeout(function(){setInterval(repeativeHorde, 5000)}, 20000);
+                    //setTimeout(function(){setInterval(triggerHorde, 1000)}, 5000);
                 } else {
-                    coolHorde();
+                    console.log("[WC] Initial Page Test -- using lameHorde then coolHorde")
+                    setTimeout(lameHorde, 2000);
+                    // setTimeout(function(){setInterval(repeativeHorde, 500)}, 3000);
+                    // setTimeout(function(){setInterval(triggerHorde, 1000)}, 5000);
+                    setTimeout(checkHordeLoad, 19000);
+                    setTimeout(coolHorde, 20000);
                 }
-                //setTimeout(function(){setInterval(repeativeHorde, 5000)}, 20000);
-                //setTimeout(function(){setInterval(triggerHorde, 1000)}, 5000);
-            } else {
-                console.log("[WC] Initial Page Test -- using lameHorde then coolHorde")
-                setTimeout(lameHorde, 2000);
-                // setTimeout(function(){setInterval(repeativeHorde, 500)}, 3000);
-                // setTimeout(function(){setInterval(triggerHorde, 1000)}, 5000);
-                setTimeout(checkHordeLoad, 19000);
-                setTimeout(coolHorde, 20000);
+    
+                function hc() {
+                    console.log(`[WC] Detected HASH CHANGE, replacing ${window.location.href} with ${STARTPAGE}`);
+                    window.location.replace(STARTPAGE);
+                }
+    
+                window.onhashchange = hc
+            } catch (e){
+                console.log("[WC] Error occurred in browser", e)
             }
-
-            function hc(){
-                console.log(`[WC] Detected HASH CHANGE, replacing ${window.location.href} with ${STARTPAGE}`);
-                window.location.replace(STARTPAGE);
-            }
-            window.onhashchange = hc
-
-        }, gremlinsHaveStarted);
+        }, gremlinsHaveStarted, usernameValue, passwordValue);
 
         // ##############################################################################
         //                         END Injected Exercise Code
@@ -1246,7 +1731,9 @@ export class RequestExplorer {
         this.requestsAdded = 0;
         let errorThrown = false;
         let clearURL = false;
-
+        
+        this.setPageTimer();
+        
         if (this.url === ""){
 
             var urlstr = `/login.php`
@@ -1288,26 +1775,30 @@ export class RequestExplorer {
         if (url.href.indexOf("/") > -1) {
             shortname = path.basename(url.pathname);
         }
-        let options = {timeout: 10000, waituntil: "networkidle0"};
+        let options = {timeout: 20000, waituntil: "networkidle2"};
         //let options = {timeout: 10000, waituntil: "domcontentloaded"};
         let madeConnection = false;
-
+        page.on('dialog', async dialog => {
+            console.log(`[WC] Dismissing Message: ${dialog.message()}`);
+            await dialog.dismiss();
+        });
+        // making 3 attempts to load page
         for (let i=0;i<3;i++){
             try {
                 let response = "";
                 this.isLoading = true;
-
+                
                 if (clearURL){
                     response = await page.reload(options);
                     let turl = await page.url();
                     console.log("Reloading page ", turl);
                 } else {
                     let request_page =url.origin + url.pathname
-                    //console.log("GOING TO requested page =", request_page , "hash =", url.hash);
+                    console.log("GOING TO requested page =", request_page );
                     //response =
                     //let p1 = page.waitForResponse(url.origin + url.pathname);
                     //let p1 = page.waitForResponse(request => {console.log(`INSIDE request_page= ${request_page} ==> ${request.url()}`);return request.url().startsWith(url.origin);}, {timeout:10000});
-
+                    
                     response = await page.goto(url.href, options);
 
                     //response = await p1
@@ -1322,14 +1813,22 @@ export class RequestExplorer {
                 // https://github.com/puppeteer/puppeteer/issues/5492
 
                 //response = await page.goto(url.href, options);
-
+                //attempting to clear an autoloaded alert box
+                
+                page.on('dialog', async dialog => {
+                    console.log(`[WC] Dismissing Message: ${dialog.message()}`);
+                    await dialog.dismiss();
+                });
+                
                 let response_good = await this.checkResponse(response, page.url());
 
                 if (response_good){
                     madeConnection = await this.initpage(page, url);
                 }
+                
                 break; // connection successful
             } catch (e) {
+                
                 console.log(`Error: Browser cannot connect to '${url.href}' RETRYING`);
                 console.log(e.stack);
             }
@@ -1342,9 +1841,14 @@ export class RequestExplorer {
         let lastGT=0, lastGTCnt=0, gremCounterStr="";
         try {
             //console.log("Performing timeout and element search");
-
+            let errorLoopcnt = 0;
             for (var cnt=0; cnt < this.timeoutLoops;cnt++){
-
+                this.setPageTimer();
+                if (!this.browser_up){
+                    console.log(`[WC] Browser is not available, exiting timeout loop`);
+                    break;
+                }
+                console.log(`[WC] Starting timeout Loop #${cnt+1} `);
                 let roundResults = this.getRoundResults();
                 if (page.url().indexOf("/") > -1) {
                     shortname = path.basename(page.url());
@@ -1395,8 +1899,45 @@ export class RequestExplorer {
                     }
                     this.isLoading = false;
                 }
-
-                await page.waitForTimeout(this.timeoutValue*1000)
+                await page.waitForTimeout(this.timeoutValue*1000);
+                let gremlinsHaveFinished = false;
+                let gremlinsHaveStarted = false;
+                let gremlinsTime = 0;
+                try{
+                    gremlinsHaveFinished = await page.evaluate(()=>{return window.gremlinsHaveFinished;});
+                    gremlinsHaveStarted = await page.evaluate(()=>{return window.gremlinsHaveStarted;});
+                    console.log(`FIRST: gremlinsHaveStarted = ${gremlinsHaveStarted} gremlinsHaveFinished = ${gremlinsHaveFinished} browser_up=${this.browser_up} gremlinsTime=${gremlinsTime}`);
+                    // the idea, is that we will keep going as long as gremlinsTime gets reset before 30 seconds is up
+                    while (!gremlinsHaveFinished && this.browser_up && gremlinsTime < 30){
+                        let currequestsAdded = this.requestsAdded;
+                        console.log(`LOOP: gremlinsHaveStarted = ${gremlinsHaveStarted} gremlinsHaveFinished = ${gremlinsHaveFinished} browser_up=${this.browser_up}  gremlinsTime=${gremlinsTime}`);
+                        await(sleepg(3000));
+                        gremlinsHaveFinished = await page.evaluate(()=>{return window.gremlinsHaveFinished;});
+                        gremlinsHaveStarted = await page.evaluate(()=>{return window.gremlinsHaveStarted;});
+                        if (typeof(gremlinsHaveFinished) === "undefined" || gremlinsHaveFinished === null){
+                            console.log("[WC] attempting to reinet client scripts");
+                            await this.initpage(page, url, true);
+                        }
+                        if (gremlinsHaveStarted) {
+                            gremlinsTime += 3;
+                        }
+                        if (currequestsAdded !== this.requestsAdded){
+                            this.setPageTimer();
+                            gremlinsTime = 0;
+                            console.log("[WC] resetting timers b/c new request found")
+                        }
+                    }
+                } catch (ex){
+                    console.log("Error occurred while checking gremlins, restarting \nError Info: ", ex);
+                    errorLoopcnt ++;
+                    if (errorLoopcnt < 10){
+                        continue;
+                    } else {
+                        console.log("\x1b[38;5;1mToo many errors encountered, breaking out of test loop.\x1b[0m");
+                        break;
+                    }
+                }
+                console.log(`DONE with waiting for gremlins:: gremlinsHaveStarted = ${gremlinsHaveStarted} gremlinsHaveFinished = ${gremlinsHaveFinished} browser_up=${this.browser_up}  gremlinsTime=${gremlinsTime}`);
                 // eval for iframes, a, forms
                 if (this.workernum === 0 && cnt % 3 === 1){
                     //page.screenshot({path: `/p/webcam/screenshot-${this.workernum}-${cnt}.png`, type:"png"}).catch(function(error){console.log("no save")});
@@ -1435,26 +1976,31 @@ export class RequestExplorer {
     }
 
     async initpage(page, url, doingReload=false) {
-
-        const test_url = await urlExist(`http://${this.site_ip}/gremlins.min.js`);
-        console.log(`test_url = ${test_url}`, `http://${this.site_ip}/gremlins.min.js`);
-        if (test_url){
-            this.gremlins_url = `http://${this.site_ip}/gremlins.min.js`;
-        } else if (await urlExist(`https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js`)){
-            this.gremlins_url = 'https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js';
-        } else if (await urlExist(`https://trickel.com/gremlins.min.js`)){
-            this.gremlins_url = "https://trickel.com/gremlins.min.js"
-        }
-
-        if (isDefined(this.gremlins_url)){
-            console.log(`loading gremscript from remote location ${this.gremlins_url}`);
-            await page.addScriptTag({url: this.gremlins_url });
-        }
-
+        
+        await page.keyboard.down('Escape');
+        // const test_url = await urlExist(`http://${this.site_ip}/gremlins.min.js`);
+        // console.log(`test_url = ${test_url}`, `http://${this.site_ip}/gremlins.min.js`);
+        // if (test_url){
+        //     this.gremlins_url = `http://${this.site_ip}/gremlins.min.js`;
+        // } else if (await urlExist(`https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js`)){
+        //     this.gremlins_url = 'https://unpkg.com/gremlins.js@2.2.0/dist/gremlins.min.js';
+        // } else if (await urlExist(`https://trickel.com/gremlins.min.js`)){
+        //     this.gremlins_url = "https://trickel.com/gremlins.min.js"
+        // }
+        //
+        // if (isDefined(this.gremlins_url)){
+        //     console.log(`loading gremscript from remote location ${this.gremlins_url}`);
+        //     await page.addScriptTag({url: this.gremlins_url });
+        // }
+        console.log(`loading gremscript from local `);
+        await page.addScriptTag({path: "gremlins.min.js"});
+        
         this.isLoading = false;
 
         await page.screenshot({path: '/p/tmp/screenshot-pre.png', type: "png"});
-
+        
+        await page.keyboard.down('Escape');
+        
         //console.log("Waited for goto and response and div");
         this.requestsAdded += this.addDataFromBrowser(page, url);
 
@@ -1465,15 +2011,28 @@ export class RequestExplorer {
         // };
 
         //await this.submitForms(page);
-
+        
+        console.log('[WC] adding hasClicker to elements')
         const elementHandles = await page.$$('div,li,span,a,input,p,button');
         for (let ele of elementHandles) {
             if (!doingReload){
                 await ele.evaluate(node => node["hasClicker"] = "true");
             }
         }
-
-        await this.addCodeExercisersToPage(doingReload);
+        for (const frame of page.mainFrame().childFrames()){
+            const frElementHandles = await frame.$$('div,li,span,a,input,p,button');
+            for (let ele of frElementHandles) {
+                if (!doingReload){
+                    await ele.evaluate(node => node["hasClicker"] = "true");
+                }
+            }
+        }
+        console.log(`About to add code exercisers to page, u=${this.usernameValue} pw=${this.passwordValue}`);
+        
+        this.appData.addGremlinValue(this.usernameValue);
+        this.appData.addGremlinValue(this.passwordValue);
+        
+        await this.addCodeExercisersToPage(doingReload, this.usernameValue, this.passwordValue);
         //await this.startCodeExercisers();
         return true;
     }
@@ -1535,6 +2094,7 @@ export class RequestExplorer {
         var gotourl = new URL(loginData["form_url"]);
         var data = loginData["post_data"];
         var method = loginData["method"];
+        
         if (this.url === ""){
             let foundRequest = FoundRequest.requestParamFactory(loginData["form_url"], method, data, {}, "LoginPage", this.appData.site_url.href);
             foundRequest.from = "LoginPage";
@@ -1568,17 +2128,24 @@ export class RequestExplorer {
         }
         page.on('request', interceptLoginRequest);
 
-        //console.log("[Login] REQUESTING URL ", gotourl);
+        console.log("[Login] REQUESTING URL ", gotourl.href);
 
-        const response = await page.goto(gotourl, {waitUntil:"load"});
-
-        //console.log(`[Login] URL GOTO'ed `);
-
+        const response = await page.goto(gotourl, {waitUntil:"networkidle2"});
+        this.page.on('dialog', async dialog => {
+            console.log(`[WC] Dismissing LOGIN Message: ${dialog.message()}`);
+            await dialog.dismiss();
+        });
+        console.log(`[Login] URL GOTO'ed `);
+        
+        self.usernameValue = loginData["usernameValue"];
+        self.passwordValue = loginData["passwordValue"];
+        
         try {
             if (loginData["usernameSelector"] || loginData["passwordSelector"]){
 
                 await page.keyboard.press("Escape");
                 await page.keyboard.press("Escape");
+                
                 if (loginData["loginStartSelector"]){
                     let p = await page.$(loginData["loginStartSelector"])
                     await p.click();
@@ -1591,7 +2158,7 @@ export class RequestExplorer {
                 await page.focus(loginData["passwordSelector"]);
                 await page.keyboard.type( loginData["passwordValue"], {delay:100});
                 const element = await page.$(loginData["passwordSelector"]);
-                const text = await (await element.getProperty('value')).jsonValue();
+                //const text = await (await element.getProperty('value')).jsonValue();
 
                 await page.screenshot({path: '/p/tmp/screenshot-pre-login.png', type:"png"});
 
@@ -1602,7 +2169,7 @@ export class RequestExplorer {
                     await inputElement.click();
                 } else if (submitType === "enter"){
                     //console.log("\nPRESSING ENTERE\n");
-                    await Promise.all([page.keyboard.type("\n"), page.waitForNavigation({timeout: 5000, waitUntil:'networkidle2'})])
+                    await Promise.all([page.keyboard.type("\n"), page.waitForNavigation({timeout: 10000, waitUntil:'networkidle2'})])
 
                 } else if (submitType === "click") {
                     //await page.keyboard.type("");
@@ -1732,7 +2299,24 @@ export class RequestExplorer {
         console.log(`[WC] Round Results for round ${this.appData.currentURLRound} of ${MAX_NUM_ROUNDS}: Total Inputs :  ${roundResults.totalInputs} Total Requests: ${roundResults.equaltoRequests} of ${roundResults.totalRequests} processed so far`);
 
     }
-
+    setPageTimer(){
+        var self = this;
+        if (this.pagetimeout){
+            console.log("[WC] \x1b[38;5;10mReseting page timer \x1b[0m");
+            clearTimeout(this.pagetimeout);
+        }
+        this.pagetimeout = setTimeout(function(){
+            console.log("I think we are STUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
+            try{
+                this.browser_up = false;
+                self.browser.close();
+                console.log("Broswer should have closed by now");
+            } catch (err){
+                console.log("\tProblem closing browser after timeout\n");
+                console.log(err);
+            }
+        }, this.actionLoopTimeout*1000 + 6000);
+    }
     async start() {
         var self = this;
         process.on('SIGINT', function() {
@@ -1812,8 +2396,9 @@ export class RequestExplorer {
                 }
             } else if (message.text().search("[WC-URL]") > - 1){
                 let urlstr = message.text().slice("[WC-URL]".length);
-                //console.log("urlstr=", urlstr);
+                console.log(`[WC] puppeteer layer recieved url from browser with urlstr='${urlstr}'`);
                 self.appData.addValidURLS([urlstr], `${self.appData.site_url.href}`,"ConsleRecvd");
+                
             } else if (message.text().search("CW DOCUMENT") === -1 && message.text() !== "JSHandle@node") {
                 if (message.text().indexOf("gremlin") > -1){
                     self.gremTracker(message.text());
@@ -1841,6 +2426,12 @@ export class RequestExplorer {
             if (req.method() !== "GET" || req.postData() || req.resourceType() === "xhr"){
                 //console.log("NONGET: ", req.url(), "method=",req.method(), "restype=", req.resourceType(), "data=", req.postData());
             }
+            let tempurl = new URL(req.url());
+            if (tempurl.pathname.search(/\.css$/) > -1 || tempurl.pathname.search(/\.js$/) > -1) {
+                console.log("CSS/JS Request Coming THROUGH!!!!! ", req.url(), "method=",req.method(), "restype=", req.resourceType(), "data=", req.postData());
+                req.continue()
+                return;
+            }
             if (req.url().search(/.*HNAP1/) > -1){
                 let re = new RegExp(/<soap:Body>(.*)<\/soap:Body>/);
                 if (re.test(req.postData())){
@@ -1850,6 +2441,7 @@ export class RequestExplorer {
                     //console.log(`${GREEN}${req.url()} NO SOAP MATCH ${req.postData()} ${ENDCOLOR}`);
                 }
             }
+            //console.log("Interceptd ", req.url());
             if (self.url.href === req.url()) {
                 //not sure why reforming request data for continue here.
 
@@ -1874,28 +2466,25 @@ export class RequestExplorer {
 
                 if (self.appData.addInterestingRequest(foundRequest) > 0){
                     self.requestsAdded++;
-                    //console.log("[WC] req.url() = ", req.url());
                 }
 
-                // console.log("processRequest caught to add method and data ");
-                // console.log("\t", self.method, pdata.method)
-                // console.log("\t", self.postData, pdata.postData)
                 if (!self.isLoading){
-                    self.reinitPage = true;
+                    req.respond({status:204});
+                    return;
+                    //self.reinitPage = true;
                 }
+                console.log("\x1b[38;5;5mprocessRequest caught to add method and data and continueing \x1b[0m", req.url());
                 req.continue(pdata);
-
+               
             } else {
 
-                let tempurl = new URL(req.url());
-
                 //self.appData.addInterestingRequest(req );
-
+                
                 tempurl.searchParams.forEach(function (value, key, parent) {
                     self.appData.addQueryParam(key, value);
                 });
                 if (req.url().startsWith(self.appData.site_url.origin)){
-                    //console.log("Intercepted in processRequest ", req.url(), req.method());
+                    console.log("[WC] Intercepted in processRequest ", req.url(), req.method());
                     let basename = path.basename(tempurl.pathname);
                     if (req.url().indexOf("rest") > -1 && (req.method() === "POST" || req.method() === "PUT")){
                         //console.log(basename, req.method(), req.headers(), req.resourceType());
@@ -1917,31 +2506,58 @@ export class RequestExplorer {
                     }
                     // skip if it has a period for nodejs apps
 
-                    // let result = self.appData.addRequest(req.url(), req.method(), req.postData(), "interceptedRequest");
-                    // if (result){
-                    //     console.log(`\x1b[38;5;2mINTERCEPTED REQUEST and ${GREEN} ${GREEN} ADDED ${ENDCOLOR}${ENDCOLOR} #${self.appData.collectedURL} ${req.url()} RF size = ${self.appData.numRequestsFound()}\x1b[0m`);
-                    // } else {
-                    //     //console.log(`INTERCEPTED and ABORTED repeat URL ${req.url()}`);
-                    // }
+                    let result = self.appData.addRequest(req.url(), req.method(), req.postData(), "interceptedRequest");
+                    if (result){
+                        console.log(`\x1b[38;5;2mINTERCEPTED REQUEST and ${GREEN} ${GREEN} ADDED ${ENDCOLOR}${ENDCOLOR} #${self.appData.collectedURL} ${req.url()} RF size = ${self.appData.numRequestsFound()}\x1b[0m`);
+                    } else {
+                        console.log(`INTERCEPTED and ABORTED repeat URL ${req.url()}`);
+                    }
                 } else {
+                    
                     if (req.url().indexOf("gremlins") > -1){
                         //console.log("[WC] CONTINUING with getting some gremlins in here.");
                         req.continue();
                     } else {
-                        //console.log(`Aborting request for ${req.url().substr(0,200)}`)
-                        req.abort();
+                        try{
+                            let url = new URL(req.url());
+                            if (req.url().startsWith("image/") || url.pathname.endsWith(".gif") || url.pathname.endsWith(".jpeg") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".woff") || url.pathname.endsWith(".ttf")){
+                            
+                            } else {
+                                //console.log(`[WC] Ignoring request for ${req.url().substr(0,200)}`)
+                            }
+                        } catch (e){
+                            //console.log(`[WC] Ignoring request for malformed url = ${req.url().substr(0,200)}`)
+                        }
+                        if (self.isLoading){
+                            req.continue();
+                        } else {
+                            req.respond(req.redirectChain().length
+                              ? { body: '' } // prevent 301/302 redirect
+                              : { status: 204 } // prevent navigation by js
+                            );
+                        }
                     }
                     return;
                 }
+                // What to do, from here
                 //console.log("PROCESSED ", req.url(), req.isNavigationRequest());
                 if (false && req.frame() === self.page.mainFrame()){
-                    req.abort('aborted');
+                    console.log(`[WC] Aborting request b/c frame == mainframe for ${req.url().substr(0,200)}`)
+                    //req.abort('aborted');
+                    req.respond(req.redirectChain().length
+                      ? { body: '' } // prevent 301/302 redirect
+                      : { status: 204 } // prevent navigation by js
+                    )
                 } else {
                     if (req.isNavigationRequest() && req.frame() === self.page.mainFrame() ) {
                         if (typeof self.last_nav_request !== "undefined" && self.last_nav_request === req.url()){
-                            //console.log("[WC] this is the same as last nav request, ignoring");
-                            req.abort()
+                            console.log("[WC] Aborting request b/c this is the same as last nav request, ignoring");
+                            
                             self.last_nav_request = req.url();
+                            req.respond(req.redirectChain().length
+                              ? { body: '' } // prevent 301/302 redirect
+                              : { status: 204 } // prevent navigation by js
+                            )
                             return;
                         }
                         self.last_nav_request = req.url();
@@ -1952,11 +2568,14 @@ export class RequestExplorer {
                         }
                         if (self.isLoading){
                             //console.log(`[WC] \tRequest granted while still in loading phase ${req.resourceType()} ${req.url()} `);
-
                             req.continue();
                         } else {
-
-                                //console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()}`);
+                                // if(req.respond(req.redirectChain().length)) {
+                                //     console.log(`[WC] \tNavigation Request in mainFrame preventing 301/302 redirect ${req.url()}`);
+                                // } else{
+                                //     console.log(`[WC] \tNavigation Request in mainFrame denied ${req.url()} using 204`);
+                                // }
+                        
                                 req.respond(req.redirectChain().length
                                   ? { body: '' } // prevent 301/302 redirect
                                   : { status: 204 } // prevent navigation by js
@@ -2008,13 +2627,13 @@ export class RequestExplorer {
                 }
 
             }
-        }
+        } // end processrequest
 
         console.log(`[\x1b[38;5;5mWC\x1b[0m] Browser launching with  url=${this.url.href} `);
 
         try {
             try{
-                this.browser = await puppeteer.launch({headless:this.appData.headless, args:["--disable-features=site-per-process", "--window-size=1920,1040"], "defaultViewport": null }); //
+                this.browser = await puppeteer.launch({headless:this.appData.headless, args:["--disable-features=site-per-process", "--window-size=1600,900"], "defaultViewport": null }); //
                 //console.log("OPENED BROWSER!");
                 this.browser_up = true;
             } catch (xerror) {
@@ -2028,17 +2647,7 @@ export class RequestExplorer {
                     throw(xerror);
                 }
             }
-            let pagetimeout = setTimeout(function(){
-                    console.log("I think we are STUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
-                    try{
-                        this.browser_up = false;
-                        self.browser.close();
-                    } catch (err){
-                        console.log("\tProblem closing browser after timeout\n");
-                    }
-
-                }, this.timeoutLoops*this.timeoutValue*1000 + 6000);
-
+            
             let gremlinsErrorTest = setInterval(function(){
                 if (self.gremlins_error && self.lamehord_done){
                     console.log("Ohh no, they killed Gizmo!, and the lamhord completed.  Aborting!!!");
@@ -2065,7 +2674,16 @@ export class RequestExplorer {
                         console.log("COOKIE ERROR:!!!", error)
                     });
                 }
-
+                let childFrames = await this.page.mainFrame().childFrames();
+    
+                if (typeof childFrames !== 'undefined' && childFrames.length > 0){
+                    for (const frame of childFrames){
+                        // await frame.setRequestInterception(true);
+                        // frame.on('request', processRequest);
+                        
+                        console.log(`[WC] adding processRequest for ${frame.url()}`)
+                    }
+                }
                 this.page.on('request', processRequest);
 
                 this.page.on('console', consoleLog);
@@ -2084,7 +2702,10 @@ export class RequestExplorer {
                 console.log(`Error: cannot start browser `);
                 console.log(e.stack);
             } finally {
-                clearTimeout(pagetimeout);
+                if (this.pagetimeout){
+                    console.log("[WC] \x1b[38;5;10mRemoving page timer for browser \x1b[0m");
+                    clearTimeout(this.pagetimeout);
+                }
                 clearInterval(gremlinsErrorTest);
                 //console.log(`current request = ${this.appData.requestsFound[this.currentRequestKey]}`)
                 await this.browser.close();

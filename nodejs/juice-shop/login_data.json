@@ -1,0 +1,27 @@
+{
+
+  "form_url": "http://localhost/#/login",
+  "form_selector": "#login-form",
+  "form_submit_selector": "#loginButton",
+  "usernameSelector": "#email",
+  "usernameValue": "admin@juice-sh.op",
+  "passwordSelector": "#password",
+  "passwordValue": "admin123",
+  "submitType": "click",
+  "positiveLoginMessage": "Logout",
+  "method":"POST",
+  "ignoreValues": ["t", "d", "sid"],
+  "urlUniqueIfValueUnique": [],
+  "getSessions": false,
+  "direct" : {
+    "url": "http://localhost:@PORT@/rest/user/login",
+    "postData": "{\"email\":\"admin@juice-sh.op\",\"password\":\"admin123\"}",
+    "getData": "",
+    "positiveMessage": "authentication",
+    "method": "POST",
+    "cgiBinary": "/p/webcam/javascript/tests/httpreqr/httpreqr",
+    "cgiParams": "--url http://localhost:@PORT@/rest/user/login --method post --json",
+    "loginSessionCookie" : "",
+    "mandatoryGet": ""
+  }
+}

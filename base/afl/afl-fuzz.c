@@ -2861,7 +2861,7 @@ static void perform_dry_run(char** argv) {
     u8* fn = strrchr(q->fname, '/') + 1;
 
     ACTF("Attempting dry run with '%s'...", fn);
-
+    fflush(stdout);
     fd = open(q->fname, O_RDONLY);
     if (fd < 0) PFATAL("Unable to open '%s'", q->fname);
 
@@ -2877,9 +2877,12 @@ static void perform_dry_run(char** argv) {
 
     if (stop_soon) return;
 
-    if (res == crash_mode || res == FAULT_NOBITS)
-      SAYF(cGRA "    len = %u, map size = %u, exec speed = %llu us\n" cRST, 
+    if (res == crash_mode || res == FAULT_NOBITS) {
+      SAYF(cGRA "    len = %u, map size = %u, exec speed = %llu us\n" cRST,
            q->len, q->bitmap_size, q->exec_us);
+      fflush(stdout);
+    }
+
 
     switch (res) {
 
@@ -4605,6 +4608,7 @@ static void show_init_stats(void) {
     hang_tmout = MIN(EXEC_TIMEOUT, exec_tmout * 2 + 100);
 
   OKF("All set and ready to roll!");
+  fflush(stdout);
 
 }
 

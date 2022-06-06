@@ -1,3 +1,5 @@
+import stat
+
 from phuzzer.reporter import Reporter
 from urllib.parse import urlparse, urlunparse
 from datetime import datetime
@@ -14,6 +16,9 @@ import pwd
 import sys
 import os
 import re
+
+WITCH_FAIL = "[\033[31mWitcher\033[0m]"
+WITCH_GO = "[\033[32mWitcher\033[0m]"
 
 class Witcher():
     AFLR, AFLHR, WICH, WICR, WICHR, EXWIC, EXWICH, EXWICHR, DEV = "AFLR", "AFLHR", "WICH", "WICR", "WICHR", "EXWIC", "EXWICH", "EXWICHR", "DEV"
@@ -42,6 +47,8 @@ class Witcher():
         self.single_target = args.target
         self.use_reqr = False
         self.affinity = args.affinity
+
+        self.no_fault_escalation = args.no_fault_escalation
 
         self.env = self.initialize_env()
 
@@ -76,6 +83,8 @@ class Witcher():
         self.server_procs = []
         self.kill = False
 
+        self.saved_seeds = set()
+
         if args.container_name:
             self.container_info = {'name': args.container_name}
         else:
@@ -105,7 +114,8 @@ class Witcher():
             env["MANDATORY_POST"] = direct["mandatory_post"]
 
         env["SERVER_NAME"] = env.get("SERVER_NAME","witcher")
-        env["STRICT"] = "1"
+        if not self.no_fault_escalation:
+            env["STRICT"] = "1"
         self.use_reqr = True if "R" in self.testver else False
         env["AFL_PATH"] = self.jconfig.get("afl_path", "/afl")
         if "H" in self.testver:
@@ -197,10 +207,10 @@ class Witcher():
                     else:
                         url = urlparse(req["_url"])
 
-                    if req["_method"].upper() == "GET":
-                        if len(url.query) + len(req.get("_postData",[])) < 1 :
-                            print(f"[*] Skipping {reqkey} b/c {url.query} is {len(url.query)} and less than 1")
-                            continue
+                    # if req["_method"].upper() == "GET":
+                    #     if len(url.query) + len(req.get("_postData",[])) < 1 :
+                    #         print(f"[*] Skipping {reqkey} b/c {url.query} is {len(url.query)} and less than 1")
+                    #         continue
 
                     if url.path.endswith("/") and req["_url"].find("/?") > -1:
                         print(f"[*] Skipping {reqkey} b/c looks like dir listing")
@@ -286,7 +296,13 @@ class Witcher():
         if len(requests) > 50:
             requests = requests[:10]
         for reqkey in requests:
-            req = self.request_data["requestsFound"][reqkey]
+
+            req = self.request_data["requestsFound"].get(reqkey,None)
+            if req is None:
+                print(f"[Witcher]\033[32m Did not find {reqkey} in request data. \033[0m")
+                continue
+                #req = self.request_data["requestsFound"].get(reqkey, None)
+
             strid = req["_id"]
             url = urlparse(req["_url"])
 
@@ -318,7 +334,7 @@ class Witcher():
             if inputvar.find("&") == len(inputvar) -1:
                 inputvar = inputvar[:-1]
             dictionary_vars.append(b"%s&" % inputvar.encode("utf-8"))
-            dictionary_vars.append(b"%s'(&" % inputvar.encode("utf-8"))
+#            dictionary_vars.append(b"%s'(&" % inputvar.encode("utf-8"))
         print(f"Wrote out dictionary vars {len(inputlist)} totals bytes {len(dictionary_vars)} {dictionary_vars[0]}")
 
         #open(self.dictionary_fn,"w").write(dictionary_vars)
@@ -450,7 +466,7 @@ class Witcher():
                                   create_dictionary=False, timeout=self.timeout, memory=self.memory,
                                   run_timeout=self.run_timeout, dictionary=dictionary_str,
                                   use_qemu=self.use_qemu, resume=do_resume, login_json_fn=self.config_loc,
-                                  base_port=self.server_base_port, container_info=self.container_info)
+                                  base_port=self.server_base_port, container_info=self.container_info, fault_escalation=not self.no_fault_escalation)
 
         def chown_files():
             # by default, AFL creates all files and dirs with permissions of 700
@@ -484,12 +500,17 @@ class Witcher():
                     totalcnt = start_results["totalcnt"]
                     successcnt = start_results["successcnt"]
                     forkfailcnt = start_results["forkfail"]
+                    failedseeds = start_results['failedseeds']
+                    weakseeds = start_results['weakseeds']
+                    logfilesize = start_results['logfilesize']
+                    reporter.set_startup_values(successcnt, len(failedseeds), len(weakseeds), logfilesize)
                     if forkfailcnt >= 1:
                         print(f"[*]\033[31mError at least 1 instance failed to communicate with fork server \033[0m")
                         import ipdb
                         ipdb.set_trace()
                         raise Exception("Fork server handshake failure count too high")
-                    if successcnt + len(start_results['failedseeds']) == self.cores or run_time > 120:
+
+                    if successcnt + len(start_results['failedseeds']) == self.cores or (run_time > 120 and logfilesize > 0) or run_time > 300:
                         verified_start = True
                         success_percent = (float(successcnt) / float(totalcnt)) * 100 if totalcnt > 0 else 0
                         if success_percent < 80:
@@ -689,7 +710,58 @@ class Witcher():
         #                     print(class_fn)
         #                     jfilters.write(class_fn + "\n")
 
+    def save_crashing_seed(self, seedpath: str, url_path: str) -> None:
+        """
+        Saves a seed that AFL reported as crashing
 
+        """
+        if seedpath+url_path in self.saved_seeds:
+            print(f"{WITCH_GO} Not saving for {url_path} {seedpath}")
+            return
+
+        encoded_url_path = url_path.replace(self.appdir + '/', '').replace('/', '+')
+
+        crash_file_dpath = os.path.join(self.report_dir, 'seed-crashes')
+        os.makedirs(crash_file_dpath, exist_ok=True)
+
+        fid = len(glob.glob(f"{crash_file_dpath}id*"))
+
+        crash_fname = os.path.join(crash_file_dpath, f"id:{fid:06},{encoded_url_path},src:{os.path.basename(seedpath)},crash")
+        crash_fname = os.path.realpath(crash_fname)
+        print(f"[Witcher] Saved potential crashing input seed at {os.path.basename(crash_fname)}")
+        shutil.copyfile(seedpath, crash_fname)
+
+        fuzz_scr_fpath = os.path.join(self.work_dir, "fuzz-0.sh")
+        with open(fuzz_scr_fpath, "r") as rf:
+            scr = rf.read()
+
+        cat_str = f'cat "$SCRIPT_DIR/{os.path.basename(crash_fname)}"'
+
+        out_scr = ""
+        for line in scr.split("\n"):
+            if line.find("afl-fuzz") > -1:
+                out_scr += """SCRIPT_DIR="$(cd "$(dirname $0)" > /dev/null && pwd)" \n"""
+                args = line.split(" ")
+
+                out_args = [f"{os.path.dirname(args[0])}/afl-showmap", "-o", f"/tmp/map-{os.path.basename(seedpath)}"]
+                argindex = 1
+                while argindex < len(args):
+                    arg = args[argindex]
+                    if arg == "-i" or arg == "-o" or arg == "-x" or arg == "-M":
+                        argindex += 2
+                    else:
+                        out_args.append(arg)
+                        argindex += 1
+                out_scr += cat_str + " | " + " ".join(out_args) + "\n"
+
+            else:
+                out_scr += line + "\n"
+
+        exec_fpath = f"{crash_fname}.sh"
+        with open(exec_fpath, "w") as wf:
+            wf.write(out_scr)
+
+        os.chmod(exec_fpath, stat.S_IRWXU | stat.S_IRWXG | stat.S_IWOTH | stat.S_IROTH)
 
 
     def start_fuzz_campaign(self):
@@ -781,18 +853,39 @@ class Witcher():
 
                         while len(seeds) > 0 and (start_results.get("totalfail", True)):
                             failed_seeds = start_results.get("failedseeds", [])
-                            if failed_seeds:
-                                print(f"We have {len(failed_seeds)} seeds that caused a failure during initialization")
-                                for fn in failed_seeds:
+                            weak_seeds = start_results.get("weakseeds", [])
+                            print(f"Startup info {start_results} {weak_seeds} {failed_seeds}")
+                            if failed_seeds or weak_seeds:
+                                print(f"{WITCH_FAIL} {len(failed_seeds)} seeds caused a failure and {len(weak_seeds)} resulted in known execution path ")
+                                seeds_to_scan = set()
+                                seeds_to_scan |= failed_seeds
+                                seeds_to_scan |= weak_seeds
+                                for fn in seeds_to_scan:
                                     seedpath = f"{self.work_dir}/initial_seeds/{fn}"
+
                                     if os.path.exists(seedpath):
-                                        os.remove(seedpath)
+
+                                        self.save_crashing_seed(seedpath, result_storage_pathname)
+                                        self.saved_seeds.add(seedpath+result_storage_pathname)
+
+                                        with open(seedpath,"rb") as rf:
+                                            filedata = rf.read()
+                                        rep_regex = rb"[\x01-\x19'\x7f-\xff]"
+
+                                        if re.match(rep_regex, filedata):
+                                            print(f"[Witcher] seed has odd characters, replacing with all with 'a'")
+                                            filedata = re.sub(rep_regex, repl=b"a", string=filedata)
+                                            with open(seedpath, "wb") as wf:
+                                                wf.write(filedata)
+                                        else:
+                                            print(f"[Witcher] No odd characters, deleting seed")
+                                            os.remove(seedpath)
                                 seeds = []
                                 for fn in glob.iglob(f"{self.work_dir}/initial_seeds/*"):
                                     with open(fn,"rb") as rf:
                                         seeds.append(rf.read())
                             else:
-                                print("\033[36mCould not find and failed seeds, so removing last seed")
+                                print("\033[36mCould not find any failed or weak seeds, so removing last seed")
                                 seeds.remove(seeds[len(seeds)-1])
 
                             print(f"\033[33mAttempting to fuzz again {target['target_path']}\033[0m with {len(seeds)} seeds and {start_results}")

@@ -644,13 +644,14 @@ void initMemory(){
         int mem_key = atoi(getenv("AFL_META_INFO_ID"));
         int shm_id = shmget(mem_key , sizeof(test_process_info), 0666);
         if (shm_id < 0 ) {
-            printf("*** shmget error using memkey=%d *** ERROR: \n", mem_key);
+            printf("*** shmget error using memkey=%d *** ERROR: %s \n", mem_key, strerror(errno));
+
             exit(1);
         }
         printf("*** shmat attaching to mem_key=%d shm_id=%d ***\n", mem_key, shm_id);
         test_process_info_ptr = (test_process_info *) shmat(shm_id, NULL, 0);  /* attach */
         if ((long) test_process_info_ptr == -1) {
-            printf("*** shmat attaching error could not attach to %d ***\n", mem_key);
+            printf("*** shmat attaching error could not attach to %d ERROR: %s ***\n", mem_key, strerror(errno));
             exit(2);
         }
         if (getenv("__AFL_SHM_ID")){

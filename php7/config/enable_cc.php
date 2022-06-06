@@ -1,7 +1,16 @@
 <?php
+$do_cc = true;
 
-if (file_exists("/tmp/start_test.dat")) {
-    $coverage_dpath = "/tmp/coverages/"; //__DIR__;
+if (isset($_SERVER['SCRIPT_FILENAME']) && !empty($_SERVER['SCRIPT_FILENAME'])) {
+    $bn = basename($_SERVER['SCRIPT_FILENAME'], ".php");
+    if ($bn == 'enable_cc.php' || $bn == 'export_cc.php'){
+        $do_cc = false;
+    }
+}
+if (file_exists("/tmp/start_test.dat") && $do_cc) {
+
+    date_default_timezone_set("America/Phoenix");
+    $coverage_dpath = "/dev/shm/coverages/"; //__DIR__;
     if (!is_dir($coverage_dpath)){
         mkdir($coverage_dpath, 0777, true);
     }
@@ -15,59 +24,34 @@ if (file_exists("/tmp/start_test.dat")) {
     //echo "hidy-ho neighbor " . $tarut_dirname . "+" . $tarut_basename . "\n";
 
     xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
-
+    function get(&$var, $default=null) {
+        return isset($var) ? $var : $default;
+    }
+    function milliseconds() {
+        $mt = explode(' ', microtime());
+        return ((int)$mt[1]) * 1000 + ((int)round($mt[0] * 1000));
+    }
     function end_coverage()
     {
         global $tarut_name;
         global $coverage_dpath;
-	//echo "cleaning up the mess\n";
-        $coverageName = $coverage_dpath . $tarut_name . ".cc";
-	$jsonCoverageFPath = $coverageName . ".json";
+
+        $coverageName = $coverage_dpath . $tarut_name . "_" . strval(milliseconds()) . ".cc";
+	    $jsonCoverageFPath = $coverageName . ".json";
 
         try {
             xdebug_stop_code_coverage(false);
-            $cur_cc_jdata = xdebug_get_code_coverage();
 
-            // if prior file exists merge jsons
-            if (file_exists($jsonCoverageFPath)) {
-                $prior_cc_jdata = json_decode(file_get_contents($jsonCoverageFPath));
-                $cur_cc_jdata = merge_jsons($prior_cc_jdata, $cur_cc_jdata);
-                //echo count($cur_cc_jdata) . " \n";
-		
-            }
-            $cur_cc_jstr = json_encode($cur_cc_jdata); // obj to str
-	    
-            file_put_contents($coverageName . '.json', $cur_cc_jstr);
+            $cur_cc_jdata = xdebug_get_code_coverage();
+            $json_data = json_encode($cur_cc_jdata);
+            file_put_contents($jsonCoverageFPath, $json_data);
 
         } catch (Exception $ex) {
-	    echo "ERROR encountered " . $ex . "\n";
-            file_put_contents($coverageName . '.ex', $ex);
+	        echo "ERROR encountered " . $ex . "\n";
+            file_put_contents($coverage_dpath."exceptions.log", $ex, FILE_APPEND);
+        } finally {
+
         }
-    }
-
-    // merges 2 code coverage jsons always keeping values > 0 from either dictionary
-    function merge_jsons($jdata1, $jdata2) {
-
-        foreach ($jdata1 as $uri => $uri_data):
-
-            foreach ($uri_data as $line => $line_result):
-                if (isset($jdata2[$uri])){
-                    if (isset($jdata2[$uri][$line]) && $jdata2[$uri][$line] > 0){
-                     // do nothing
-                    } else {
-                        // if jdata2 doesn't have the value or its less than zero than use line_result, copy everything from jdata1
-                        $jdata2[$uri][$line] = $line_result;
-                    }
-                } else {
-                    $jdata2[$uri] = array();
-                    $jdata2[$uri][$line] = $line_result;
-                }
-
-            endforeach;
-
-        endforeach;
-
-        return $jdata2;
     }
 
     class coverage_dumper

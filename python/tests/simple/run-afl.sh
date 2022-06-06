@@ -3,7 +3,7 @@
 APPDIR=/p/webcam/apps/wp320
 export LD_LIBRARY_PATH=/p/webcam/libs
 #export AFL_PRELOAD=/p/webcam/libs/libcodetracer.so
-export AFL_PRELOAD=/p/webcam/libs/libcgiwrapper.so
+export AFL_PRELOAD=/p/webcam/libs/lib_db_fault_escalator.so
 
 trap ctrl_c INT
 

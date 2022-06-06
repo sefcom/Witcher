@@ -32,7 +32,7 @@ def main():
 
     parser.add_argument("--target", help="a single file to fuzz", type=str, default=None)
     parser.add_argument("-C", "--first_crash","--first", help="Run till firstcrash or timeout, config file has precendence", action="store_true", default=False )
-
+    parser.add_argument("-F", "--no_fault_escalation", "--no-fault-escalation", help="Disable fault escalation", action="store_true", default=False)
     parser.add_argument("-A", "--affinity", help="CPU affinity starting core", type=str, default=None)
     parser.add_argument("-M", "--memory", help="Memory limit to pass to AFL (MB, or use k, M, G, T suffixes), config file has precendence", type=str, default="8G")
 

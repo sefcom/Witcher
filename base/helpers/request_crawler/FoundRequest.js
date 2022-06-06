@@ -16,6 +16,7 @@ export class FoundRequest  {
         if (!this._urlstr.startsWith("http://")) {
             this._urlstr = site_url + this._urlstr;
         }
+        this.multipleParamKeys = new Set();
         this._url = new URL(this._urlstr);
         this._resourceType = resourceType;
         this._method = method.toUpperCase();
@@ -225,6 +226,19 @@ export class FoundRequest  {
         let postData = this._postData;
         let builtParams = {};
         let plist = [];
+        let bf = this.multipleParamKeys;
+        if (!this.multipleParamKeys){
+            this.multipleParamKeys = new Set();
+        } else if (!(this.multipleParamKeys instanceof Set)){
+            //console.log(`[WC] taking ${this.multipleParamKeys} and turning into Set`);
+            if (this.multipleParamKeys instanceof Array){
+                this.multipleParamKeys = new Set(this.multipleParamKeys);
+            } else if (this.multipleParamKeys instanceof Object){
+                this.multipleParamKeys = new Set(Object.keys(this.multipleParamKeys));
+            }
+        }
+        //console.log(bf, bf instanceof Set,"after", this.multipleParamKeys, this.multipleParamKeys instanceof Set );
+        
         if (isDefined(queryString) && queryString.length > 0) {
             plist = queryString.split("&");
         }
@@ -237,6 +251,7 @@ export class FoundRequest  {
                 // if the string is filled with repeating Q's or 2's then truncate string to 1 character
                 if (key in builtParams){
                     builtParams[key].add(value);
+                    this.multipleParamKeys.add(key)
                 } else {
                     builtParams[key] = new Set([value]);
                 }
