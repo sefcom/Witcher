@@ -3,6 +3,10 @@
 This repo contains the source code for Witcher a web application fuzzer that utilizes mutational fuzzing 
 to explore web applications and fault escalation to detect command and SQL injection vulnerabilities. 
 
+This repo relies on submodules
+`git submodule update --init --recursive`
+
+
 The best way to utilize Witcher is to build the base docker containers and use them as the foundation for the web application container to be tested.
 
 To get started, run `docker/build-all.sh`
