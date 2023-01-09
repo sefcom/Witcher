@@ -1,8 +1,40 @@
 # Witcher
 
+This repo contains the source code for Witcher a web application fuzzer that utilizes mutational fuzzing 
+to explore web applications and fault escalation to detect command and SQL injection vulnerabilities. 
 
+The best way to utilize Witcher is to build the base docker containers and use them as the foundation for the web application container to be tested.
+
+To get started, run `docker/build-all.sh`
+
+Once completed, the script will have built all of Witcher's base containers. 
+- witcher/php5run
+- witcher/php7run
+- witcher/python
+- witcher/java
+- witcher/nodejs
+- witcher/ruby
+
+When building the target web application, use one of the above containers in conjunction with the `FROM` field in the application's docker build file.
+
+Currently, PHP 5 and 7 fuzz the application by accessing the PHP application via CGI. Whereas, Witcher fuzzes python, java, nodejs, and ruby using the target web application's interface.
+
+This repository contains Witcher's source code, the scripts used to evaluate Witcher are available at https://github.com/sefcom/Witcher-experiment 
+
+# Building Basic Docker Containers
+
+
+To start, we suggest setting up a directory structure similar to what was done for the evaluation (See [Hospital Management](https://github.com/sefcom/Witcher-experiment/tree/main/interpreter-targets/openemr)). 
+In general, create a folder for the web application where the Dockerfile and source code will reside.
+Next, create a folder for configuration and results (e.g.,`user`), inside the new folder create a file named `witcher_config.json`
+The new folder will be mapped to Witcher's container at run time so that the results are saved to your local drive.
+
+`docker build --build-arg USE_INSTRUMENTED=1 -t openemr-user`
 
 ## Witcher Config File
+
+The Witcher Config File, `witcher_config.json` should be created in the 
+
 - afl_preload is location of cgi wrapper for PHP and CGI web applications
 - number_of_refuzzes is the number of times page will be fuzzed within a single trial, more than one encourages page to page interactions
 - timeout in seconds
@@ -58,3 +90,30 @@
 
 }
 ```
+
+
+## Fuzzing the application
+
+For the experiments, a bash [script](https://github.com/sefcom/Witcher-experiment/blob/main/scripts/run_single_experiment.sh) was used to configure the container and directories and run the fuzzer. 
+
+`docker run -id --rm --privileged --shm-size=1G -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix  --name openerm-user -v openemr:/openemr -v openemr/user:/tmp/coverages ${docker_image_name}`
+
+`docker exec -it -w /helpers/request_crawler/  openemr touch /tmp/start_test.dat`
+
+### Running the Request Crawler
+
+`docker exec -it -w /helpers/request_crawler/ -u wc  openemr bash -i'"'timeout --signal KILL $(( 4 * 60 * 60 ))s  node main.js request_crawler http://localhost /openemr/user --no-headless >> openemr/user/crawler.log '"'`
+
+### Running the fuzzer
+
+`docker exec -it openemr/user bash -c "echo 1 >/proc/sys/kernel/sched_child_runs_first && echo core > /proc/sys/kernel/core_pattern";`
+`docker exec -it openemr/user bash -c 'for fn in /sys/devices/system/cpu/cpu*/cpufreq/scaling_gov*; do echo performance > $fn; done'`
+
+`docker exec -it opeemr/user bash -i -c 'cd /app; chown wc:www-data -R .; chmod o+r . -R;if [ -d /var/instr/ ]; then chmod 666 -R /var/instr/*; fi`
+
+`docker exec -it -w "openemr" -u wc openemr/user bash -i -c "p --testver WICHR `
+
+After completing the last command, the fuzzer should start with results being printed to the terminal.
+
+
+

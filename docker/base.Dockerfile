@@ -95,7 +95,7 @@ RUN sudo cp -r /home/wc/docker_env/. /root/
 RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 RUN echo 'export NVM_DIR=$HOME/.nvm; . $NVM_DIR/nvm.sh; . $NVM_DIR/bash_completion' >> /home/wc/.bashrc
 ENV NVM_DIR /home/wc/.nvm
-RUN . $NVM_DIR/nvm.sh && nvm install node
+RUN . $NVM_DIR/nvm.sh && nvm install 16
 #RUN sudo mkdir /node_modules && sudo chown wc:wc /node_modules && sudo apt-get install -y npm
 RUN sudo apt-get install -y npm
 RUN . $NVM_DIR/nvm.sh && npm install puppeteer cheerio
@@ -152,7 +152,7 @@ RUN rm -f /wclibs/libcgiwrapper.so && ln -s /wclibs/lib_db_fault_escalator.so /w
 
 #COPY --chown=wc:wc bins /bins
 
-COPY --from=puppeteer1337/build-widash-x86 /Widash/archbuilds/dash /crashing_dash
+COPY --from=witcher/build-widash-x86 /Widash/archbuilds/dash /crashing_dash
 
 ENV CONTAINER_NAME="witcher"
 ENV WC_TEST_VER="EXWICHR"

@@ -32,7 +32,7 @@ RUN cp /config/mysql-connector-java-8.0.21.jar /opt/tomcat/base/lib/ && \
 COPY config/py_aff.alias /root/py_aff.alias
 RUN cat /root/py_aff.alias >> /home/wc/.bashrc && printf "\n\n" >> /home/wc/.bashrc
 
-COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /bin/dash
+COPY --from=witcher/build-widash-x86 /Widash/archbuilds/dash /bin/dash
 
 EXPOSE 14000
 #CMD /opt/tomcat/port_14000/bin/catalina.sh start && bash

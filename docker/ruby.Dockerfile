@@ -7,18 +7,20 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - && \
     apt-get update && \
     apt-get install -y git-core zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev \
                        sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev software-properties-common libffi-dev \
-                       yarn
+                       yarn build-essential git autoconf ruby
 
 COPY --chown=wc:wc rubysrc271 /rubysrc/
-RUN cd /rubysrc && autoconf && ./configure && make -j50
-RUN cd /rubysrc && make install && gem install bundler
-RUN gem install rails -v 6.0.2.2
-COPY config/supervisord.conf /etc/supervisord.conf
 
-CMD /usr/bin/supervisord
+#RUN cd /rubysrc && autoconf && ./configure && make -j$(nproc)
+#RUN cd /rubysrc && make install && gem install bundler
+#RUN gem install rails -v 6.0.2.2
+#COPY config/supervisord.conf /etc/supervisord.conf
+#
+#CMD /usr/bin/supervisord
 
 #RUN chmod +x /run-php-test.sh
 
+#RUN cp /bin/dash /bin/dash_backup; cp /crashing_dash /bin/dash
 #COPY supervisord.conf /etc/supervisord.conf
 
 ##### MyCloud

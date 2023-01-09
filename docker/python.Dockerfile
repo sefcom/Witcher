@@ -11,6 +11,10 @@ RUN su - wc -c "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && mkvi
 
 RUN su - wc -c "source /home/wc/.virtualenvs/pywitch/bin/activate && pip install termcolor flask "
 
+RUN cp /bin/dash /bin/dash_backup
+
+COPY --from=witcher/build-widash-x86 /Widash/archbuilds/dash /bin/dash
+
 EXPOSE 80
 
 CMD /bin/true && /usr/bin/supervisord

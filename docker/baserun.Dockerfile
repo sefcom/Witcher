@@ -69,7 +69,7 @@ RUN echo 'workon witcher' >> /home/wc/.bashrc
 RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 RUN echo 'export NVM_DIR=$HOME/.nvm; . $NVM_DIR/nvm.sh; . $NVM_DIR/bash_completion' >> /home/wc/.bashrc
 ENV NVM_DIR /home/wc/.nvm
-RUN . $NVM_DIR/nvm.sh && nvm install node
+RUN . $NVM_DIR/nvm.sh && nvm install 16
 #RUN sudo mkdir /node_modules && sudo chown wc:wc /node_modules && sudo apt-get install -y npm
 RUN sudo apt-get install -y npm libgbm-dev
 RUN . $NVM_DIR/nvm.sh && npm install puppeteer cheerio

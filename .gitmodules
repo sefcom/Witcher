@@ -10,3 +10,12 @@
 [submodule "base/Widash"]
 	path = base/Widash
 	url = git@github.com:sefcom/Widash.git
+[submodule "nodejs/Witcher-nodejs"]
+	path = nodejs/Witcher-nodejs
+	url = git@github.com:sefcom/Witcher-nodejs
+[submodule "java/jdksrc"]
+	path = java/jdksrc
+	url = git@github.com:sefcom/Witcher-java
+[submodule "nodejs/juice-shop/app"]
+	path = nodejs/juice-shop/app
+	url = git@github.com:/bkimminich/juice-shop.git
