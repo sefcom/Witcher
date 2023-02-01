@@ -45,7 +45,7 @@ struct test_process_info {
 #define TEST_PROCESS_INFO_SHM_ID 0x411911
 #define TEST_PROCESS_INFO_MAX_NBR 100
 #define TEST_PROCESS_INFO_SMM_SIZE 0x4000
-test_process_info *test_process_info_ptr;
+//test_process_info *test_process_info_ptr;
 
 bool isparent = true;
 int tbd_shm_id = 0;
@@ -195,12 +195,16 @@ public:
 
     void setMethod(string method_in){
       for (auto & c: method_in) c = toupper(c);
+
       method = method_in;
       if (method.length() == 0){
         method = "GET";
       }
     }
     string getMethod(){
+    if (posts.length() > 0){
+        method = "POST";
+      }
       return method;
     }
     void setJSON(bool jsonIn){
@@ -241,34 +245,38 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
 void writeOutAFLSHM(string PORT){
 
   ofstream myfile;
-
-  myfile.open ("/tmp/" +  PORT + ".afl");
+  
   char * afl_shm_loc = getenv("__AFL_SHM_ID");
+
   if (afl_shm_loc){
-    cout << "RECVD AFL_SHM_ID of " << hex << afl_shm_loc << " and wrote to " << PORT << "" << endl;
+    struct stat info;
+    if( stat( "/fs", &info ) == 0 ){
+      myfile.open ("/fs/__AFL_SHM_ID"); //" +  PORT + ".afl");
+      myfile << afl_shm_loc << endl;
+      myfile.close();
+    } else {
+      myfile.open ("/__AFL_SHM_ID"); //" +  PORT + ".afl");
+      myfile << afl_shm_loc << endl;
+      myfile.close();
+    }
+
+    cout << "RECVD AFL_SHM_ID of " << hex << afl_shm_loc << endl;
+
   } else {
     cout << "NO AFL_SHM_MEM but wrote 0 to " << PORT << "" << endl;
   }
 
-  if (afl_shm_loc){
-    myfile << afl_shm_loc << endl;
-  } else {
-    myfile << "0" << endl;
-  }
-
-  myfile.close();
-
 }
 
 void clear_shm_values(){
-    if (test_process_info_ptr && isparent){
-        printf("EXITING PARENT and setting afl_id = 0\n");
-        test_process_info_ptr->capture = false ;
-        test_process_info_ptr->afl_id = 0;
-        //sleep(1);
-    } else {
-        printf("not clearing b/c in child\n");
-    }
+    // if (test_process_info_ptr && isparent){
+    //     printf("EXITING PARENT and setting afl_id = 0\n");
+    //     test_process_info_ptr->capture = false ;
+    //     test_process_info_ptr->afl_id = 0;
+    //     //sleep(1);
+    // } else {
+    //     printf("not clearing b/c in child\n");
+    // }
 }
 
 
@@ -290,6 +298,26 @@ void checkForServerErrors(string port){
       raise(SIGSEGV);
 
     }
+  }
+  string fs_haccs_log = "/fs/HACCS.error";
+  if (fileExists(fs_haccs_log)){
+    string error;
+    std::ifstream haccs_log_fn (fs_haccs_log);
+    std::getline(haccs_log_fn, error, '\n');
+
+
+    remove(fs_haccs_log.c_str());
+
+    ofstream errorFileOut;
+    string local_haccs_log = "/__haccs.log";
+    errorFileOut.open (local_haccs_log, std::ios_base::app);
+    errorFileOut << "HACCS.error found " << error << endl;
+    errorFileOut.close();
+    if (afl_area_ptr != NULL){
+        afl_area_ptr[777]=1;
+    }
+    raise(SIGSEGV);
+
   }
 }
 
@@ -373,6 +401,8 @@ void sendRequest(RequestData *reqD ){
     cout << "----------------------- HTTP RESPONSE --------------------------" << endl;
     cout << "Readbuffer = " << readBuffer << endl;
     cout << "--------------------- END HTTP RESPONSE ------------------------" << endl;
+
+
   }
 }
 
@@ -469,9 +499,9 @@ static void recvAFLRequests(RequestData *reqD) {
       string id_str = getenv("__AFL_SHM_ID");
       int shm_id = atoi(id_str.c_str());
 
-      test_process_info_ptr->afl_id = shm_id;
+//      test_process_info_ptr->afl_id = shm_id;
 
-      test_process_info_ptr->reqr_process_id = getpid();
+//      test_process_info_ptr->reqr_process_id = getpid();
       FILE *fptr;
       // opening file in writing mode
       fptr = fopen("/tmp/httpreqr.pid", "w");
@@ -484,8 +514,8 @@ static void recvAFLRequests(RequestData *reqD) {
       std::string cpid = std::to_string(getpid());
 
       setenv("AFL_CHILD_PID", cpid.c_str(),1);
-      printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d, pids C=%d, P=%d, %d, afl_id=%d\033[0m\n", claunch_cnt,  getpid(),
-              test_process_info_ptr->reqr_process_id, test_process_info_ptr->capture, test_process_info_ptr->afl_id);
+      // printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d, pids C=%d, P=%d, %d, afl_id=%d\033[0m\n", claunch_cnt,  getpid(),
+      //         test_process_info_ptr->reqr_process_id, test_process_info_ptr->capture, test_process_info_ptr->afl_id);
       printf("[WC][CHILD-FORK]\t\t\t\033[33mlaunch cnt = %d current process IS the child, pid == %d\033[0m\n", claunch_cnt,  getpid());
       afl_fork_child = 1;
       close(FORKSRV_FD);
@@ -498,24 +528,24 @@ static void recvAFLRequests(RequestData *reqD) {
       for (int x=0; x < 65000; x++){
           bitset += afl_area_ptr[x];
       }
-      printf("[WC][CHILD-FORK] AFL_SHM_ID=%d, AFL ptr = %p state=%d cap=%d afl_id=%d START BITS SET = %d\n", shm_id, afl_area_ptr,
-               test_process_info_ptr->initialized, test_process_info_ptr->capture, test_process_info_ptr->afl_id, bitset);
+      // printf("[WC][CHILD-FORK] AFL_SHM_ID=%d, AFL ptr = %p state=%d cap=%d afl_id=%d START BITS SET = %d\n", shm_id, afl_area_ptr,
+      //          test_process_info_ptr->initialized, test_process_info_ptr->capture, test_process_info_ptr->afl_id, bitset);
 
 
-      test_process_info_ptr->capture=true;
+//      test_process_info_ptr->capture=true;
       sendRequest(reqD);
-      test_process_info_ptr->capture=false;
-      test_process_info_ptr->afl_id = 0;
+      // test_process_info_ptr->capture=false;
+      // test_process_info_ptr->afl_id = 0;
 
       bitset = 0;
       for (int x=0; x < 65000; x++){
           bitset += afl_area_ptr[x];
       }
-      printf("[WC][CHILD-FORK] AFL_SHM_ID=%d, AFL ptr = %p state=%d cap=%d afl_id=%d END BITS SET = %d\n", shm_id, afl_area_ptr,
-               test_process_info_ptr->initialized, test_process_info_ptr->capture, test_process_info_ptr->afl_id, bitset);
+      // printf("[WC][CHILD-FORK] AFL_SHM_ID=%d, AFL ptr = %p state=%d cap=%d afl_id=%d END BITS SET = %d\n", shm_id, afl_area_ptr,
+      //          test_process_info_ptr->initialized, test_process_info_ptr->capture, test_process_info_ptr->afl_id, bitset);
 
       checkForServerErrors(reqD->getPort());
-      printf("[WC][CHILD-FORK] Error information => %s\n", test_process_info_ptr->error_type);
+      // printf("[WC][CHILD-FORK] Error information => %s\n", test_process_info_ptr->error_type);
 
       return;
 
@@ -532,7 +562,7 @@ static void recvAFLRequests(RequestData *reqD) {
 
     //test_process_info_ptr->reqr_process_id = child_pid;
 
-    printf("[WC][PARENT-FORK]\t\tCheck for child status from Parent %d for %d \n", getpid(), test_process_info_ptr->reqr_process_id);
+    //printf("[WC][PARENT-FORK]\t\tCheck for child status from Parent %d for %d \n", getpid(), test_process_info_ptr->reqr_process_id);
 
     if (infinite && write(FORKSRV_FD + 1, &child_pid, 4) != 4) {
       printf("\t\tExiting Parent %d with 5\n", child_pid);
@@ -563,6 +593,7 @@ static void recvAFLRequests(RequestData *reqD) {
             int afl_id = atoi(getenv("__AFL_SHM_ID"));
             cout << "\033[36mAFL_ID = " << dec  << afl_id <<"\033[0m\n";
             afl_area_ptr = (unsigned char*) shmat(afl_id, NULL, 0);
+            afl_area_ptr[0]=1;
         } else {
             cout << "\033[31m__AFL_SHM_ID environment variable is not set. "<< "\033[0m\n";
         }
@@ -640,30 +671,30 @@ void signal_handler(int signal){
 
 void initMemory(){
 
-     if (test_process_info_ptr == NULL && getenv("AFL_META_INFO_ID")){
-        int mem_key = atoi(getenv("AFL_META_INFO_ID"));
-        int shm_id = shmget(mem_key , sizeof(test_process_info), 0666);
-        if (shm_id < 0 ) {
-            printf("*** shmget error using memkey=%d *** ERROR: %s \n", mem_key, strerror(errno));
+     // if (test_process_info_ptr == NULL && getenv("AFL_META_INFO_ID")){
+    //     int mem_key = atoi(getenv("AFL_META_INFO_ID"));
+    //     int shm_id = shmget(mem_key , sizeof(test_process_info), 0666);
+    //     if (shm_id < 0 ) {
+    //         printf("*** shmget error using memkey=%d *** ERROR: %s \n", mem_key, strerror(errno));
 
-            exit(1);
-        }
-        printf("*** shmat attaching to mem_key=%d shm_id=%d ***\n", mem_key, shm_id);
-        test_process_info_ptr = (test_process_info *) shmat(shm_id, NULL, 0);  /* attach */
-        if ((long) test_process_info_ptr == -1) {
-            printf("*** shmat attaching error could not attach to %d ERROR: %s ***\n", mem_key, strerror(errno));
-            exit(2);
-        }
-        if (getenv("__AFL_SHM_ID")){
-            test_process_info_ptr->afl_id = atoi(getenv("__AFL_SHM_ID"));
-            test_process_info_ptr->reqr_process_id = getpid();
-            printf("[WC] \033[34mSet afl_id = %d and reqr_process_id = %d \033[0m\n", test_process_info_ptr->afl_id, test_process_info_ptr->reqr_process_id);
-        }
+    //         exit(1);
+    //     }
+    //     printf("*** shmat attaching to mem_key=%d shm_id=%d ***\n", mem_key, shm_id);
+    //     test_process_info_ptr = (test_process_info *) shmat(shm_id, NULL, 0);  /* attach */
+    //     if ((long) test_process_info_ptr == -1) {
+    //         printf("*** shmat attaching error could not attach to %d ERROR: %s ***\n", mem_key, strerror(errno));
+    //         exit(2);
+    //     }
+    //     if (getenv("__AFL_SHM_ID")){
+    //         test_process_info_ptr->afl_id = atoi(getenv("__AFL_SHM_ID"));
+    //         test_process_info_ptr->reqr_process_id = getpid();
+    //         printf("[WC] \033[34mSet afl_id = %d and reqr_process_id = %d \033[0m\n", test_process_info_ptr->afl_id, test_process_info_ptr->reqr_process_id);
+    //     }
 
-    } else if (!getenv("AFL_META_INFO_ID")){
-        printf("*** Error no AFL_META_INFO_ID environment variable was detected *** \n");
-        exit(32);
-    }
+    // } else if (!getenv("AFL_META_INFO_ID")){
+    //     printf("*** Error no AFL_META_INFO_ID environment variable was detected *** \n");
+    //     exit(32);
+    // }
 
 
 }
@@ -703,12 +734,13 @@ int main(int argc, char *argv[])
   if (use_shm){
       atexit(clear_shm_values);
 
-      initMemory();
+//      initMemory();
   }
 
   writeOutAFLSHM(reqD->getPort());
 
   if (getenv("__AFL_SHM_ID")){
+    printf("RECEIVING AFL REQUEST\n");
     recvAFLRequests(reqD);
   } else {
     //trickAFLInstrumentChecker();

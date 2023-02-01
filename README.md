@@ -1,7 +1,17 @@
 # Witcher
 
 This repo contains the source code for Witcher a web application fuzzer that utilizes mutational fuzzing 
-to explore web applications and fault escalation to detect command and SQL injection vulnerabilities. 
+to explore web applications and fault escalation to detect command and SQL injection vulnerabilities.
+
+Witcher is to be published in S&P in May 2023.
+@inproceedings{trickelwitcher,
+  title={Toss a fault to your witcher: Applying grey-box coverage-guided mutational fuzzing to detect sql and command injection vulnerabilities},
+  author={Trickel, Erik and Pagani, Fabio and Zhu, Chang and Dresel, Lukas and Vigna, Giovanni and Kruegel, Christopher and Wang, Ruoyu and Bao, Tiffany and Shoshitaishvili, Yan and Doup{\'e}, Adam},
+  booktitle={IEEE Symposium on Security and Privacy (SP), to appear},
+  pages={116--133},
+  year={2023}
+}
+
 
 This repo relies on submodules
 `git submodule update --init --recursive`
@@ -34,6 +44,19 @@ Next, create a folder for configuration and results (e.g.,`user`), inside the ne
 The new folder will be mapped to Witcher's container at run time so that the results are saved to your local drive.
 
 `docker build --build-arg USE_INSTRUMENTED=1 -t openemr-user`
+
+# Pulling the containers
+
+The completely built containers exists on hub.docker, which can be pulled via the witcherfuzz user.
+```docker pull witcherfuzz/php5run
+docker pull witcherfuzz/php7run
+docker pull witcherfuzz/python
+docker pull witcherfuzz/java
+docker pull witcherfuzz/nodejs
+docker pull witcherfuzz/ruby
+```
+
+
 
 ## Witcher Config File
 
