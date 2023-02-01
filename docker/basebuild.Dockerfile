@@ -31,14 +31,10 @@ RUN    apt-fast install -y build-essential  \
                         libxss1 bison flex \
 			            gawk cvs ncurses-dev
 
-#"Installing" the Witcher's Dash that abends on a parsing error when STRICT=1 is set.
-#
-
-#COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
-COPY --chown=wc:wc /httpreqr /httpreqr
+COPY /httpreqr /httpreqr
 RUN cd /httpreqr && make 
 
-COPY --chown=wc:wc wclibs /wclibs
+COPY wclibs /wclibs
 RUN cd /wclibs && \
     gcc -c -Wall -fpic db_fault_escalator.c && \
     gcc -shared -o lib_db_fault_escalator.so db_fault_escalator.o -ldl && \
