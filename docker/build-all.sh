@@ -43,7 +43,7 @@ for b in "${builds[@]}"; do
     docker_img_name="witcher/${b}"
     puppeteer_img_name="puppeteer1337/${b}"
     docker_img_name=${docker_img_name/tests\//""}
-    docker_img_name=${docker_img_name/\/base/""}
+    docker_img_name=${docker_img_name/\/base/"/basebuildrun"}
     dockerfile_path="${DIR}/${b}.Dockerfile"
     if [[ ! -f ${dockerfile_path} ]]; then
         dockerfile_path=${DIR}/../${b}/Dockerfile

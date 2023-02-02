@@ -1,4 +1,4 @@
-FROM witcher
+FROM witcher/basebuildrun
 MAINTAINER tricke
 
 COPY --chown=wc:wc Witcher-nodejs /nodejssrc/

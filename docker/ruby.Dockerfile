@@ -1,4 +1,4 @@
-FROM witcher
+FROM witcher/basebuildrun
 MAINTAINER tricke
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - && \

@@ -1,4 +1,4 @@
-FROM puppeteer1337/witcher-base
+FROM witcher/basebuildrun
 
 MAINTAINER tricke
 

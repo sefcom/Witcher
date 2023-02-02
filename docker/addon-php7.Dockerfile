@@ -120,7 +120,7 @@ RUN usermod -a -G www-data wc
 #COPY config/dash /bin/dash
 #COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /bin/dash
 
-COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
+COPY --from=witcher/basebuild /httpreqr/httpreqr.64 /httpreqr
 
 COPY base/afl /afl
 ENV AFL_PATH=/afl

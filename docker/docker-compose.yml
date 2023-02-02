@@ -12,7 +12,7 @@ services:
   baserun:
     build:
       context: ../base
-      dockerfile: ../docker/baserun.Dockerfile
+      dockerfile: baserun.Dockerfile
     image: witcher/baserun
     deploy:
       replicas: 0

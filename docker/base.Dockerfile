@@ -1,6 +1,7 @@
-
+## this base is used under the image name witcher, which is used by
 FROM ubuntu:bionic
 LABEL maintainer="erik.trickel@asu.edu"
+
 
 # Use the fastest APT repo
 #COPY ./files/sources.list.with_mirrors /etc/apt/sources.list
@@ -127,7 +128,8 @@ RUN usermod -a -G www-data wc
 #
 
 #COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
-COPY --chown=wc:wc /httpreqr/httpreqr.64 /httpreqr
+#COPY --chown=wc:wc /httpreqr/httpreqr.64 /httpreqr
+COPY --from=witcher/basebuild /httpreqr/httpreqr.64 /httpreqr
 
 COPY afl /afl
 ENV AFL_PATH=/afl

@@ -129,8 +129,7 @@ RUN usermod -a -G www-data wc
 #"Installing" the Witcher's Dash that abends on a parsing error when STRICT=1 is set.
 #COPY config/dash /bin/dash
 #COPY --from=hacrs/build-widash-x86 /Widash/archbuilds/dash /bin/dash
-
-COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
+COPY --from=witcher/basebuild /httpreqr/httpreqr.64 /httpreqr
 
 COPY afl /afl
 ENV AFL_PATH=/afl

@@ -101,7 +101,7 @@ RUN usermod -a -G www-data wc
 #
 
 #COPY --from=hacrs/build-httpreqr /Witcher/base/httpreqr/httpreqr /httpreqr
-COPY --chown=wc:wc /httpreqr/httpreqr.64 /httpreqr
+COPY --from=witcher/basebuild /httpreqr/httpreqr.64 /httpreqr
 
 COPY afl /afl
 ENV AFL_PATH=/afl
