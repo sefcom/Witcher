@@ -2506,7 +2506,7 @@ export class RequestExplorer {
                     }
                     // skip if it has a period for nodejs apps
 
-                    let result = self.appData.addRequest(req.url(), req.method(), req.postData(), "interceptedRequest");
+                    let result = self.appData.addRequest(foundRequest);
                     if (result){
                         console.log(`\x1b[38;5;2mINTERCEPTED REQUEST and ${GREEN} ${GREEN} ADDED ${ENDCOLOR}${ENDCOLOR} #${self.appData.collectedURL} ${req.url()} RF size = ${self.appData.numRequestsFound()}\x1b[0m`);
                     } else {
