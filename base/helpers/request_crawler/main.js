@@ -116,9 +116,9 @@ function addInputsToRequestsFound(requestInputDir, url, appData){
 
             console.log("STING URL HERE",urlstr);
             if (plen > 0 ){
-                appData.addRequest(urlstr, "POST", requestData[POST_DATA_INDEX], "initialLoad", requestData[COOKIE_INDEX]);
+                appData.addRequest(FoundRequest.requestParamFactory(urlstr, "POST", requestData[POST_DATA_INDEX], {}, "initialLoad", requestData[COOKIE_INDEX]));
             }
-            appData.addRequest(urlstr, "GET", requestData[POST_DATA_INDEX], "initialLoad", requestData[COOKIE_INDEX]);
+            appData.addRequest(FoundRequest.requestParamFactory(urlstr, "GET", requestData[GET_INDEX], {}, "initialLoad", requestData[COOKIE_INDEX]));
 
         }
 
