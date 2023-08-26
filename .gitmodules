@@ -16,6 +16,6 @@
 [submodule "java/jdksrc"]
 	path = java/jdksrc
 	url = git@github.com:sefcom/Witcher-java
-[submodule "my-local-juice-shop"]
+[submodule "nodejs/juice-shop/app"]
 	path = nodejs/juice-shop/app
 	url = git@github.com:/bkimminich/juice-shop.git
