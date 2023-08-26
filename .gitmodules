@@ -18,4 +18,4 @@
 	url = git@github.com:sefcom/Witcher-java
 [submodule "nodejs/juice-shop/app"]
 	path = nodejs/juice-shop/app
-	url = git@github.com:/bkimminich/juice-shop.git
+	url = git@github.com:bkimminich/juice-shop.git
